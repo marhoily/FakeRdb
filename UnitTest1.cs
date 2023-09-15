@@ -1,6 +1,5 @@
 using System.Text;
 using Antlr4.Runtime;
-using SQLitePCL;
 
 namespace FakeRdb
 {
@@ -10,12 +9,13 @@ namespace FakeRdb
         public void Test1()
         {
             var inputStream = Sql();
-            var speakLexer = new SQLiteLexer(inputStream);
-            var commonTokenStream = new CommonTokenStream(speakLexer);
-            var speakParser = new SQLiteParser(commonTokenStream);
-            
-            var chatContext = speakParser.sql_stmt_list();
-            var visitor = new SQLiteParserBaseVisitor<StringBuilder>();        
+            var lexer = new SQLiteLexer(inputStream);
+            var tokens = new CommonTokenStream(lexer);
+            var parser = new SQLiteParser(tokens);
+            parser.RemoveErrorListeners();
+            parser.AddErrorListener(new PanicErrorListener());
+            var chatContext = parser.sql_stmt_list();
+            var visitor = new MyVisitor();        
             visitor.Visit(chatContext);
         }
 
@@ -325,6 +325,23 @@ namespace FakeRdb
                 WHERE
                     RowNum = 1;
                 """);
+        }
+    }
+
+    public class PanicErrorListener : BaseErrorListener
+    {
+        public override void SyntaxError(TextWriter output, IRecognizer recognizer, IToken offendingSymbol, int line, int charPositionInLine,
+            string msg, RecognitionException e)
+        {
+            throw new InvalidOperationException($"line {line}:{charPositionInLine} {msg}", e);
+        }
+    
+    }
+    public sealed class MyVisitor : SQLiteParserBaseVisitor<StringBuilder>
+    {
+        public override StringBuilder VisitSelect_core(SQLiteParser.Select_coreContext context)
+        {
+            return base.VisitSelect_core(context);
         }
     }
 }
