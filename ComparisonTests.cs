@@ -22,7 +22,7 @@ public abstract class ComparisonTests : IDisposable
         Sut.Dispose();
     }
 
-    protected void CompareReaders(string sql)
+    protected void AssertReadersMatch(string sql)
     {
         var cmd1 = Prototype.CreateCommand();
         cmd1.CommandText = sql;
@@ -34,7 +34,7 @@ public abstract class ComparisonTests : IDisposable
         if (x1 != null)
         {
             x2.Should().NotBeNull();
-            AssertError(x1.Message, x2!.Message);
+            AssertErrorsMatch(x1.Message, x2!.Message);
         }
         else
         {
@@ -52,7 +52,7 @@ public abstract class ComparisonTests : IDisposable
     };
     // Makes sure actual error either matches the expected completely,
     // or equivalent to any of it counterparts in the lookup table, using Regex
-    private static void AssertError(string expected, string actual)
+    private static void AssertErrorsMatch(string expected, string actual)
     {
         if (expected == actual) return;
         var equivalenceClass = ErrorEquivalenceTable.FirstOrDefault(

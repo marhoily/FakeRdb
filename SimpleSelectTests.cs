@@ -6,7 +6,7 @@ namespace FakeRdb
         [Fact]
         public void Table_Not_Found()
         {
-            CompareReaders("SELECT * FROM Album");
+            AssertReadersMatch("SELECT * FROM Album");
         }
         
         [Fact]
@@ -14,7 +14,7 @@ namespace FakeRdb
         {
             Prototype.Seed3Albums();
             Sut.Seed3Albums();
-            CompareReaders("SELECT * FROM Album");
+            AssertReadersMatch("SELECT * FROM Album");
         }
     }
 }
