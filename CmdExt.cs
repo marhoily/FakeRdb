@@ -14,4 +14,16 @@ public static class CmdExt
         dbParameter.Value = value;
         cmd.Parameters.Add(dbParameter);
     }
+
+    public static (DbDataReader?, Exception?) SafeExecuteReader(this DbCommand cmd)
+    {
+        try
+        {
+            return (cmd.ExecuteReader(), null); 
+        }
+        catch (Exception ex)
+        {
+            return (null, ex); 
+        }
+    }
 }

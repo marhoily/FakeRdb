@@ -1,3 +1,3 @@
 namespace FakeRdb;
 
-public sealed class View : List<object[]>{}
+public sealed class View : List<object?[]>{}

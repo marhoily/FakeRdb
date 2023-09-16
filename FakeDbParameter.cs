@@ -1,13 +1,16 @@
 ﻿using System.Data;
 using System.Data.Common;
 using System.Diagnostics.CodeAnalysis;
+// ReSharper disable NullCoalescingConditionIsAlwaysNotNullAccordingToAPIContract
+#pragma warning disable CS8765 // Nullability of type of parameter doesn't match overridden member (possibly because of nullability attributes).
+#pragma warning disable CS8601 // Possible null reference assignment.
+#pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
 
 namespace FakeRdb;
 
 /// <summary>
 ///     Represents a parameter and its value in a <see cref="T:Microsoft.Data.Sqlite.SqliteCommand" />.
 /// </summary>
-/// <remarks>Due to SQLite's dynamic type system, parameter values are not converted.</remarks>
 /// <seealso href="https://docs.microsoft.com/dotnet/standard/data/sqlite/parameters">Parameters</seealso>
 /// <seealso href="https://docs.microsoft.com/dotnet/standard/data/sqlite/types">Data Types</seealso>
 public sealed class FakeDbParameter : DbParameter
@@ -17,12 +20,7 @@ public sealed class FakeDbParameter : DbParameter
     private int? _size;
     private Type? _sqliteType;
     private string _sourceColumn = string.Empty;
-    private static readonly char[] _parameterPrefixes = new char[3]
-    {
-        '@',
-        '$',
-        ':'
-    };
+
 
     /// <summary>
     ///     Initializes a new instance of the <see cref="T:Microsoft.Data.Sqlite.SqliteParameter" /> class.
@@ -33,7 +31,6 @@ public sealed class FakeDbParameter : DbParameter
     }
 
 
-#nullable enable
     /// <summary>
     ///     Initializes a new instance of the <see cref="T:Microsoft.Data.Sqlite.SqliteParameter" /> class.
     /// </summary>
@@ -43,8 +40,8 @@ public sealed class FakeDbParameter : DbParameter
     /// <seealso href="https://docs.microsoft.com/dotnet/standard/data/sqlite/types">Data Types</seealso>
     public FakeDbParameter(string name, object? value)
     {
-        this.ParameterName = name;
-        this.Value = value;
+        ParameterName = name;
+        Value = value;
     }
 
     /// <summary>
@@ -55,8 +52,8 @@ public sealed class FakeDbParameter : DbParameter
     /// <seealso href="https://docs.microsoft.com/dotnet/standard/data/sqlite/parameters">Parameters</seealso>
     public FakeDbParameter(string? name, Type type)
     {
-        this.ParameterName = name;
-        this.Type = type;
+        ParameterName = name;
+        Type = type;
     }
 
     /// <summary>
@@ -69,7 +66,7 @@ public sealed class FakeDbParameter : DbParameter
     public FakeDbParameter(string? name, Type type, int size)
         : this(name, type)
     {
-        this.Size = size;
+        Size = size;
     }
 
     /// <summary>
@@ -83,7 +80,7 @@ public sealed class FakeDbParameter : DbParameter
     public FakeDbParameter(string? name, Type type, int size, string? sourceColumn)
         : this(name, type, size)
     {
-        this.SourceColumn = sourceColumn;
+        SourceColumn = sourceColumn;
     }
 
     /// <summary>Gets or sets the type of the parameter.</summary>
@@ -96,8 +93,8 @@ public sealed class FakeDbParameter : DbParameter
     /// <seealso href="https://docs.microsoft.com/dotnet/standard/data/sqlite/parameters">Parameters</seealso>
     public Type Type
     {
-        get => this._sqliteType ?? _value.GetType();
-        set => this._sqliteType = value;
+        get => _sqliteType ?? _value.GetType();
+        set => _sqliteType = value;
     }
 
     /// <summary>
@@ -124,9 +121,9 @@ public sealed class FakeDbParameter : DbParameter
     /// <value>The name of the parameter.</value>
     public override string ParameterName
     {
-        get => this._parameterName;
+        get => _parameterName;
         [param: AllowNull]
-        set => this._parameterName = value ?? string.Empty;
+        set => _parameterName = value ?? string.Empty;
     }
 
     /// <summary>
@@ -138,14 +135,14 @@ public sealed class FakeDbParameter : DbParameter
     {
         get
         {
-            int? size = this._size;
+            int? size = _size;
             if (size.HasValue)
                 return size.GetValueOrDefault();
-            if (this._value is string str)
+            if (_value is string str)
                 return str.Length;
-            return !(this._value is byte[] numArray) ? 0 : numArray.Length;
+            return !(_value is byte[] numArray) ? 0 : numArray.Length;
         }
-        set => this._size = value >= -1 ? new int?(value) : throw new ArgumentOutOfRangeException(nameof(value), (object)value, (string)null);
+        set => _size = value >= -1 ? value : throw new ArgumentOutOfRangeException(nameof(value), value, null);
     }
 
     /// <summary>
@@ -154,9 +151,9 @@ public sealed class FakeDbParameter : DbParameter
     /// <value>The source column used for loading the value.</value>
     public override string SourceColumn
     {
-        get => this._sourceColumn;
+        get => _sourceColumn;
         [param: AllowNull]
-        set => this._sourceColumn = value ?? string.Empty;
+        set => _sourceColumn = value ?? string.Empty;
     }
 
     /// <summary>
@@ -171,22 +168,22 @@ public sealed class FakeDbParameter : DbParameter
     /// <seealso href="https://docs.microsoft.com/dotnet/standard/data/sqlite/types">Data Types</seealso>
     public override object? Value
     {
-        get => this._value;
-        set => this._value = value;
+        get => _value;
+        set => _value = value;
     }
 
     /// <summary>
     ///     Resets the <see cref="P:Microsoft.Data.Sqlite.SqliteParameter.DbType" /> property to its original value.
     /// </summary>
-    public override void ResetDbType() => this.ResetSqliteType();
+    public override void ResetDbType() => ResetSqliteType();
 
     /// <summary>
     ///     Resets the <see cref="P:Microsoft.Data.Sqlite.SqliteParameter.Type" /> property to its original value.
     /// </summary>
     public void ResetSqliteType()
     {
-        this.DbType = DbType.String;
-        this._sqliteType = null;
+        DbType = DbType.String;
+        _sqliteType = null;
     }
 
 }
