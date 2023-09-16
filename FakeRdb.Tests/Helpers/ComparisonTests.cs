@@ -1,6 +1,4 @@
-using System.Data.Common;
 using System.Text.RegularExpressions;
-using FluentAssertions;
 using Microsoft.Data.Sqlite;
 
 namespace FakeRdb.Tests;

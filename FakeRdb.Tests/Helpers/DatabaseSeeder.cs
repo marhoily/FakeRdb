@@ -1,12 +1,10 @@
-using System.Data.Common;
-
 namespace FakeRdb.Tests;
 
 public static class DatabaseSeeder
 {
     public static DbConnection Seed3Albums(this DbConnection connection)
     {
-        var factory = DbProviderFactories.GetFactory(connection) 
+        var factory = DbProviderFactories.GetFactory(connection)
                       ?? throw new InvalidOperationException();
         using var createTable = connection.CreateCommand();
         createTable.CommandText =
@@ -16,7 +14,7 @@ public static class DatabaseSeeder
             "Artist TEXT, " +
             "Year INTEGER)";
         createTable.ExecuteNonQuery();
-           
+
         using var insertRow = connection.CreateCommand();
         insertRow.CommandText =
             "INSERT INTO Album (Title, Artist, Year) " +

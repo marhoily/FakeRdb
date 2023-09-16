@@ -1,6 +1,4 @@
-﻿using System.Data.Common;
-
-namespace FakeRdb;
+﻿namespace FakeRdb;
 
 public sealed class FakeDbProviderFactory : DbProviderFactory
 {

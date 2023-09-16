@@ -1,7 +1,4 @@
-﻿using System.Collections;
-using System.Data.Common;
-
-namespace FakeRdb;
+﻿namespace FakeRdb;
 
 public class FakeDbParameterCollection : DbParameterCollection
 {

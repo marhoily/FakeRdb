@@ -1,6 +1,3 @@
-using System.Collections;
-using System.Data.Common;
-
 namespace FakeRdb;
 
 public sealed class FakeDbReader : DbDataReader

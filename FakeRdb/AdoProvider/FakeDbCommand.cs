@@ -1,6 +1,4 @@
-﻿using System.Data;
-using System.Data.Common;
-using System.Diagnostics.CodeAnalysis;
+﻿using System.Diagnostics.CodeAnalysis;
 using Antlr4.Runtime;
 
 namespace FakeRdb;

@@ -1,6 +1,3 @@
-using System.Data.Common;
-using FluentAssertions;
-
 namespace FakeRdb.Tests;
 
 //Assuming I want to compare the readers as well as possible, am I missing anything?

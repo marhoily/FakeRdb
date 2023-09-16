@@ -1,8 +1,6 @@
-using FluentAssertions;
-
 namespace FakeRdb.Tests;
 
-public sealed class DataSeederTests 
+public sealed class DataSeederTests
 {
     private readonly FakeDb _fakeDb = new();
     private readonly FakeDbConnection _connection;
@@ -23,7 +21,7 @@ public sealed class DataSeederTests
             new Field("Artist", typeof(string)),
             new Field("Year", typeof(long)),
         });
-         
+
     }
     [Fact]
     public void Seed3Albums_Should_Populate_Correct_Data()

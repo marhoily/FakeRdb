@@ -17,10 +17,10 @@ public sealed class ReaderVisitor : SQLiteParserBaseVisitor<FakeDbReader>
         var tableNameContext = context.table_name().GetText();
         var table = _db[tableNameContext];
         _defaultResult = new FakeDbReader(
-            new QueryResult(table.Schema, 
-                table.Select(row => 
+            new QueryResult(table.Schema,
+                table.Select(row =>
                     row.Data.ToList()).ToList()));
-            
+
         return DefaultResult;
     }
 }

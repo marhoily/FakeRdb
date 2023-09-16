@@ -15,8 +15,6 @@ public sealed class NonQueryVisitor : SQLiteParserBaseVisitor<int>
     {
         var tableName = context.table_name().GetText();
         var table = _db[tableName];
-        //var sqlFields = context.column_name()
-        //    .Select(c => table.GetColumn(c.GetText())).ToArray();
         if (context.values_clause() is not { } values) return base.VisitInsert_stmt(context);
         var sqlRows = values.value_row();
         var valueSelectors = table.Schema

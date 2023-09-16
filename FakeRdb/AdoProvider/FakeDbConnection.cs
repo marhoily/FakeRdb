@@ -1,6 +1,4 @@
-﻿using System.Data;
-using System.Data.Common;
-using System.Diagnostics.CodeAnalysis;
+﻿using System.Diagnostics.CodeAnalysis;
 
 namespace FakeRdb;
 
