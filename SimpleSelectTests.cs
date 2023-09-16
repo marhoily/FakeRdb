@@ -1,4 +1,3 @@
-using System.Data.Common;
 using FluentAssertions;
 using Microsoft.Data.Sqlite;
 
@@ -97,76 +96,5 @@ namespace FakeRdb
 
         }
 
-        [Fact]
-        public void CreateTable()
-        {
-            var fakeDb = new FakeDb();
-            using var connection = new FakeDbConnection(fakeDb);
-            PopulateData(connection, fakeDb);
-            return;
-        }
-
-        private static void PopulateData(DbConnection connection, FakeDb fakeDb)
-        {
-            var factory = DbProviderFactories.GetFactory(connection) 
-                ?? throw new InvalidOperationException();
-            connection.Open();
-            using var createTable = connection.CreateCommand();
-            createTable.CommandText =
-                "CREATE TABLE Album (" +
-                "Id INTEGER PRIMARY KEY AUTOINCREMENT, " +
-                "Title TEXT, " +
-                "Artist TEXT, " +
-                "Year INTEGER)";
-            createTable.ExecuteNonQuery();
-            var table = fakeDb["Album"];
-            table.Schema.Should().BeEquivalentTo(new[]
-            {
-                new Field("Id", typeof(int)),
-                new Field("Title", typeof(string)),
-                new Field("Artist", typeof(string)),
-                new Field("Year", typeof(int)),
-            });
-
-            using var insertRow = connection.CreateCommand();
-            insertRow.CommandText =
-                "INSERT INTO Album (Title, Artist, Year) " +
-                "VALUES (@Title, @Artist, @Year)";
-
-            InsertTracks(insertRow, "Track 1", "Artist 1", 2021);
-            InsertTracks(insertRow, "Track 2", "Artist 2", 2022);
-            InsertTracks(insertRow, "Track 3", "Artist 3", 2023);
-
-            table.Should().BeEquivalentTo(new[]
-            {
-                new Row(table, new object[] { 0, "Track 1", "Artist 1", 2021L }),
-                new Row(table, new object[] { 0, "Track 2", "Artist 2", 2022L }),
-                new Row(table, new object[] { 0, "Track 3", "Artist 3", 2023L }),
-            });
-            return;
-
-            void InsertTracks(DbCommand cmd, string title, string artist, int year)
-            {
-                cmd.SetParameter(factory, "@Title", title);
-                cmd.SetParameter(factory, "@Artist", artist);
-                cmd.SetParameter(factory, "@Year", year);
-                cmd.ExecuteNonQuery();
-                cmd.Parameters.Clear();
-            }
-        }
-    }
-
-    public static class CmdExt
-    {
-        public static void SetParameter(this DbCommand cmd,
-            DbProviderFactory factory, string parameterName, object? value)
-        {
-            var dbParameter = 
-                factory.CreateParameter() ?? 
-                throw new InvalidOperationException("WTF?");
-            dbParameter.ParameterName = parameterName;
-            dbParameter.Value = value;
-            cmd.Parameters.Add(dbParameter);
-        }
     }
 }
