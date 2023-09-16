@@ -43,20 +43,33 @@ namespace FakeRdb
         {
             var sql = "SELECT * FROM Album";
 
-            using var connection = new SqliteConnection("Data Source=:memory:");
-            connection.Open();
-            connection.Seed3Albums();
+            using var connection = 
+                new SqliteConnection("Data Source=:memory:")
+                    .Seed3Albums();
+           
+            using var con2 = new FakeDbConnection(_db)
+                .Seed3Albums();
+           
+            Compare.Readers(connection, con2, sql);
+        }
+    }
 
-            using var cmd = connection.CreateCommand();
-            cmd.CommandText = sql;
+    public static class Compare
+    {
+        public static void Readers(
+            DbConnection c1, 
+            DbConnection c2, 
+            string sql)
+        {
+            var cmd1 = c1.CreateCommand();
+            cmd1.CommandText = sql;
+            var reader = cmd1.ExecuteReader();
 
-            using var reader = cmd.ExecuteReader();
+            var cmd2 = c2.CreateCommand();
+            cmd2.CommandText = sql;
+            var result = cmd2.ExecuteReader();
 
-            var con2 = new FakeDbConnection(_db).Seed3Albums();
-
-            var result = (DbDataReader)con2.ExecuteReader(sql);
             reader.ShouldEqual(result);
         }
-
     }
 }
