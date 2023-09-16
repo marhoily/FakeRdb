@@ -33,7 +33,13 @@ public sealed class FakeDbConnection : DbConnection
 
     protected override DbCommand CreateDbCommand()
     {
+        return CreateCommand();
+    }
+
+    public new FakeDbCommand CreateCommand()
+    {
         return new FakeDbCommand(this);
+
     }
 
     public override void Open()
@@ -57,4 +63,5 @@ public sealed class FakeDbConnection : DbConnection
     {
         throw new NotSupportedException("Changing the database is not supported in this toy SQLite provider.");
     }
+
 }

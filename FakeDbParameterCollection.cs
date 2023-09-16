@@ -5,11 +5,19 @@ namespace FakeRdb;
 
 public class FakeDbParameterCollection : DbParameterCollection
 {
-    private readonly List<DbParameter> _parameters;
-
-    public FakeDbParameterCollection()
+    private readonly List<DbParameter> _parameters = new();
+    public void AddWithValue(string parameterName, object value)
     {
-        _parameters = new List<DbParameter>();
+            var index = IndexOf(parameterName);
+            if (index >= 0)
+            {
+                _parameters[index].Value = value;
+            }
+            else
+            {
+                _parameters.Add(
+                    new FakeDbParameter(parameterName, value));
+            }
     }
 
     public override int Count => _parameters.Count;

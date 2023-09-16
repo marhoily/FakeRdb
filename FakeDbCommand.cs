@@ -12,7 +12,7 @@ public class FakeDbCommand : DbCommand
     public FakeDbCommand(FakeDbConnection connection)
     {
         _connection = connection;
-        DbParameterCollection = new FakeDbParameterCollection();
+        Parameters = new FakeDbParameterCollection();
     }
 
     public override void Prepare()
@@ -26,10 +26,10 @@ public class FakeDbCommand : DbCommand
     public override CommandType CommandType { get; set; }
     public override UpdateRowSource UpdatedRowSource { get; set; }
     protected override DbConnection? DbConnection { get; set; }
-    protected override DbParameterCollection DbParameterCollection { get; }
+    protected override DbParameterCollection DbParameterCollection => Parameters;
     protected override DbTransaction? DbTransaction { get; set; }
     public override bool DesignTimeVisible { get; set; }
-
+    public FakeDbParameterCollection Parameters { get; }
     protected override DbDataReader ExecuteDbDataReader(CommandBehavior behavior)
     {
         throw new NotImplementedException();

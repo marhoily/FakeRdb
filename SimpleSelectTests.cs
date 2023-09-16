@@ -118,6 +118,25 @@ namespace FakeRdb
                 new Field("Artist", typeof(string)),
                 new Field("Year", typeof(int)),
             });
+
+            using var insertRow = connection.CreateCommand();
+            insertRow.CommandText =
+                "INSERT INTO Album (Title, Artist, Year) " +
+                "VALUES (@Title, @Artist, @Year)";
+
+            InsertTracks(insertRow, "Track 1", "Artist 1", 2021);
+            InsertTracks(insertRow, "Track 2", "Artist 2", 2022);
+            InsertTracks(insertRow, "Track 3", "Artist 3", 2023);
+            return;
+
+            static void InsertTracks(FakeDbCommand cmd, string title, string artist, int year)
+            {
+                cmd.Parameters.AddWithValue("@Title", title);
+                cmd.Parameters.AddWithValue("@Artist", artist);
+                cmd.Parameters.AddWithValue("@Year", year);
+                cmd.ExecuteNonQuery();
+                cmd.Parameters.Clear();
+            }
         }
     }
 }
