@@ -101,6 +101,7 @@ namespace FakeRdb
                 InsertTracks(insertRow, "Track 2", "Artist 2", 2022);
                 InsertTracks(insertRow, "Track 3", "Artist 3", 2023);
             }
+
         }
         public record Album(string Title, string Artist, int Year);
     }
