@@ -19,15 +19,6 @@ public sealed class MyVisitor : SQLiteParserBaseVisitor<View>
     }
 }
 
-public sealed class NonQueryVisitor : SQLiteParserBaseVisitor<int>
-{
-    private readonly FakeDb _db;
-
-    public NonQueryVisitor(FakeDb db)
-    {
-        _db = db;
-    }
-}
 public sealed class ReaderVisitor : SQLiteParserBaseVisitor<FakeDbReader>
 {
     private readonly FakeDb _db;

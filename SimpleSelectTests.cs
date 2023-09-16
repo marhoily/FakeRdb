@@ -97,7 +97,7 @@ namespace FakeRdb
         }
 
         [Fact]
-        public void Insert()
+        public void CreateTable()
         {
             var fakeDb = new FakeDb();
             using var connection = new FakeDbConnection(fakeDb);
