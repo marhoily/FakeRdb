@@ -43,7 +43,6 @@ namespace FakeRdb
             connection.Open();
             SetUp();
 
-            // Act
             using var cmd = connection.CreateCommand();
             cmd.CommandText = "SELECT Year " +
                               "FROM Album";
@@ -62,7 +61,7 @@ namespace FakeRdb
                 SELECT Year
                 FROM tracks
                 """);
-            // Assert
+            
             reader.ShouldEqual(result);
             return;
 
@@ -74,7 +73,6 @@ namespace FakeRdb
                 insertRow.ExecuteNonQuery();
                 insertRow.Parameters.Clear();
             }
-
         
             void SetUp()
             {
@@ -96,6 +94,23 @@ namespace FakeRdb
                 InsertTracks(insertRow, "Track 3", "Artist 3", 2023);
             }
 
+        }
+
+        [Fact]
+        public void Insert()
+        {
+            var fakeDb = new FakeDb();
+            using var connection = new FakeDbConnection(fakeDb);
+            connection.Open();
+            using var createTable = connection.CreateCommand();
+            createTable.CommandText =
+                "CREATE TABLE Album (" +
+                "Id INTEGER PRIMARY KEY AUTOINCREMENT, " +
+                "Title TEXT, " +
+                "Artist TEXT, " +
+                "Year INTEGER)";
+            createTable.ExecuteNonQuery();
+            fakeDb.Single().Key.Should().Be("Album");
         }
     }
 }

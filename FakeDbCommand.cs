@@ -1,6 +1,7 @@
 ﻿using System.Data;
 using System.Data.Common;
 using System.Diagnostics.CodeAnalysis;
+using Antlr4.Runtime;
 
 namespace FakeRdb;
 
@@ -36,7 +37,16 @@ public class FakeDbCommand : DbCommand
 
     public override int ExecuteNonQuery()
     {
-        throw new NotSupportedException("ExecuteNonQuery is not supported in this toy SQLite provider.");
+        var inputStream = new AntlrInputStream(CommandText);
+        var lexer = new SQLiteLexer(inputStream);
+        var tokens = new CommonTokenStream(lexer);
+        var parser = new SQLiteParser(tokens);
+        parser.RemoveErrorListeners();
+        parser.AddErrorListener(new PanicErrorListener());
+        var chatContext = parser.sql_stmt_list();
+        var visitor = new NonQueryVisitor(_connection.Db);
+        return visitor.Visit(chatContext);
+
     }
 
     public override object ExecuteScalar()

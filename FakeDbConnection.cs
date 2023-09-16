@@ -6,24 +6,21 @@ namespace FakeRdb;
 
 public sealed class FakeDbConnection : DbConnection
 {
-    private string _connectionString;
     private ConnectionState _state;
 
-    public FakeDbConnection(string connectionString)
+    public FakeDbConnection(FakeDb db)
     {
-        _connectionString = connectionString;
+        Db = db;
         _state = ConnectionState.Closed;
     }
 
     [AllowNull]
     public override string ConnectionString
     {
-        get => _connectionString;
+        get => "";
         set
         {
-            if (_state != ConnectionState.Closed)
-                throw new InvalidOperationException("The connection state must be closed to set the connection string.");
-            _connectionString = value ?? "";
+            
         }
     }
 
@@ -31,6 +28,8 @@ public sealed class FakeDbConnection : DbConnection
     public override string DataSource => "";
     public override string ServerVersion=> "";
     public override ConnectionState State => _state;
+
+    public FakeDb Db { get; set; }
 
     protected override DbCommand CreateDbCommand()
     {
