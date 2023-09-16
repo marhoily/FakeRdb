@@ -19,7 +19,7 @@ public static class TypeExt
         return context.GetText() switch
         {
             "TEXT" => typeof(string),
-            "INTEGER" => typeof(int),
+            "INTEGER" => typeof(long),
             var x => throw new ArgumentOutOfRangeException(x)
         };
     }

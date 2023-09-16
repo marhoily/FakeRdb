@@ -32,7 +32,11 @@ public class FakeDbCommand : DbCommand
     public new FakeDbParameterCollection Parameters { get; }
     protected override DbDataReader ExecuteDbDataReader(CommandBehavior behavior)
     {
-        throw new NotImplementedException();
+        return behavior switch
+        {
+            CommandBehavior.Default => _connection.Db.ExecuteReader(CommandText),
+            _ => throw new ArgumentOutOfRangeException(nameof(behavior), behavior, null)
+        };
     }
 
     public override int ExecuteNonQuery()
@@ -63,7 +67,7 @@ public class FakeDbCommand : DbCommand
     {
         throw new NotImplementedException();
     }
-
+    
     protected override DbParameter CreateDbParameter()
     {
         throw new NotSupportedException("Creating parameters is not supported in this toy SQLite provider.");

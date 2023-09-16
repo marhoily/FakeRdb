@@ -4,7 +4,7 @@ namespace FakeRdb;
 
 public static class DatabaseSeeder
 {
-    public static void Seed3Albums(this DbConnection connection)
+    public static DbConnection Seed3Albums(this DbConnection connection)
     {
         var factory = DbProviderFactories.GetFactory(connection) 
                       ?? throw new InvalidOperationException();
@@ -18,7 +18,6 @@ public static class DatabaseSeeder
             "Year INTEGER)";
         createTable.ExecuteNonQuery();
            
-
         using var insertRow = connection.CreateCommand();
         insertRow.CommandText =
             "INSERT INTO Album (Title, Artist, Year) " +
@@ -28,7 +27,7 @@ public static class DatabaseSeeder
         InsertTracks(insertRow, "Track 2", "Artist 2", 2022);
         InsertTracks(insertRow, "Track 3", "Artist 3", 2023);
 
-        return;
+        return connection;
 
         void InsertTracks(DbCommand cmd, string title, string artist, int year)
         {

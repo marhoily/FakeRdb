@@ -1,3 +1,5 @@
+using System.Data.Common;
+using Dapper;
 using FluentAssertions;
 using Microsoft.Data.Sqlite;
 
@@ -39,7 +41,7 @@ namespace FakeRdb
         [Fact]
         public void FactMethodName()
         {
-            var sql = "SELECT Year FROM Album";
+            var sql = "SELECT * FROM Album";
 
             using var connection = new SqliteConnection("Data Source=:memory:");
             connection.Open();
@@ -50,14 +52,9 @@ namespace FakeRdb
 
             using var reader = cmd.ExecuteReader();
 
-            _db["Album"] = new Table(
-                new[] { new Field("Year", typeof(long)) })
-            {
-                new object[] { 2021L },
-                new object[] { 2022L },
-                new object[] { 2023L },
-            };
-            var result = _db.ExecuteReader(sql);
+            var con2 = new FakeDbConnection(_db).Seed3Albums();
+
+            var result = (DbDataReader)con2.ExecuteReader(sql);
             reader.ShouldEqual(result);
         }
 
