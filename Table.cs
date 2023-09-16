@@ -13,5 +13,6 @@ public sealed class Table : List<Row>
                                                string.Equals(f.Name, name,
                                                    StringComparison.InvariantCultureIgnoreCase)) ??
                                            throw new InvalidOperationException($"Column {name} is not found");
-    public void Add(object[] oneRow) => Add(new Row(this, oneRow));
+    public void Add(object?[] oneRow) => Add(new Row(this, oneRow));
+
 }

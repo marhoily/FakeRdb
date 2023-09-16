@@ -3,24 +3,38 @@ namespace FakeRdb;
 public sealed class NonQueryVisitor : SQLiteParserBaseVisitor<int>
 {
     private readonly FakeDb _db;
+    private readonly FakeDbParameterCollection _parameters;
 
-    public NonQueryVisitor(FakeDb db)
+    public NonQueryVisitor(FakeDb db, FakeDbParameterCollection parameters)
     {
         _db = db;
+        _parameters = parameters;
     }
 
     public override int VisitInsert_stmt(SQLiteParser.Insert_stmtContext context)
     {
         var tableName = context.table_name().GetText();
         var table = _db[tableName];
-        var fields = context.column_name()
+        var sqlFields = context.column_name()
             .Select(c => table.GetColumn(c.GetText())).ToArray();
         if (context.values_clause() is not { } values) return base.VisitInsert_stmt(context);
-        var sqlRow = values.value_row();
-        for (var i = 0; i < sqlRow.Length; i++)
+        var sqlRows = values.value_row();
+        var valueSelectors = table.Schema
+            .Select(field =>
+            {
+                var idx = Array.FindIndex(sqlFields, f => f.Name == field.Name);
+                if (idx != -1)
+                {
+                    return rowIndex => sqlRows[rowIndex].expr(idx).Resolve(_parameters);
+                }
+                return new Func<int, object?>(_ => Activator.CreateInstance(field.FieldType));
+            })
+            .ToArray();
+
+        for (var i = 0; i < sqlRows.Length; i++)
         {
-            var dbRow = new object[table.Schema.Length];
-            table.Add(dbRow);
+            var oneRow = valueSelectors.Select(v => v(i)).ToArray();
+            table.Add(oneRow);
         }
         return base.VisitInsert_stmt(context);
     }

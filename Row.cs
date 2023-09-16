@@ -1,3 +1,3 @@
 namespace FakeRdb;
 
-public sealed record Row(Table Table, object[] Data);
+public sealed record Row(Table Table, object?[] Data);

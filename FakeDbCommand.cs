@@ -29,7 +29,7 @@ public class FakeDbCommand : DbCommand
     protected override DbParameterCollection DbParameterCollection => Parameters;
     protected override DbTransaction? DbTransaction { get; set; }
     public override bool DesignTimeVisible { get; set; }
-    public FakeDbParameterCollection Parameters { get; }
+    public new FakeDbParameterCollection Parameters { get; }
     protected override DbDataReader ExecuteDbDataReader(CommandBehavior behavior)
     {
         throw new NotImplementedException();
@@ -44,7 +44,7 @@ public class FakeDbCommand : DbCommand
         parser.RemoveErrorListeners();
         parser.AddErrorListener(new PanicErrorListener());
         var chatContext = parser.sql_stmt_list();
-        var visitor = new NonQueryVisitor(_connection.Db);
+        var visitor = new NonQueryVisitor(_connection.Db, Parameters);
         return visitor.Visit(chatContext);
 
     }
