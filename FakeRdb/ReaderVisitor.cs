@@ -1,24 +1,5 @@
 namespace FakeRdb;
 
-public sealed class MyVisitor : SQLiteParserBaseVisitor<View>
-{
-    private readonly FakeDb _db;
-    protected override View DefaultResult { get; } = new();
-
-    public MyVisitor(FakeDb db)
-    {
-        _db = db;
-    }
-
-    public override View VisitTable_or_subquery(SQLiteParser.Table_or_subqueryContext context)
-    {
-        var tableNameContext = context.table_name().GetText();
-        var table = _db[tableNameContext];
-        DefaultResult.AddRange(table.Select(r=> r.Data));
-        return DefaultResult;
-    }
-}
-
 public sealed class ReaderVisitor : SQLiteParserBaseVisitor<FakeDbReader>
 {
     private readonly FakeDb _db;

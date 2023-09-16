@@ -1,6 +1,7 @@
 ﻿using System.Data;
 using System.Data.Common;
 using System.Diagnostics.CodeAnalysis;
+
 // ReSharper disable NullCoalescingConditionIsAlwaysNotNullAccordingToAPIContract
 #pragma warning disable CS8765 // Nullability of type of parameter doesn't match overridden member (possibly because of nullability attributes).
 #pragma warning disable CS8601 // Possible null reference assignment.

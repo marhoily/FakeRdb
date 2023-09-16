@@ -1,5 +1,5 @@
-﻿using System.Data.Common;
-using System.Collections;
+﻿using System.Collections;
+using System.Data.Common;
 
 namespace FakeRdb;
 
@@ -8,16 +8,16 @@ public class FakeDbParameterCollection : DbParameterCollection
     private readonly List<DbParameter> _parameters = new();
     public void AddWithValue(string parameterName, object value)
     {
-            var index = IndexOf(parameterName);
-            if (index >= 0)
-            {
-                _parameters[index].Value = value;
-            }
-            else
-            {
-                _parameters.Add(
-                    new FakeDbParameter(parameterName, value));
-            }
+        var index = IndexOf(parameterName);
+        if (index >= 0)
+        {
+            _parameters[index].Value = value;
+        }
+        else
+        {
+            _parameters.Add(
+                new FakeDbParameter(parameterName, value));
+        }
     }
 
     public override int Count => _parameters.Count;

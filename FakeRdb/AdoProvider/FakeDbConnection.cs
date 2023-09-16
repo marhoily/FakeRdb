@@ -21,13 +21,13 @@ public sealed class FakeDbConnection : DbConnection
         get => "";
         set
         {
-            
+
         }
     }
 
     public override string Database => "";
     public override string DataSource => "";
-    public override string ServerVersion=> "";
+    public override string ServerVersion => "";
     public override ConnectionState State => _state;
     protected override DbProviderFactory? DbProviderFactory { get; }
     public FakeDb Db { get; set; }

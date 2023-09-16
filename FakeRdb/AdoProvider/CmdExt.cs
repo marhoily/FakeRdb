@@ -7,8 +7,8 @@ public static class CmdExt
     public static void SetParameter(this DbCommand cmd,
         DbProviderFactory factory, string parameterName, object? value)
     {
-        var dbParameter = 
-            factory.CreateParameter() ?? 
+        var dbParameter =
+            factory.CreateParameter() ??
             throw new InvalidOperationException("WTF?");
         dbParameter.ParameterName = parameterName;
         dbParameter.Value = value;
@@ -19,11 +19,11 @@ public static class CmdExt
     {
         try
         {
-            return (cmd.ExecuteReader(), null); 
+            return (cmd.ExecuteReader(), null);
         }
         catch (Exception ex)
         {
-            return (null, ex); 
+            return (null, ex);
         }
     }
 }

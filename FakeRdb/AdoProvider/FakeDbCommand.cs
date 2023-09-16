@@ -67,7 +67,7 @@ public class FakeDbCommand : DbCommand
     {
         throw new NotImplementedException();
     }
-    
+
     protected override DbParameter CreateDbParameter()
     {
         throw new NotSupportedException("Creating parameters is not supported in this toy SQLite provider.");
