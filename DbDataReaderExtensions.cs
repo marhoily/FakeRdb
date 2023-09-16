@@ -12,8 +12,8 @@ public static class DbDataReaderExtensions
         actual.IsClosed.Should().BeFalse();
         expected.IsClosed.Should().BeFalse();
         expected.RecordsAffected.Should().Be(actual.RecordsAffected);
-        actual.GetFieldTypes().Should().BeEquivalentTo(
-            expected.GetFieldTypes(), opt => opt.WithStrictOrdering());
+        actual.GetSchema().Should().BeEquivalentTo(
+            expected.GetSchema(), opt => opt.WithStrictOrdering());
         actual.ReadData().Should().BeEquivalentTo(expected.ReadData(),
             opt => opt
                 .WithStrictOrdering()
@@ -25,7 +25,7 @@ public static class DbDataReaderExtensions
                 .WhenTypeIs<float>());
     }
 
-    private static IEnumerable<(Type, string)> GetFieldTypes(this DbDataReader reader)
+    private static IEnumerable<(Type, string)> GetSchema(this DbDataReader reader)
     {
         for (var i = 0; i < reader.FieldCount; i++)
         {

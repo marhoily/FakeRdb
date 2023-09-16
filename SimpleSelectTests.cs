@@ -43,18 +43,22 @@ namespace FakeRdb
             connection.Open();
             SetUp();
 
-            var expectedAlbums = new List<Album>
-            {
-                new ("Track 1", "Artist 1", 2021),
-                new ("Track 2", "Artist 2", 2022),
-                new ("Track 3", "Artist 3", 2023)
-            };
-
             // Act
-            var actualAlbums = ReadAlbums(connection);
-
+            using var cmd = connection.CreateCommand();
+            cmd.CommandText = "SELECT Title, Artist, Year " +
+                              "FROM Album";
+            using var reader = cmd.ExecuteReader();
             // Assert
-            actualAlbums.Should().BeEquivalentTo(expectedAlbums);
+            reader.ShouldEqual(new FakeDbReader(
+                new QueryResult(new []{
+                    new Field("Title", typeof(string)),
+                    new Field("Artist", typeof(string)),
+                    new Field("Year", typeof(long))
+                }, new List<List<object?>>{ 
+                    new() {"Track 1", "Artist 1", 2021},
+                    new() {"Track 2", "Artist 2", 2022},
+                    new() {"Track 3", "Artist 3", 2023},
+                })));
             return;
 
             void InsertTracks(SqliteCommand insertRow, string title, string artist, int year)
@@ -66,22 +70,7 @@ namespace FakeRdb
                 insertRow.Parameters.Clear();
             }
 
-            static IEnumerable<Album> ReadAlbums(SqliteConnection conn)
-            {
-                using var cmd = conn.CreateCommand();
-                cmd.CommandText = "SELECT Title, Artist, Year " +
-                                  "FROM Album";
-                using var reader = cmd.ExecuteReader();
-                while (reader.Read())
-                {
-                    yield return new Album(
-                        reader.GetString(0),
-                        reader.GetString(1), 
-                        reader.GetInt32(2));
-                }
-
-            }
-
+        
             void SetUp()
             {
                 using var createTable = connection.CreateCommand();
@@ -103,6 +92,5 @@ namespace FakeRdb
             }
 
         }
-        public record Album(string Title, string Artist, int Year);
     }
 }
