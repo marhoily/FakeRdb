@@ -1,3 +1,4 @@
+using System.Data.Common;
 using FluentAssertions;
 using Microsoft.Data.Sqlite;
 
@@ -46,7 +47,7 @@ namespace FakeRdb
             using var cmd = connection.CreateCommand();
             cmd.CommandText = "SELECT Year " +
                               "FROM Album";
-            
+
             using var reader = cmd.ExecuteReader();
 
             _db["tracks"] = new Table(
@@ -61,7 +62,7 @@ namespace FakeRdb
                 SELECT Year
                 FROM tracks
                 """);
-            
+
             reader.ShouldEqual(result);
             return;
 
@@ -73,7 +74,7 @@ namespace FakeRdb
                 insertRow.ExecuteNonQuery();
                 insertRow.Parameters.Clear();
             }
-        
+
             void SetUp()
             {
                 using var createTable = connection.CreateCommand();
@@ -101,6 +102,14 @@ namespace FakeRdb
         {
             var fakeDb = new FakeDb();
             using var connection = new FakeDbConnection(fakeDb);
+            PopulateData(connection, fakeDb);
+            return;
+        }
+
+        private static void PopulateData(DbConnection connection, FakeDb fakeDb)
+        {
+            var factory = DbProviderFactories.GetFactory(connection) 
+                ?? throw new InvalidOperationException();
             connection.Open();
             using var createTable = connection.CreateCommand();
             createTable.CommandText =
@@ -136,14 +145,28 @@ namespace FakeRdb
             });
             return;
 
-            static void InsertTracks(FakeDbCommand cmd, string title, string artist, int year)
+            void InsertTracks(DbCommand cmd, string title, string artist, int year)
             {
-                cmd.Parameters.AddWithValue("@Title", title);
-                cmd.Parameters.AddWithValue("@Artist", artist);
-                cmd.Parameters.AddWithValue("@Year", year);
+                cmd.SetParameter(factory, "@Title", title);
+                cmd.SetParameter(factory, "@Artist", artist);
+                cmd.SetParameter(factory, "@Year", year);
                 cmd.ExecuteNonQuery();
                 cmd.Parameters.Clear();
             }
+        }
+    }
+
+    public static class CmdExt
+    {
+        public static void SetParameter(this DbCommand cmd,
+            DbProviderFactory factory, string parameterName, object? value)
+        {
+            var dbParameter = 
+                factory.CreateParameter() ?? 
+                throw new InvalidOperationException("WTF?");
+            dbParameter.ParameterName = parameterName;
+            dbParameter.Value = value;
+            cmd.Parameters.Add(dbParameter);
         }
     }
 }

@@ -12,6 +12,7 @@ public sealed class FakeDbConnection : DbConnection
     {
         Db = db;
         _state = ConnectionState.Closed;
+        DbProviderFactory = new FakeDbProviderFactory();
     }
 
     [AllowNull]
@@ -28,7 +29,7 @@ public sealed class FakeDbConnection : DbConnection
     public override string DataSource => "";
     public override string ServerVersion=> "";
     public override ConnectionState State => _state;
-
+    protected override DbProviderFactory? DbProviderFactory { get; }
     public FakeDb Db { get; set; }
 
     protected override DbCommand CreateDbCommand()
