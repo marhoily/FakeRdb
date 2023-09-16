@@ -18,6 +18,7 @@ public abstract class ComparisonTests : IDisposable
     {
         Prototype.Dispose();
         Sut.Dispose();
+        GC.SuppressFinalize(this);
     }
 
     protected void AssertReadersMatch(string sql)

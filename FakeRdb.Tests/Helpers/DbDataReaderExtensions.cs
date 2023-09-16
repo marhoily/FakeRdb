@@ -9,9 +9,9 @@ public static class DbDataReaderExtensions
         actual.IsClosed.Should().BeFalse();
         expected.IsClosed.Should().BeFalse();
         expected.RecordsAffected.Should().Be(actual.RecordsAffected);
-        actual.GetSchema().Should().BeEquivalentTo(
-            expected.GetSchema(), opt => opt.WithStrictOrdering());
-        actual.ReadData().Should().BeEquivalentTo(expected.ReadData(),
+        expected.GetSchema().Should().BeEquivalentTo(
+            actual.GetSchema(), opt => opt.WithStrictOrdering());
+        expected.ReadData().Should().BeEquivalentTo(actual.ReadData(),
             opt => opt
                 .WithStrictOrdering()
                 .Using<double>(ctx => ctx.Subject.Should()

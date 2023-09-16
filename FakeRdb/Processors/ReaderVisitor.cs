@@ -12,15 +12,29 @@ public sealed class ReaderVisitor : SQLiteParserBaseVisitor<FakeDbReader>
         _db = db;
     }
 
-    public override FakeDbReader VisitTable_or_subquery(SQLiteParser.Table_or_subqueryContext context)
+    public override FakeDbReader VisitSelect_core(SQLiteParser.Select_coreContext context)
     {
-        var tableNameContext = context.table_name().GetText();
-        var table = _db[tableNameContext];
-        _defaultResult = new FakeDbReader(
-            new QueryResult(table.Schema,
-                table.Select(row =>
-                    row.Data.ToList()).ToList()));
+        var tableName = context.table_or_subquery().Single().table_name().GetText();
+        var dbTable = _db[tableName];
+        var dbSchema = dbTable.Schema;
+        var arr = context.result_column();
 
-        return DefaultResult;
+        var selectedIndices = arr.Length == 1 && arr[0].GetText() == "*"
+            ? Enumerable.Range(0, dbSchema.Length)
+            : arr.Select(col => Array.FindIndex(dbSchema,
+                    field => field.Name == col.GetText()))
+                .ToArray();
+
+        var table = dbTable
+            .Select(dbRow => selectedIndices
+                .Select(column => dbRow.Data[column])
+                .ToList())
+            .ToList();
+        var schema = selectedIndices
+            .Select(column => dbSchema[column])
+            .ToArray();
+        return _defaultResult = new FakeDbReader(
+            new QueryResult(schema, table));
     }
+
 }

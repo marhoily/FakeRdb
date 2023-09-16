@@ -15,4 +15,11 @@ public sealed class SimpleSelectTests : ComparisonTests
         Sut.Seed3Albums();
         AssertReadersMatch("SELECT * FROM Album");
     }
+    [Fact]
+    public void Select_OneColumn()
+    {
+        Prototype.Seed3Albums();
+        Sut.Seed3Albums();
+        AssertReadersMatch("SELECT Title FROM Album");
+    }
 }
