@@ -110,7 +110,14 @@ namespace FakeRdb
                 "Artist TEXT, " +
                 "Year INTEGER)";
             createTable.ExecuteNonQuery();
-            fakeDb.Single().Key.Should().Be("Album");
+            var table = fakeDb["Album"];
+            table.Schema.Should().BeEquivalentTo(new[]
+            {
+                new Field("Id", typeof(int)),
+                new Field("Title", typeof(string)),
+                new Field("Artist", typeof(string)),
+                new Field("Year", typeof(int)),
+            });
         }
     }
 }
