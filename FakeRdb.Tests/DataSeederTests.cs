@@ -1,6 +1,6 @@
 using FluentAssertions;
 
-namespace FakeRdb;
+namespace FakeRdb.Tests;
 
 public sealed class DataSeederTests 
 {

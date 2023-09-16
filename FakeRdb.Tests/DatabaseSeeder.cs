@@ -1,6 +1,6 @@
 using System.Data.Common;
 
-namespace FakeRdb;
+namespace FakeRdb.Tests;
 
 public static class DatabaseSeeder
 {

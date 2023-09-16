@@ -3,7 +3,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.7.34031.279
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FakeRdb", "FakeRdb\FakeRdb.csproj", "{8AF47CE1-F3A9-4C40-B1BE-74F8DBE9B6DB}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FakeRdb", "FakeRdb\FakeRdb.csproj", "{352B1019-1FB0-401B-A32D-E148A3501D45}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FakeRdb.Tests", "FakeRdb.Tests\FakeRdb.Tests.csproj", "{C0C6F567-D2FB-4800-95AF-8813B3116D91}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -11,10 +13,14 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{8AF47CE1-F3A9-4C40-B1BE-74F8DBE9B6DB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{8AF47CE1-F3A9-4C40-B1BE-74F8DBE9B6DB}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{8AF47CE1-F3A9-4C40-B1BE-74F8DBE9B6DB}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{8AF47CE1-F3A9-4C40-B1BE-74F8DBE9B6DB}.Release|Any CPU.Build.0 = Release|Any CPU
+		{352B1019-1FB0-401B-A32D-E148A3501D45}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{352B1019-1FB0-401B-A32D-E148A3501D45}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{352B1019-1FB0-401B-A32D-E148A3501D45}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{352B1019-1FB0-401B-A32D-E148A3501D45}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C0C6F567-D2FB-4800-95AF-8813B3116D91}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C0C6F567-D2FB-4800-95AF-8813B3116D91}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C0C6F567-D2FB-4800-95AF-8813B3116D91}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C0C6F567-D2FB-4800-95AF-8813B3116D91}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

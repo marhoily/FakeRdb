@@ -3,7 +3,7 @@ using System.Text.RegularExpressions;
 using FluentAssertions;
 using Microsoft.Data.Sqlite;
 
-namespace FakeRdb;
+namespace FakeRdb.Tests;
 
 public abstract class ComparisonTests : IDisposable
 {

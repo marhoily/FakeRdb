@@ -1,5 +1,5 @@
 
-namespace FakeRdb
+namespace FakeRdb.Tests
 {
     public sealed class SimpleSelectTests : ComparisonTests
     {
