@@ -20,7 +20,7 @@ namespace FakeRdb
         [Fact]
         public void Select_EveryColumn()
         {
-            _db["tracks"] = new Table
+            _db["tracks"] = new Table(Array.Empty<Field>())
             {
                 new object[] { 1 }
             };
@@ -45,20 +45,25 @@ namespace FakeRdb
 
             // Act
             using var cmd = connection.CreateCommand();
-            cmd.CommandText = "SELECT Title, Artist, Year " +
+            cmd.CommandText = "SELECT Year " +
                               "FROM Album";
+            
             using var reader = cmd.ExecuteReader();
+
+            _db["tracks"] = new Table(
+                new[] { new Field("Year", typeof(long)) })
+            {
+                new object[] { 2021L },
+                new object[] { 2022L },
+                new object[] { 2023L },
+            };
+            var result = _db.ExecuteReader(
+                """
+                SELECT Year
+                FROM tracks
+                """);
             // Assert
-            reader.ShouldEqual(new FakeDbReader(
-                new QueryResult(new []{
-                    new Field("Title", typeof(string)),
-                    new Field("Artist", typeof(string)),
-                    new Field("Year", typeof(long))
-                }, new List<List<object?>>{ 
-                    new() {"Track 1", "Artist 1", 2021},
-                    new() {"Track 2", "Artist 2", 2022},
-                    new() {"Track 3", "Artist 3", 2023},
-                })));
+            reader.ShouldEqual(result);
             return;
 
             void InsertTracks(SqliteCommand insertRow, string title, string artist, int year)

@@ -4,11 +4,11 @@ using System.Data.Common;
 namespace FakeRdb;
 public sealed record Field(string Name, Type FieldType);
 
-public sealed record QueryResult(Field[] Schema, List<List<object?>> Data); 
+public sealed record QueryResult(Field[] Schema, List<List<object?>> Data);
 
 public sealed class FakeDbReader : DbDataReader
 {
-   private readonly QueryResult _queryResult;
+    private readonly QueryResult _queryResult;
     private int _currentRow = -1;
 
     public FakeDbReader(QueryResult queryResult)
