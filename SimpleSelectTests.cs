@@ -39,61 +39,26 @@ namespace FakeRdb
         [Fact]
         public void FactMethodName()
         {
+            var sql = "SELECT Year FROM Album";
+
             using var connection = new SqliteConnection("Data Source=:memory:");
             connection.Open();
-            SetUp();
+            connection.Seed3Albums();
 
             using var cmd = connection.CreateCommand();
-            cmd.CommandText = "SELECT Year " +
-                              "FROM Album";
+            cmd.CommandText = sql;
 
             using var reader = cmd.ExecuteReader();
 
-            _db["tracks"] = new Table(
+            _db["Album"] = new Table(
                 new[] { new Field("Year", typeof(long)) })
             {
                 new object[] { 2021L },
                 new object[] { 2022L },
                 new object[] { 2023L },
             };
-            var result = _db.ExecuteReader(
-                """
-                SELECT Year
-                FROM tracks
-                """);
-
+            var result = _db.ExecuteReader(sql);
             reader.ShouldEqual(result);
-            return;
-
-            void InsertTracks(SqliteCommand insertRow, string title, string artist, int year)
-            {
-                insertRow.Parameters.AddWithValue("@Title", title);
-                insertRow.Parameters.AddWithValue("@Artist", artist);
-                insertRow.Parameters.AddWithValue("@Year", year);
-                insertRow.ExecuteNonQuery();
-                insertRow.Parameters.Clear();
-            }
-
-            void SetUp()
-            {
-                using var createTable = connection.CreateCommand();
-                createTable.CommandText =
-                    "CREATE TABLE Album (" +
-                    "Id INTEGER PRIMARY KEY AUTOINCREMENT, " +
-                    "Title TEXT, " +
-                    "Artist TEXT, " +
-                    "Year INTEGER)";
-                createTable.ExecuteNonQuery();
-                using var insertRow = connection.CreateCommand();
-                insertRow.CommandText =
-                    "INSERT INTO Album (Title, Artist, Year) " +
-                    "VALUES (@Title, @Artist, @Year)";
-
-                InsertTracks(insertRow, "Track 1", "Artist 1", 2021);
-                InsertTracks(insertRow, "Track 2", "Artist 2", 2022);
-                InsertTracks(insertRow, "Track 3", "Artist 3", 2023);
-            }
-
         }
 
     }

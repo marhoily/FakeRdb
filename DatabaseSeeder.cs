@@ -4,7 +4,7 @@ namespace FakeRdb;
 
 public static class DatabaseSeeder
 {
-    public static void SeedWith3Albums(this DbConnection connection)
+    public static void Seed3Albums(this DbConnection connection)
     {
         var factory = DbProviderFactories.GetFactory(connection) 
                       ?? throw new InvalidOperationException();

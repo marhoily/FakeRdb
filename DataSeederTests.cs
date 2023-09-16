@@ -13,9 +13,9 @@ public sealed class DataSeederTests
     }
 
     [Fact]
-    public void SeedWith3Albums_Should_Create_Correct_Schema()
+    public void Seed3Albums_Should_Create_Correct_Schema()
     {
-        _connection.SeedWith3Albums();
+        _connection.Seed3Albums();
         _fakeDb["Album"].Schema.Should().BeEquivalentTo(new[]
         {
             new Field("Id", typeof(int)),
@@ -26,9 +26,9 @@ public sealed class DataSeederTests
          
     }
     [Fact]
-    public void SeedWith3Albums_Should_Populate_Correct_Data()
+    public void Seed3Albums_Should_Populate_Correct_Data()
     {
-        _connection.SeedWith3Albums();
+        _connection.Seed3Albums();
 
         _fakeDb["Album"].Should().BeEquivalentTo(new[]
         {
