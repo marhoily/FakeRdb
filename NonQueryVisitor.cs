@@ -15,19 +15,22 @@ public sealed class NonQueryVisitor : SQLiteParserBaseVisitor<int>
     {
         var tableName = context.table_name().GetText();
         var table = _db[tableName];
-        var sqlFields = context.column_name()
-            .Select(c => table.GetColumn(c.GetText())).ToArray();
+        //var sqlFields = context.column_name()
+        //    .Select(c => table.GetColumn(c.GetText())).ToArray();
         if (context.values_clause() is not { } values) return base.VisitInsert_stmt(context);
         var sqlRows = values.value_row();
         var valueSelectors = table.Schema
             .Select(field =>
             {
-                var idx = Array.FindIndex(sqlFields, f => f.Name == field.Name);
+                var idx = Array.FindIndex(context.column_name(), col => col.GetText() == field.Name);
                 if (idx != -1)
                 {
                     return rowIndex => sqlRows[rowIndex].expr(idx).Resolve(_parameters);
                 }
-                return new Func<int, object?>(_ => Activator.CreateInstance(field.FieldType));
+                if (field.IsAutoincrement)
+                    return new Func<int, object?>(_ => table.Autoincrement());
+
+                return _ => Activator.CreateInstance(field.FieldType);
             })
             .ToArray();
 
@@ -44,7 +47,8 @@ public sealed class NonQueryVisitor : SQLiteParserBaseVisitor<int>
         var tableName = context.table_name().GetText();
         var fields = context.column_def().Select(col =>
                 new Field(col.column_name().GetText(),
-                    col.type_name().ToRuntimeType()))
+                    col.type_name().ToRuntimeType(),
+                    col.column_constraint().Any(c => c.AUTOINCREMENT_() != null)))
             .ToArray();
         _db.Add(tableName, new Table(fields));
         return base.VisitCreate_table_stmt(context);

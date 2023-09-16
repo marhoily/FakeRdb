@@ -34,11 +34,11 @@ public sealed class ReaderVisitor : SQLiteParserBaseVisitor<FakeDbReader>
     public override FakeDbReader VisitTable_or_subquery(SQLiteParser.Table_or_subqueryContext context)
     {
         var tableNameContext = context.table_name().GetText();
-        Table table = _db[tableNameContext];
+        var table = _db[tableNameContext];
         _defaultResult = new FakeDbReader(
             new QueryResult(table.Schema, 
                 table.Select(row => 
-                    row.Data.Cast<object?>().ToList()).ToList()));
+                    row.Data.ToList()).ToList()));
             
         return DefaultResult;
     }
