@@ -127,6 +127,13 @@ namespace FakeRdb
             InsertTracks(insertRow, "Track 1", "Artist 1", 2021);
             InsertTracks(insertRow, "Track 2", "Artist 2", 2022);
             InsertTracks(insertRow, "Track 3", "Artist 3", 2023);
+
+            table.Should().BeEquivalentTo(new[]
+            {
+                new Row(table, new object[] { 0, "Track 1", "Artist 1", 2021L }),
+                new Row(table, new object[] { 0, "Track 2", "Artist 2", 2022L }),
+                new Row(table, new object[] { 0, "Track 3", "Artist 3", 2023L }),
+            });
             return;
 
             static void InsertTracks(FakeDbCommand cmd, string title, string artist, int year)
