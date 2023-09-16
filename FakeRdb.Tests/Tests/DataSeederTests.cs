@@ -14,7 +14,7 @@ public sealed class DataSeederTests
     public void Seed3Albums_Should_Create_Correct_Schema()
     {
         _connection.Seed3Albums();
-        _fakeDb["Album"].Schema.Should().BeEquivalentTo(new[]
+        _fakeDb["Album"].Schema.Columns.Should().BeEquivalentTo(new[]
         {
             new Field("Id", typeof(long), true),
             new Field("Title", typeof(string)),

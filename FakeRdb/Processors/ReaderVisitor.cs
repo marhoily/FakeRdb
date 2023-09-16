@@ -20,10 +20,8 @@ public sealed class ReaderVisitor : SQLiteParserBaseVisitor<FakeDbReader>
         var arr = context.result_column();
 
         var selectedIndices = arr.Length == 1 && arr[0].GetText() == "*"
-            ? Enumerable.Range(0, dbSchema.Length)
-            : arr.Select(col => Array.FindIndex(dbSchema,
-                    field => field.Name == col.GetText()))
-                .ToArray();
+            ? Enumerable.Range(0, dbSchema.Columns.Length)
+            : arr.Select(col => dbSchema.IndexOf(col.GetText())).ToArray();
 
         var table = dbTable
             .Select(dbRow => selectedIndices
@@ -31,7 +29,7 @@ public sealed class ReaderVisitor : SQLiteParserBaseVisitor<FakeDbReader>
                 .ToList())
             .ToList();
         var schema = selectedIndices
-            .Select(column => dbSchema[column])
+            .Select(column => dbSchema.Columns[column])
             .ToArray();
         return _defaultResult = new FakeDbReader(
             new QueryResult(schema, table));

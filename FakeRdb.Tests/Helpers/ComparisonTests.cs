@@ -47,6 +47,11 @@ public abstract class ComparisonTests : IDisposable
         {
             "SQLite Error 1: 'no such table: (?<t>\\w+)'.",
             "The given key '(?<t>\\w+)' was not present in the dictionary."
+        },
+        new[]
+        {
+            "SQLite Error 1: 'no such column: (?<t>\\w+)'.",
+            "Column (?<t>\\w+) is not found"
         }
     };
     // Makes sure actual error either matches the expected completely,

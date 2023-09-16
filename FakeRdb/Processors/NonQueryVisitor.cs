@@ -17,7 +17,7 @@ public sealed class NonQueryVisitor : SQLiteParserBaseVisitor<int>
         var table = _db[tableName];
         if (context.values_clause() is not { } values) return base.VisitInsert_stmt(context);
         var sqlRows = values.value_row();
-        var valueSelectors = table.Schema
+        var valueSelectors = table.Schema.Columns
             .Select(field =>
             {
                 var idx = Array.FindIndex(context.column_name(), col => col.GetText() == field.Name);
@@ -48,7 +48,7 @@ public sealed class NonQueryVisitor : SQLiteParserBaseVisitor<int>
                     col.type_name().ToRuntimeType(),
                     col.column_constraint().Any(c => c.AUTOINCREMENT_() != null)))
             .ToArray();
-        _db.Add(tableName, new Table(fields));
+        _db.Add(tableName, new Table(new TableSchema(fields)));
         return base.VisitCreate_table_stmt(context);
     }
 }
