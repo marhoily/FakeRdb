@@ -50,12 +50,46 @@ public abstract class ComparisonTests : IDisposable
     };
     // Makes sure actual error either matches the expected completely,
     // or equivalent to any of it counterparts in the lookup table, using Regex
-    private static void AssertErrorsMatch(string expected, string actual)
+    protected static void AssertErrorsMatch(string expected, string actual)
     {
         if (expected == actual) return;
-        var equivalenceClass = ErrorEquivalenceTable.FirstOrDefault(
-            errorSet => errorSet.Any(errorPattern => Regex.IsMatch(expected, errorPattern)));
-        equivalenceClass.Should().NotBeNull($"Expected error is NOT found!\n{expected}");
-        equivalenceClass.Should().Contain(errorPattern => Regex.IsMatch(actual, errorPattern));
+        var (equivalenceClass, expectedMatch) = ErrorEquivalenceTable
+            .Select(errorSet => (errorSet, match: errorSet.FindMatch(expected)))
+            .FirstOrDefault(t => t.match != null);
+        if (equivalenceClass == null || expectedMatch == null)
+        {
+            Assert.Fail($"""
+                         Expected error equivalence class is NOT found!
+                         {expected}
+                         """);
+        }
+
+        var actualMatch = equivalenceClass.FindMatch(actual);
+        if (actualMatch == null)
+        {
+            Assert.Fail(
+                $"""
+                 Actual error message does not fit the equivalence class!
+
+                 Equivalence class:
+                 {string.Join("\n", equivalenceClass)}
+
+                 Actual error message:
+                 {actual}
+                 """);
+        }
+
+        var expectedGroups = expectedMatch.Groups
+            .Cast<Group>()
+            .Where(group => group.Name != "0")
+            .Select(group => new { groupName = group.Name, group.Value });
+
+        var actualGroups = actualMatch.Groups
+            .Cast<Group>()
+            .Where(group => group.Name != "0")
+            .Select(group => new { groupName = group.Name, group.Value });
+
+        actualGroups.Should().BeEquivalentTo(expectedGroups,
+            options => options.WithStrictOrdering());
     }
 }
