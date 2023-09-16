@@ -8,6 +8,12 @@ public abstract class ComparisonTests : IDisposable
     protected DbConnection Prototype { get; } = new SqliteConnection("Data Source=:memory:");
     protected DbConnection Sut { get; } = new FakeDbConnection(new FakeDb());
 
+    protected ComparisonTests()
+    {
+        Prototype.Open();
+        Sut.Open();
+    }
+
     public void Dispose()
     {
         Prototype.Dispose();

@@ -6,7 +6,6 @@ public static class DatabaseSeeder
 {
     public static DbConnection Seed3Albums(this DbConnection connection)
     {
-        connection.Open();
         var factory = DbProviderFactories.GetFactory(connection) 
                       ?? throw new InvalidOperationException();
         using var createTable = connection.CreateCommand();
