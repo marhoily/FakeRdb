@@ -14,7 +14,7 @@ public sealed class ReaderVisitor : SQLiteParserBaseVisitor<FakeDbReader>
 
     public override FakeDbReader VisitSelect_core(SQLiteParser.Select_coreContext context)
     {
-        var tableName = context.table_or_subquery().Single().table_name().GetText();
+        var tableName = context.table_or_subquery().Single().table_name().GetText().Unescape();
         var dbTable = _db[tableName];
         var dbSchema = dbTable.Schema;
         var arr = context.result_column();

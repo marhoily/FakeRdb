@@ -49,4 +49,11 @@ public sealed class SimpleSelectTests : ComparisonTests
         Sut.Seed3Albums();
         AssertReadersMatch("SELECT [title] FROM Album");
     }
+    [Fact]
+    public void Select_Escaped_Table()
+    {
+        Prototype.Seed3Albums();
+        Sut.Seed3Albums();
+        AssertReadersMatch("SELECT `title` FROM `Album`");
+    }
 }
