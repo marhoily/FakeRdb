@@ -21,7 +21,7 @@ public sealed class ReaderVisitor : SQLiteParserBaseVisitor<FakeDbReader>
 
         var selectedIndices = arr.Length == 1 && arr[0].GetText() == "*"
             ? Enumerable.Range(0, dbSchema.Columns.Length).ToArray()
-            : arr.Select(col => dbSchema.IndexOf(col.GetText())).ToArray();
+            : arr.Select(col => dbSchema.IndexOf(col.GetColumnName())).ToArray();
         if (selectedIndices.Length == 0) 
             throw new InvalidOperationException($"No columns selected from table: {tableName}");
         var table = dbTable
