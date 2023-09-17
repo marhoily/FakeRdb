@@ -23,7 +23,7 @@ public sealed class NonQueryVisitor : SQLiteParserBaseVisitor<int>
                 var idx = Array.FindIndex(context.column_name(), col => col.GetText() == field.Name);
                 if (idx != -1)
                 {
-                    return rowIndex => sqlRows[rowIndex].expr(idx).Resolve(_parameters);
+                    return rowIndex => sqlRows[rowIndex].expr(idx).Resolve(_parameters, field.FieldType);
                 }
                 if (field.IsAutoincrement)
                     return new Func<int, object?>(_ => table.Autoincrement());

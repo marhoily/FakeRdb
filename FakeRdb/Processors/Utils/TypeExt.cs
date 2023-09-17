@@ -8,6 +8,7 @@ public static class TypeExt
         {
             "TEXT" => typeof(string),
             "INTEGER" => typeof(long),
+            "NUMERIC" => typeof(decimal),
             var x => throw new ArgumentOutOfRangeException(x)
         };
     }
