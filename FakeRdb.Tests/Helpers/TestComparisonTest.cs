@@ -1,9 +1,14 @@
+using Xunit.Abstractions;
 using Xunit.Sdk;
 
 namespace FakeRdb.Tests;
 
 public sealed class TestComparisonTest : ComparisonTests
 {
+    public TestComparisonTest(ITestOutputHelper output) : base(output)
+    {
+    }
+
     [Fact]
     public void AssertErrorsMatch_Should_Check_Regex_Groups()
     {

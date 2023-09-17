@@ -1,17 +1,21 @@
+using Xunit.Abstractions;
+
 namespace FakeRdb.Tests;
 
 //Assuming I want to compare the readers as well as possible, am I missing anything?
 // #nullable enable
 public static class DbDataReaderExtensions
 {
-    public static void ShouldEqual(this DbDataReader actual, DbDataReader expected)
+    public static void ShouldEqual(this DbDataReader actual, DbDataReader expected, ITestOutputHelper outputHelper)
     {
         actual.IsClosed.Should().BeFalse();
         expected.IsClosed.Should().BeFalse();
         expected.RecordsAffected.Should().Be(actual.RecordsAffected);
-        expected.GetSchema().Should().BeEquivalentTo(
+        var expectedSchema = expected.GetSchema().ToList();
+        expectedSchema.Should().BeEquivalentTo(
             actual.GetSchema(), opt => opt.WithStrictOrdering());
-        expected.ReadData().Should().BeEquivalentTo(actual.ReadData(),
+        var expectedData = expected.ReadData();
+        expectedData.Should().BeEquivalentTo(actual.ReadData(),
             opt => opt
                 .WithStrictOrdering()
                 .Using<double>(ctx => ctx.Subject.Should()
@@ -20,6 +24,35 @@ public static class DbDataReaderExtensions
                 .Using<float>(ctx => ctx.Subject.Should()
                     .BeApproximately(ctx.Expectation, 1e-4f))
                 .WhenTypeIs<float>());
+        outputHelper.PrintOut(expectedSchema, expectedData);
+    }
+
+    // Prints nicely formatted markdown-style table
+    private static void PrintOut(this ITestOutputHelper output, 
+        List<(Type ColumnType, string ColumnName)> headers, 
+        List<List<object?>> rows)
+    {
+        var columnCount = headers.Count;
+
+        // Calculate the maximum width for each column
+        var columnWidths = new int[columnCount];
+        for (var i = 0; i < columnCount; i++)
+        {
+            var maxColumnWidth = Math.Max(headers[i].ColumnName.Length, rows.Select(row => row[i]?.ToString()?.Length ?? 0).Max());
+            columnWidths[i] = maxColumnWidth;
+        }
+
+        // Build the header row
+        var headerRow = "|" + string.Join("|", headers.Select((header, i) => header.ColumnName.PadRight(columnWidths[i]))) + "|";
+        var headerSeparator = "|" + string.Join("|", columnWidths.Select(width => new string('-', width))) + "|";
+
+        // Build the data rows
+        var dataRows = rows.Select(row => "|" + string.Join("|", row.Select((data, i) => (data?.ToString() ?? string.Empty).PadRight(columnWidths[i]))) + "|").ToList();
+
+        // Combine all rows into the table content
+        var tableContent = string.Join(Environment.NewLine, new[] { headerRow, headerSeparator }.Concat(dataRows));
+
+        output.WriteLine(tableContent);
     }
 
     private static IEnumerable<(Type, string)> GetSchema(this DbDataReader reader)

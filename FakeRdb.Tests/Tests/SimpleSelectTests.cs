@@ -1,7 +1,13 @@
+using Xunit.Abstractions;
+
 namespace FakeRdb.Tests;
 
 public sealed class SimpleSelectTests : ComparisonTests
 {
+    public SimpleSelectTests(ITestOutputHelper output) : base(output)
+    {
+    }
+
     [Fact]
     public void Table_Not_Found()
     {
@@ -28,5 +34,12 @@ public sealed class SimpleSelectTests : ComparisonTests
         Prototype.Seed3Albums();
         Sut.Seed3Albums();
         AssertReadersMatch("SELECT Wrong FROM Album");
+    }
+    [Fact]
+    public void Select_CaseSensitive_Column()
+    {
+        Prototype.Seed3Albums();
+        Sut.Seed3Albums();
+        AssertReadersMatch("SELECT title FROM Album");
     }
 }

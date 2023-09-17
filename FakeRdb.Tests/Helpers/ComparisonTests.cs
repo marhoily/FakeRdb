@@ -1,15 +1,18 @@
 using System.Text.RegularExpressions;
 using Microsoft.Data.Sqlite;
+using Xunit.Abstractions;
 
 namespace FakeRdb.Tests;
 
 public abstract class ComparisonTests : IDisposable
 {
+    private readonly ITestOutputHelper _output;
     protected DbConnection Prototype { get; } = new SqliteConnection("Data Source=:memory:");
     protected DbConnection Sut { get; } = new FakeDbConnection(new FakeDb());
 
-    protected ComparisonTests()
+    protected ComparisonTests(ITestOutputHelper output)
     {
+        _output = output;
         Prototype.Open();
         Sut.Open();
     }
@@ -37,7 +40,7 @@ public abstract class ComparisonTests : IDisposable
         }
         else
         {
-            reader!.ShouldEqual(result!);
+            reader!.ShouldEqual(result!, _output);
         }
     }
 
