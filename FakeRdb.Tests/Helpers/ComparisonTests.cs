@@ -38,6 +38,11 @@ public abstract class ComparisonTests : IDisposable
             x2.Should().NotBeNull();
             AssertErrorsMatch(x1.Message, x2!.Message);
         }
+        else if (x2 != null)
+        {
+            Assert.Fail("While prototype DB ran without errors, " +
+                        "FakeDb gave this one:\n\n" + x2);
+        }
         else
         {
             reader!.ShouldEqual(result!, _output);
