@@ -1,9 +1,7 @@
-using Xunit.Abstractions;
+﻿using Xunit.Abstractions;
 
 namespace FakeRdb.Tests;
 
-//Assuming I want to compare the readers as well as possible, am I missing anything?
-// #nullable enable
 public static class DbDataReaderExtensions
 {
     public static void ShouldEqual(this DbDataReader actual, DbDataReader expected, ITestOutputHelper outputHelper)
@@ -12,10 +10,13 @@ public static class DbDataReaderExtensions
         expected.IsClosed.Should().BeFalse();
         expected.RecordsAffected.Should().Be(actual.RecordsAffected);
         var expectedSchema = expected.GetSchema().ToList();
-        expectedSchema.Should().BeEquivalentTo(
-            actual.GetSchema(), opt => opt.WithStrictOrdering());
+        actual.GetSchema().Should().BeEquivalentTo(
+            expectedSchema, opt => opt.WithStrictOrdering());
         var expectedData = expected.ReadData();
-        expectedData.Should().BeEquivalentTo(actual.ReadData(),
+        outputHelper.PrintOut(expectedSchema
+            .Select(c => c.ColumnName)
+            .ToList(), expectedData);
+        actual.ReadData().Should().BeEquivalentTo(expectedData,
             opt => opt
                 .WithStrictOrdering()
                 .Using<double>(ctx => ctx.Subject.Should()
@@ -24,42 +25,41 @@ public static class DbDataReaderExtensions
                 .Using<float>(ctx => ctx.Subject.Should()
                     .BeApproximately(ctx.Expectation, 1e-4f))
                 .WhenTypeIs<float>());
-        outputHelper.PrintOut(expectedSchema, expectedData);
     }
 
-    // Prints nicely formatted markdown-style table
-    private static void PrintOut(this ITestOutputHelper output, 
-        List<(Type ColumnType, string ColumnName)> headers, 
+    private static void PrintOut(this ITestOutputHelper output,
+        List<string> headers,
         List<List<object?>> rows)
     {
-        var columnCount = headers.Count;
+        var widths = Enumerable.Range(0, headers.Count)
+            .Select(i => Math.Max(
+                headers[i].Length,
+                rows.Select(row => row[i]?.ToString()?.Length ?? 0).Max()))
+            .ToArray();
 
-        // Calculate the maximum width for each column
-        var columnWidths = new int[columnCount];
-        for (var i = 0; i < columnCount; i++)
-        {
-            var maxColumnWidth = Math.Max(headers[i].ColumnName.Length, rows.Select(row => row[i]?.ToString()?.Length ?? 0).Max());
-            columnWidths[i] = maxColumnWidth;
-        }
+        var h = headers.Select((header, i) => header.PadRight(widths[i]));
+        var header = "│ " + string.Join(" │ ", h) + " │";
+        var top = Border("┌─┬┐");
+        var bottom = Border("└─┴┘");
+        var separator = Border("├─┼┤");      
+        var dataRows = rows.Select(row => "│ " + string.Join(" │ ", RowData(row)) + " │");
 
-        // Build the header row
-        var headerRow = "|" + string.Join("|", headers.Select((header, i) => header.ColumnName.PadRight(columnWidths[i]))) + "|";
-        var headerSeparator = "|" + string.Join("|", columnWidths.Select(width => new string('-', width))) + "|";
+        output.WriteLine(string.Join(Environment.NewLine,
+            new[] { top, header, separator}
+                .Concat(dataRows).Append(bottom)));
+        return;
 
-        // Build the data rows
-        var dataRows = rows.Select(row => "|" + string.Join("|", row.Select((data, i) => (data?.ToString() ?? string.Empty).PadRight(columnWidths[i]))) + "|").ToList();
-
-        // Combine all rows into the table content
-        var tableContent = string.Join(Environment.NewLine, new[] { headerRow, headerSeparator }.Concat(dataRows));
-
-        output.WriteLine(tableContent);
+        string Border(string map) => map[0] + string.Join(map[2], widths.Select(width => new string(map[1], width + 2))) + map[3];
+        IEnumerable<string> RowData(IEnumerable<object?> row) =>
+            row.Select((data, i) =>
+                (data?.ToString() ?? "").PadRight(widths[i]));
     }
 
-    private static IEnumerable<(Type, string)> GetSchema(this DbDataReader reader)
+    private static IEnumerable<(string, string ColumnName)> GetSchema(this DbDataReader reader)
     {
         for (var i = 0; i < reader.FieldCount; i++)
         {
-            yield return (reader.GetFieldType(i), reader.GetName(i));
+            yield return (reader.GetDataTypeName(i), reader.GetName(i));
         }
     }
 
@@ -71,7 +71,11 @@ public static class DbDataReaderExtensions
             var row = new List<object?>();
             for (var i = 0; i < reader.FieldCount; i++)
             {
-                var value = reader.GetValue(i);
+                var value = reader.GetDataTypeName(i) switch
+                {
+                    "NUMERIC" => reader.GetDecimal(i),
+                    _ => reader.GetValue(i),
+                };
                 row.Add(value == DBNull.Value ? null : value);
             }
             rows.Add(row);

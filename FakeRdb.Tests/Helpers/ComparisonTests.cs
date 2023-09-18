@@ -28,11 +28,11 @@ public abstract class ComparisonTests : IDisposable
     {
         var cmd1 = Prototype.CreateCommand();
         cmd1.CommandText = sql;
-        var (reader, x1) = cmd1.SafeExecuteReader();
+        var (expected, x1) = cmd1.SafeExecuteReader();
 
         var cmd2 = Sut.CreateCommand();
         cmd2.CommandText = sql;
-        var (result, x2) = cmd2.SafeExecuteReader();
+        var (actual, x2) = cmd2.SafeExecuteReader();
         if (x1 != null)
         {
             x2.Should().NotBeNull();
@@ -45,7 +45,7 @@ public abstract class ComparisonTests : IDisposable
         }
         else
         {
-            reader!.ShouldEqual(result!, _output);
+            actual!.ShouldEqual(expected!, _output);
         }
     }
 

@@ -45,6 +45,7 @@ public sealed class NonQueryVisitor : SQLiteParserBaseVisitor<int>
         var tableName = context.table_name().GetText();
         var fields = context.column_def().Select(col =>
                 new Field(col.column_name().GetText(),
+                    col.type_name().GetText(),
                     col.type_name().ToRuntimeType(),
                     col.column_constraint().Any(c => c.AUTOINCREMENT_() != null)))
             .ToArray();

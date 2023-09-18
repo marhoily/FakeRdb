@@ -64,7 +64,7 @@ public static class DatabaseSeeder
             
             -- Insert records into the 'orders' table
             INSERT INTO orders (order_id, customer_id, order_date, total_amount) VALUES
-                (1, 1, '2023-09-01', 100.00),
+                (1, 1, '2023-09-01', 100.20),
                 (2, 1, '2023-09-05', 250.00),
                 (3, 2, '2023-09-10', 150.00);
             """;

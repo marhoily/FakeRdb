@@ -16,10 +16,10 @@ public sealed class DataSeederTests
         _connection.Seed3Albums();
         _fakeDb["Album"].Schema.Columns.Should().BeEquivalentTo(new[]
         {
-            new Field("Id", typeof(long), true),
-            new Field("Title", typeof(string)),
-            new Field("Artist", typeof(string)),
-            new Field("Year", typeof(long)),
+            new Field("Id", "INTEGER", typeof(long), true),
+            new Field("Title", "TEXT", typeof(string)),
+            new Field("Artist", "TEXT", typeof(string)),
+            new Field("Year", "INTEGER", typeof(long)),
         });
 
     }
