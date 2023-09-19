@@ -33,4 +33,15 @@ public sealed class UpdateTests : ComparisonTests
         AssertReadersMatch("select * from orders");
 
     }
+
+    [Fact]
+    public void ColumnName_In_RValue()
+    {
+        AssertReadersMatch("""
+                           UPDATE orders
+                           SET total_amount = total_amount * 1.10; -- Increase all order totals by 10%
+                           """);
+        AssertReadersMatch("select * from orders");
+
+    }
 }
