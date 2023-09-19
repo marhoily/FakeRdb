@@ -54,14 +54,14 @@ public sealed class FakeDb : Dictionary<string, Table>
     }
     public int Update(
         string tableName,
-        (string column, object? value)[] assignments,
+        (string column, Expression value)[] assignments,
         Func<Row, bool>? filter)
     {
         var table = this[tableName] ?? throw new ArgumentOutOfRangeException(nameof(tableName));
         var schema = table.Schema;
         var compiled = assignments.Select(x =>
             (column: schema.IndexOf(x.column),
-             value: Convert.ChangeType(x.value, schema[x.column].FieldType)))
+             value: x.value.BindTarget(schema[x.column])))
             .ToArray();
         var counter = 0;
         foreach (var row in table)
@@ -70,7 +70,7 @@ public sealed class FakeDb : Dictionary<string, Table>
                 counter++;
                 foreach (var (column, value) in compiled)
                 {
-                    row.Data[column] = value;
+                    row.Data[column] = value.Resolve(row);
                 }
             }
         return counter;

@@ -238,7 +238,7 @@ drop_stmt:
 expr:
     literal_value
     | BIND_PARAMETER
-    | ((schema_name DOT)? table_name DOT)? column_name
+    | column_access
     | unary_operator expr
     | expr PIPE2 expr
     | expr ( STAR | DIV | MOD) expr
@@ -278,6 +278,10 @@ expr:
     | ((NOT_)? EXISTS_)? OPEN_PAR select_stmt CLOSE_PAR
     | CASE_ expr? (WHEN_ expr THEN_ expr)+ (ELSE_ expr)? END_
     | raise_function
+;
+
+column_access: 
+    ((schema_name DOT)? table_name DOT)? column_name
 ;
 
 raise_function:

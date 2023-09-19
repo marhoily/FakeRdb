@@ -8,6 +8,7 @@ public sealed class SqlVisitor : SQLiteParserBaseVisitor<IResult?>
 {
     private readonly FakeDb _db;
     private readonly FakeDbParameterCollection _parameters;
+    private Context<Table> _currentTable;
 
     public SqlVisitor(FakeDb db, FakeDbParameterCollection parameters)
     {
@@ -30,7 +31,7 @@ public sealed class SqlVisitor : SQLiteParserBaseVisitor<IResult?>
                     col.column_constraint().Any(c => c.AUTOINCREMENT_() != null)))
             .ToArray();
         _db.Add(tableName, new Table(new TableSchema(fields)));
-        return VisitChildren(context);
+        return null;
     }
 
     public override IResult? VisitInsert_stmt(SQLiteParser.Insert_stmtContext context)
@@ -44,7 +45,7 @@ public sealed class SqlVisitor : SQLiteParserBaseVisitor<IResult?>
 
         _db.Insert(tableName, columns, GetData, rows.Length);
 
-        return VisitChildren(context);
+        return null;
 
         object? GetData(int rowIndex, int idx) =>
             rows[rowIndex].expr(idx).Resolve(_parameters);
@@ -65,14 +66,53 @@ public sealed class SqlVisitor : SQLiteParserBaseVisitor<IResult?>
 
     public override IResult VisitUpdate_stmt(SQLiteParser.Update_stmtContext context)
     {
-        var table = context.qualified_table_name().GetText();
+        var tableName = context.qualified_table_name().GetText();
+        var table = _db[tableName];
+        using var _ = _currentTable.Set(table);
         var assignments = context.update_assignment()
             .Select(a => (
                 ColumnName: a.column_name().GetText(),
-                Value: a.expr().Resolve(_parameters)))
+                Value: (Expression) Visit(a.expr())!))
             .ToArray();
-        var filter = context.where_clause()?.expr().ToFilter(_db[table]);
-        var recordsAffected = _db.Update(table, assignments, filter);
+        var filter = context.where_clause()?.expr().ToFilter(table);
+        var recordsAffected = _db.Update(tableName, assignments, filter);
         return new Affected(recordsAffected);
+    }
+
+    public override IResult VisitExpr(SQLiteParser.ExprContext context)
+    {
+        if (context.BIND_PARAMETER() is { } bind)
+        {
+            return Expression.Value(_parameters[bind.GetText()].Value);
+        }
+        if (context.literal_value() is {} literal)
+        {
+            return Expression.Value(literal.GetText().Unquote());
+        }
+
+        throw new NotImplementedException(context.GetText());
+    }
+
+    public override IResult VisitColumn_access(SQLiteParser.Column_accessContext context)
+    {
+        var schema = context.schema_name()?.GetText();
+        var table = context.table_name()?.GetText() ?? _currentTable.Value;
+        var column = context.column_name().GetText();
+        return Expression.Column(_db[table].Schema[column]);
+        return base.VisitColumn_access(context);
+    }
+}
+public struct Context<T> : IDisposable
+{
+    public T? Value { get; private set; }
+    public Context<T> Set(T? value)
+    {
+        Value = value;
+        return this;
+    }
+
+    public void Dispose()
+    {
+        Value = default;
     }
 }
