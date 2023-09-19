@@ -42,6 +42,16 @@ public sealed class UpdateTests : ComparisonTests
                            SET total_amount = total_amount * 1.10; -- Increase all order totals by 10%
                            """);
         AssertReadersMatch("select * from orders");
-
     }
+    [Fact]
+    public void Update_Multiple_Fields()
+    {
+        AssertReadersMatch("""
+                           UPDATE customers
+                           SET customer_name = 'Johnny Doe', email = 'johnny.doe@example.com'
+                           WHERE customer_id = 1;
+                           """);
+        AssertReadersMatch("select * from orders");
+    }
+
 }
