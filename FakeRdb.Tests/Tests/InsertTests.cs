@@ -6,14 +6,14 @@ public sealed class InsertTests : ComparisonTests
 {
     public InsertTests(ITestOutputHelper output) : base(output)
     {
-        Prototype.Seed3Albums();
+        Sqlite.Seed3Albums();
         Sut.Seed3Albums();
     }
     
     [Fact]
     public void Insert_Expression()
     {
-        AssertReadersMatch(
+        CompareAgainstSqlite(
             "INSERT INTO Album (Title, Artist, Year) " +
             "VALUES ('blah', 'blah', 1+1)");
     }

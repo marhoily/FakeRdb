@@ -6,14 +6,14 @@ public sealed class MultiTableSelectTests : ComparisonTests
 {
     public MultiTableSelectTests(ITestOutputHelper output) : base(output)
     {
-        Prototype.SeedCustomersOrders();
+        Sqlite.SeedCustomersOrders();
         Sut.SeedCustomersOrders();
     }
 
     [Fact]
     public void Should_Fill_In_The_Tables()
     {
-        AssertReadersMatch("select * from customers");
-        AssertReadersMatch("select * from orders");
+        CompareAgainstSqlite("select * from customers");
+        CompareAgainstSqlite("select * from orders");
     }
 }

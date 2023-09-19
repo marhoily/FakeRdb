@@ -6,62 +6,62 @@ public sealed class UpdateTests : ComparisonTests
 {
     public UpdateTests(ITestOutputHelper output) : base(output)
     {
-        Prototype.SeedCustomersOrders();
+        Sqlite.SeedCustomersOrders();
         Sut.SeedCustomersOrders();
     }
 
     [Fact]
     public void UpdateEmail()
     {
-        AssertReadersMatch("""
+        CompareAgainstSqlite("""
                            UPDATE customers
                            SET email = 'new.email@example.com'
                            WHERE customer_id = 1;
                            """);
-        AssertReadersMatch("select * from customers");
+        CompareAgainstSqlite("select * from customers");
 
     }
 
     [Fact]
     public void UpdateAmount()
     {
-        AssertReadersMatch("""
+        CompareAgainstSqlite("""
                            UPDATE orders
                            SET total_amount = 300.00
                            WHERE order_id = 2;
                            """);
-        AssertReadersMatch("select * from orders");
+        CompareAgainstSqlite("select * from orders");
 
     }
 
     [Fact]
     public void ColumnName_In_RValue()
     {
-        AssertReadersMatch("""
+        CompareAgainstSqlite("""
                            UPDATE orders
                            SET total_amount = total_amount * 1.10; -- Increase all order totals by 10%
                            """);
-        AssertReadersMatch("select * from orders");
+        CompareAgainstSqlite("select * from orders");
     }
     [Fact]
     public void Update_Multiple_Fields()
     {
-        AssertReadersMatch("""
+        CompareAgainstSqlite("""
                            UPDATE customers
                            SET customer_name = 'Johnny Doe', email = 'johnny.doe@example.com'
                            WHERE customer_id = 1;
                            """);
-        AssertReadersMatch("select * from orders");
+        CompareAgainstSqlite("select * from orders");
     }
     [Fact]
     public void Based_On_Join_Condition()
     {
-        AssertReadersMatch("""
+        CompareAgainstSqlite("""
                            UPDATE customers
                            SET email = 'updated.email@example.com'
                            WHERE customer_id IN (SELECT customer_id FROM orders WHERE order_date < '2023-09-05');
                            """);
-        AssertReadersMatch("select * from orders");
+        CompareAgainstSqlite("select * from orders");
     }
 
 }

@@ -7,26 +7,26 @@ namespace FakeRdb.Tests;
 public abstract class ComparisonTests : IDisposable
 {
     private readonly ITestOutputHelper _output;
-    protected DbConnection Prototype { get; } = new SqliteConnection("Data Source=:memory:");
+    protected DbConnection Sqlite { get; } = new SqliteConnection("Data Source=:memory:");
     protected DbConnection Sut { get; } = new FakeDbConnection(new FakeDb());
 
     protected ComparisonTests(ITestOutputHelper output)
     {
         _output = output;
-        Prototype.Open();
+        Sqlite.Open();
         Sut.Open();
     }
 
     public void Dispose()
     {
-        Prototype.Dispose();
+        Sqlite.Dispose();
         Sut.Dispose();
         GC.SuppressFinalize(this);
     }
 
-    protected void AssertReadersMatch(string sql)
+    protected void CompareAgainstSqlite(string sql)
     {
-        var cmd1 = Prototype.CreateCommand();
+        var cmd1 = Sqlite.CreateCommand();
         cmd1.CommandText = sql;
         var (expected, x1) = cmd1.SafeExecuteReader();
 

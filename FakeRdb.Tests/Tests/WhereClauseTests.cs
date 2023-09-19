@@ -11,8 +11,8 @@ public sealed class WhereClauseTests : ComparisonTests
     [Fact]
     public void LessThan()
     {
-        Prototype.Seed3Albums();
+        Sqlite.Seed3Albums();
         Sut.Seed3Albums();
-        AssertReadersMatch("SELECT * FROM Album WHERE Year < 2023");
+        CompareAgainstSqlite("SELECT * FROM Album WHERE Year < 2023");
     }
 }
