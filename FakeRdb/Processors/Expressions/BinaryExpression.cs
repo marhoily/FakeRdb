@@ -48,6 +48,7 @@ public sealed class BinaryExpression : Expression
                 l == null || r == null ? null : (dynamic)l * (dynamic)r,
             Operator.Equal => Equals(l, r),
             Operator.Less => l is IComparable c ? c.CompareTo(r) == -1 : throw new NotSupportedException(),
+            Operator.Addition => l == null || r == null ? null : (dynamic)l + (dynamic)r,
             _ => throw new ArgumentOutOfRangeException(_op.ToString())
         };
 

@@ -33,13 +33,14 @@ public sealed class SqlVisitor : SQLiteParserBaseVisitor<IResult?>
         return null;
     }
 
-    public override IResult? VisitInsert_stmt(SQLiteParser.Insert_stmtContext context)
+    public override IResult VisitInsert_stmt(SQLiteParser.Insert_stmtContext context)
     {
         var valuesTable = Visit(context.values_clause()) ?? throw new InvalidOperationException();
         var tableName = context.table_name().GetText();
         var columns = context.column_name().Select(col => col.GetText()).ToArray();
-        _db.Insert(tableName, columns, (ValuesTable)valuesTable);
-        return null;
+        var values = (ValuesTable)valuesTable;
+        _db.Insert(tableName, columns, values);
+        return new Affected(values.Rows.Length);
     }
 
     public override IResult VisitValues_clause(SQLiteParser.Values_clauseContext context)
