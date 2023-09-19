@@ -77,7 +77,8 @@ public sealed class SqlVisitor : SQLiteParserBaseVisitor<IResult?>
                 ColumnName: a.column_name().GetText(),
                 Value: (Expression)Visit(a.expr())!))
             .ToArray();
-        var filter = context.where_clause()?.expr().ToFilter(table);
+        var where = context.where_clause()?.expr();
+        var filter = where == null ? null : (Expression)Visit(where)!;
         var recordsAffected = _db.Update(tableName, assignments, filter);
         return new Affected(recordsAffected);
     }

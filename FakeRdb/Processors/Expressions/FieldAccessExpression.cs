@@ -4,6 +4,7 @@ public sealed class FieldAccessExpression : Expression
 {
     private readonly Field _accessedField;
     public FieldAccessExpression(Field field) => _accessedField = field;
+    public override Type ExpressionType => _accessedField.FieldType;
 
     protected override void SetTarget(Field targetField)
     {
@@ -21,5 +22,4 @@ public sealed class FieldAccessExpression : Expression
                 "Cannot resolve value without column");
         return Convert.ChangeType(row[_accessedField], _accessedField.FieldType);
     }
-
 }

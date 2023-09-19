@@ -5,6 +5,7 @@ public sealed class BinaryExpression : Expression
     private readonly Expression _left;
     private readonly Operator _op;
     private readonly Expression _right;
+    private Type? _expressionType;
 
     public BinaryExpression(Operator op, Expression left, Expression right)
     {
@@ -25,14 +26,38 @@ public sealed class BinaryExpression : Expression
         _right.BindValue(value);
     }
 
+    public override Type ExpressionType => 
+        _expressionType ?? 
+        throw new InvalidOperationException(
+            "Cannot determine ExpressionType of a binary operation before it was resolved");
+
     public override object? Resolve(Row row)
     {
-        dynamic l = _left.Resolve(row) ?? throw new InvalidOperationException();
-        dynamic r = _right.Resolve(row) ?? throw new InvalidOperationException();
+        var l = _left.Resolve(row);
+        var r = _right.Resolve(row);
+        if (GetCoercionPriority(_left) < GetCoercionPriority(_right))
+            l = Convert.ChangeType(l, 
+                _expressionType = _right.ExpressionType);
+        else
+            r = Convert.ChangeType(r, 
+                _expressionType = _left.ExpressionType);
+
         return _op switch
         {
-            Operator.Multiplication => l * r,
-            _ => throw new ArgumentOutOfRangeException()
+            Operator.Multiplication => 
+                l == null || r == null ? null : (dynamic)l * (dynamic)r,
+            Operator.Equal => Equals(l, r),
+            _ => throw new ArgumentOutOfRangeException(_op.ToString())
         };
-    }
+
+        static int GetCoercionPriority(Expression exp) =>
+            exp switch
+            {
+                BinaryExpression => 0,
+                FieldAccessExpression => 1,
+                ValueExpression => 0,
+                _ => throw new ArgumentOutOfRangeException(nameof(exp))
+            };
+}
+
 }

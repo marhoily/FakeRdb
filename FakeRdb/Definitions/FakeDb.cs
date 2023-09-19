@@ -55,7 +55,7 @@ public sealed class FakeDb : Dictionary<string, Table>
     public int Update(
         string tableName,
         (string column, Expression value)[] assignments,
-        Func<Row, bool>? filter)
+        Expression? filter)
     {
         var table = this[tableName] ?? throw new ArgumentOutOfRangeException(nameof(tableName));
         var schema = table.Schema;
@@ -65,7 +65,7 @@ public sealed class FakeDb : Dictionary<string, Table>
             .ToArray();
         var counter = 0;
         foreach (var row in table)
-            if (filter == null || filter(row))
+            if (filter == null || filter.Resolve<bool>(row))
             {
                 counter++;
                 foreach (var (column, value) in compiled)
