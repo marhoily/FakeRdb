@@ -1,5 +1,6 @@
 namespace FakeRdb;
 
-public sealed record Field(string Name, 
+public sealed record Field(int ColumnIndex, string Name, 
     string DataType,
-    Type FieldType, bool IsAutoincrement = false);
+    Type FieldType, 
+    bool IsAutoincrement = false);

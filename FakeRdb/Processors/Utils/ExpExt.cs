@@ -11,7 +11,7 @@ public static class ExpExt
             throw new NotImplementedException();
         if (ctx.expr().Length != 2)
             throw new NotImplementedException();
-        if (ctx.expr(0).column_name() is not { } column)
+        if (ctx.expr(0).column_access() is not { } column)
             throw new NotImplementedException();
         if (ctx.expr(1).literal_value() is not { } literal)
             throw new NotImplementedException();

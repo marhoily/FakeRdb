@@ -75,4 +75,9 @@ public sealed class FakeDb : Dictionary<string, Table>
             }
         return counter;
     }
+
+    public Table? Try(string? tableName)
+    {
+        return tableName == null ? null : this[tableName];
+    }
 }

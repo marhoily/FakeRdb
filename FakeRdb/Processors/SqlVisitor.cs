@@ -24,8 +24,9 @@ public sealed class SqlVisitor : SQLiteParserBaseVisitor<IResult?>
     public override IResult? VisitCreate_table_stmt(SQLiteParser.Create_table_stmtContext context)
     {
         var tableName = context.table_name().GetText();
-        var fields = context.column_def().Select(col =>
-                new Field(col.column_name().GetText(),
+        var fields = context.column_def().Select((col, n) =>
+                new Field(n,
+                    col.column_name().GetText(),
                     col.type_name().GetText(),
                     col.type_name().ToRuntimeType(),
                     col.column_constraint().Any(c => c.AUTOINCREMENT_() != null)))
@@ -79,7 +80,7 @@ public sealed class SqlVisitor : SQLiteParserBaseVisitor<IResult?>
         return new Affected(recordsAffected);
     }
 
-    public override IResult VisitExpr(SQLiteParser.ExprContext context)
+    public override IResult? VisitExpr(SQLiteParser.ExprContext context)
     {
         if (context.BIND_PARAMETER() is { } bind)
         {
@@ -90,29 +91,16 @@ public sealed class SqlVisitor : SQLiteParserBaseVisitor<IResult?>
             return Expression.Value(literal.GetText().Unquote());
         }
 
-        throw new NotImplementedException(context.GetText());
+        return VisitChildren(context);
     }
 
     public override IResult VisitColumn_access(SQLiteParser.Column_accessContext context)
     {
-        var schema = context.schema_name()?.GetText();
-        var table = context.table_name()?.GetText() ?? _currentTable.Value;
+        var table = _db.Try(context.table_name()?.GetText()) ?? 
+                    _currentTable.Value;
         var column = context.column_name().GetText();
-        return Expression.Column(_db[table].Schema[column]);
-        return base.VisitColumn_access(context);
-    }
-}
-public struct Context<T> : IDisposable
-{
-    public T? Value { get; private set; }
-    public Context<T> Set(T? value)
-    {
-        Value = value;
-        return this;
-    }
-
-    public void Dispose()
-    {
-        Value = default;
+        if (table == null)
+            throw new InvalidOperationException("Couldn't resolve table!");
+        return Expression.Column(table.Schema[column]);
     }
 }
