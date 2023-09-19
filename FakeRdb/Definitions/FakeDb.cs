@@ -61,7 +61,8 @@ public sealed class FakeDb : Dictionary<string, Table>
         var table = this[tableName] ?? throw new ArgumentOutOfRangeException(nameof(tableName));
         var schema = table.Schema;
         var compiled = assignments.Select(x =>
-            (column: schema.IndexOf(x.column), x.value))
+            (column: schema.IndexOf(x.column),
+             value: Convert.ChangeType(x.value, schema[x.column].FieldType)))
             .ToArray();
         var counter = 0;
         foreach (var row in table)
