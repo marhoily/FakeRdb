@@ -95,8 +95,13 @@ public sealed class SqlVisitor : SQLiteParserBaseVisitor<IResult?>
         if (context.children[1] is not ITerminalNode { Symbol.Type: var operand }) return VisitChildren(context);
 
         var left = (Expression)(Visit(context.children.First()) ?? throw new NotImplementedException());
-        var right = (Expression)(Visit(context.children.Last()) ?? throw new NotImplementedException());
-        return context.ToBinaryExpression(operand, left, right);
+        var right = Visit(context.children.Last()) ?? throw new NotImplementedException();
+        if (operand == SQLiteLexer.IN_)
+        {
+            return new InExpression(left, (QueryResult)right);
+        }
+
+        return context.ToBinaryExpression(operand, left, (Expression)right);
 
     }
 
