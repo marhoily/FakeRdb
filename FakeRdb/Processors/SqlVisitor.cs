@@ -39,17 +39,19 @@ public sealed class SqlVisitor : SQLiteParserBaseVisitor<FakeDbReader>
     }
     public override FakeDbReader VisitInsert_stmt(SQLiteParser.Insert_stmtContext context)
     {
-        if (context.values_clause() is not { } values) return base.VisitInsert_stmt(context);
+        if (context.values_clause() is not { } values)
+            throw new NotImplementedException();
 
         var tableName = context.table_name().GetText();
-        var sqlRows = values.value_row();
         var columns = context.column_name().Select(col => col.GetText()).ToArray();
-        _db.Insert(tableName,
-            (rowIndex, idx) => sqlRows[rowIndex].expr(idx).Resolve(_parameters),
-            columns, 
-            sqlRows.Length);
+        var rows = values.value_row();
+
+        _db.Insert(tableName, columns, GetData, rows.Length);
        
         return base.VisitInsert_stmt(context);
+
+        object? GetData(int rowIndex, int idx) => 
+            rows[rowIndex].expr(idx).Resolve(_parameters);
     }
     public override FakeDbReader VisitCreate_table_stmt(SQLiteParser.Create_table_stmtContext context)
     {

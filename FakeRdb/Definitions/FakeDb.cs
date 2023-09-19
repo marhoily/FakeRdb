@@ -2,32 +2,33 @@ namespace FakeRdb;
 
 public sealed class FakeDb : Dictionary<string, Table>
 {
-    public void Insert(string tableName, 
-        Func<int, int, object?> cellValue,
+    public void Insert(string tableName,
         string[] columns,
+        Func<int, int, object?> cells,
         int rowCount)
     {
         var table = this[tableName];
-        var valueSelectors = table.Schema.Columns
-            .Select(field =>
-            {
-                var col = Array.IndexOf(columns, field.Name);
-                if (col != -1)
-                {
-                    return row => Convert.ChangeType(
-                        cellValue(row, col), field.FieldType);
-                }
-                if (field.IsAutoincrement)
-                    return new Func<int, object?>(_ => table.Autoincrement());
 
-                return _ => Activator.CreateInstance(field.FieldType);
-            })
+        var columnGenerator = table.Schema.Columns
+            .Select(PrepareColumnValueGenerator)
             .ToArray();
 
-        for (var i = 0; i < rowCount; i++)
+        for (var i = 0; i < rowCount; i++) 
+            table.Add(columnGenerator.Select(gen => gen(i)).ToArray());
+
+        return;
+
+        Func<int, object?> PrepareColumnValueGenerator(Field field)
         {
-            var oneRow = valueSelectors.Select(v => v(i)).ToArray();
-            table.Add(oneRow);
+            var col = Array.IndexOf(columns, field.Name);
+            if (col != -1)
+                return row => Convert.ChangeType(
+                    cells(row, col), field.FieldType);
+
+            if (field.IsAutoincrement) 
+                return _ => table.Autoincrement();
+
+            return _ => Activator.CreateInstance(field.FieldType);
         }
     }
 }
