@@ -5,7 +5,7 @@ public sealed class BinaryExpression : Expression
     private readonly Expression _left;
     private readonly Operator _op;
     private readonly Expression _right;
-    private Type? _expressionType;
+    private DynamicType? _expressionType;
 
     public BinaryExpression(Operator op, Expression left, Expression right)
     {
@@ -26,7 +26,7 @@ public sealed class BinaryExpression : Expression
         _right.BindValue(value);
     }
 
-    public override Type ExpressionType => 
+    public override DynamicType ExpressionType => 
         _expressionType ?? 
         throw new InvalidOperationException(
             "Cannot determine ExpressionType of a binary operation before it was resolved");

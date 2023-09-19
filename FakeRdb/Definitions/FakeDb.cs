@@ -1,5 +1,19 @@
 namespace FakeRdb;
 
+public enum SqliteStorageType{Null, Integer, Real, Text, Blob}
+public enum SqliteTypeAffinity{Numeric, Integer, Real, Text, Blob}
+
+public sealed record DynamicType(SqliteStorageType StorageType, SqliteTypeAffinity TypeAffinity, Type RuntimeType)
+{
+    public static readonly DynamicType Text = new(SqliteStorageType.Text, SqliteTypeAffinity.Text, typeof(string));
+    public static readonly DynamicType Bool = new(SqliteStorageType.Integer, SqliteTypeAffinity.Integer, typeof(bool));
+    public static readonly DynamicType Integer = new(SqliteStorageType.Integer, SqliteTypeAffinity.Integer, typeof(long));
+    public static readonly DynamicType Numeric = new(SqliteStorageType.Real, SqliteTypeAffinity.Numeric, typeof(decimal));
+    public static readonly DynamicType Null = new(SqliteStorageType.Null, SqliteTypeAffinity.Blob, typeof(DBNull));
+
+    public static implicit operator Type(DynamicType dynamicType) => dynamicType.RuntimeType;
+}
+
 public sealed class FakeDb : Dictionary<string, Table>
 {
     public void Insert(string tableName, string[] columns, ValuesTable values)
@@ -20,7 +34,8 @@ public sealed class FakeDb : Dictionary<string, Table>
             var col = Array.IndexOf(columns, field.Name);
             if (col != -1)
                 return row => Convert.ChangeType(
-                    values.Rows[row].Cells[col].Resolve(), field.FieldType);
+                    values.Rows[row].Cells[col].Resolve(), 
+                    field.FieldType);
 
             if (field.IsAutoincrement)
                 return _ => table.Autoincrement();
@@ -60,13 +75,13 @@ public sealed class FakeDb : Dictionary<string, Table>
     {
         var dbTable = this[tableName];
         var rows = dbTable.ToArray();
-        var result = aggregate.Single().Resolve<AggregateResult>(rows);
+        var func = aggregate.Single();
+        var result = func.Resolve<AggregateResult>(rows);
         var schema = new[]
         {
             new Field(0,
                 "MAX(total_amount)",
-                "INTEGER",
-                typeof(long))
+                func.ExpressionType)
         };
         return new QueryResult(schema,
             new List<List<object?>>

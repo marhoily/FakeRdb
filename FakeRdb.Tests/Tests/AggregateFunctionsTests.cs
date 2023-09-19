@@ -16,4 +16,9 @@ public sealed class AggregateFunctionsTests : ComparisonTests
     {
         CompareAgainstSqlite("SELECT MAX(total_amount) FROM orders");
     }
+    [Fact]
+    public void Min()
+    {
+        CompareAgainstSqlite("SELECT Min(order_date) FROM orders");
+    }
 }

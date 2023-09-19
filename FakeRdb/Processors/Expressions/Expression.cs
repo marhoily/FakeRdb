@@ -18,5 +18,5 @@ public abstract class Expression : IResult
 
     public abstract object? Resolve(params Row[] dataSet);
     public T Resolve<T>(params Row[] dataSet) => (T)Resolve(dataSet)!;
-    public abstract Type ExpressionType { get; }
+    public abstract DynamicType ExpressionType { get; }
 }

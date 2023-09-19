@@ -25,7 +25,7 @@ public sealed class SqlVisitor : SQLiteParserBaseVisitor<IResult?>
         var fields = context.column_def().Select((col, n) =>
                 new Field(n,
                     col.column_name().GetText(),
-                    col.type_name().GetText(),
+                   // col.type_name().GetText(),
                     col.type_name().ToRuntimeType(),
                     col.column_constraint().Any(c => c.AUTOINCREMENT_() != null)))
             .ToArray();
@@ -91,7 +91,8 @@ public sealed class SqlVisitor : SQLiteParserBaseVisitor<IResult?>
     {
         if (context.BIND_PARAMETER() is { } bind)
         {
-            return new ValueExpression(_parameters[bind.GetText()].Value);
+            var value = _parameters[bind.GetText()].Value;
+            return new ValueExpression(value, value.GetRuntimeType());
         }
 
         // try and filter out binary\unary expression
@@ -111,7 +112,11 @@ public sealed class SqlVisitor : SQLiteParserBaseVisitor<IResult?>
 
     public override IResult VisitLiteral_value(SQLiteParser.Literal_valueContext context)
     {
-        return new ValueExpression(context.GetText().Unquote());
+        var text = context.GetText();
+        var unquote = text.Unquote();
+        return new ValueExpression(unquote, unquote != text 
+            ? DynamicType.Text 
+            : DynamicType.Integer);
     }
 
     public override IResult? VisitResult_column(SQLiteParser.Result_columnContext context)

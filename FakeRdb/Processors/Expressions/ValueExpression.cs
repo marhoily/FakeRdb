@@ -3,8 +3,13 @@ namespace FakeRdb;
 public sealed class ValueExpression : Expression
 {
     private object? _value;
-    public ValueExpression(object? value) => _value = value;
-    public override Type ExpressionType => _value?.GetType() ?? typeof(DBNull);
+    public ValueExpression(object? value, DynamicType type)
+    {
+        _value = value;
+        ExpressionType = type;
+    }
+
+    public override DynamicType ExpressionType { get; }
 
     protected override void SetTarget(Field field) =>
         _value = Convert.ChangeType(_value, field.FieldType);

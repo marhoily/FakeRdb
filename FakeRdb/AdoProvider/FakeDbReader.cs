@@ -74,7 +74,9 @@ public sealed class FakeDbReader : DbDataReader
 
     public override string GetDataTypeName(int ordinal)
     {
-        return _queryResult.Schema[ordinal].DataType;
+        return _queryResult.Schema[ordinal]
+            .FieldType.TypeAffinity
+            .ToString().ToUpperInvariant();
     }
 
     public override DateTime GetDateTime(int ordinal)

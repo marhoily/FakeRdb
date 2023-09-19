@@ -22,9 +22,10 @@ public sealed class FunctionCallExpression : Expression
     }
 
     public override object Resolve(params Row[] dataSet) =>
-        _functionName switch
+        _functionName.ToUpperInvariant() switch
         {
             "MAX" => Max(dataSet),
+            "MIN" => Min(dataSet),
             _ => throw new ArgumentOutOfRangeException("Unknown:" + _functionName)
         };
 
@@ -35,10 +36,18 @@ public sealed class FunctionCallExpression : Expression
                   throw new NotImplementedException();
         return new AggregateResult(row, expression.Resolve(row));
     }
-
-    public override Type ExpressionType => _functionName switch
+    private AggregateResult Min(Row[] dataSet)
     {
-        "Max" => _args.Single().ExpressionType,
+        var expression = _args.Single();
+        var row = dataSet.MinBy(r => expression.Resolve(r)) ??
+                  throw new NotImplementedException();
+        return new AggregateResult(row, expression.Resolve(row));
+    }
+
+    public override DynamicType ExpressionType => _functionName.ToUpperInvariant() switch
+    {
+        "MAX" => _args.Single().ExpressionType,
         _ => throw new ArgumentOutOfRangeException("Unknown:" + _functionName)
     };
+
 }

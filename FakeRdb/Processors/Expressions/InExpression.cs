@@ -28,5 +28,5 @@ public sealed class InExpression : Expression
         return _set.Data.Any(r => Equals(nn, r[0]));
     }
 
-    public override Type ExpressionType => typeof(bool);
+    public override DynamicType ExpressionType => DynamicType.Bool;
 }
