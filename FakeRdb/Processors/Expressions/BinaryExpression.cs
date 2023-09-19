@@ -6,7 +6,7 @@ public sealed class BinaryExpression : Expression
     private readonly Operator _op;
     private readonly Expression _right;
 
-    public BinaryExpression(Expression left, Operator op, Expression right)
+    public BinaryExpression(Operator op, Expression left, Expression right)
     {
         _left = left;
         _op = op;
@@ -31,7 +31,7 @@ public sealed class BinaryExpression : Expression
         dynamic r = _right.Resolve(row) ?? throw new InvalidOperationException();
         return _op switch
         {
-            Operator.Mul => l * r,
+            Operator.Multiplication => l * r,
             _ => throw new ArgumentOutOfRangeException()
         };
     }

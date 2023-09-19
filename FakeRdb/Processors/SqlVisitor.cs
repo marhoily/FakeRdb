@@ -94,44 +94,17 @@ public sealed class SqlVisitor : SQLiteParserBaseVisitor<IResult?>
         }
         if (context.children[0] is SQLiteParser.ExprContext)
         {
-            if (context.children[1] is ITerminalNode { Symbol.Type: var t })
+            if (context.children[1] is ITerminalNode { Symbol.Type: var operand })
             {
-                var left = (Expression)(Visit(context.children[0]) ?? throw new NotImplementedException());
-                var right = (Expression)(Visit(context.children[2]) ?? throw new NotImplementedException());
-                return t switch
-                {
-                    SQLiteLexer.STAR => new BinaryExpression(left, Operator.Mul, right),
-/*
- * expr PIPE2 expr
-   | expr ( STAR | DIV | MOD) expr
-   | expr ( PLUS | MINUS) expr
-   | expr ( LT2 | GT2 | AMP | PIPE) expr
-   | expr ( LT | LT_EQ | GT | GT_EQ) expr
-   | expr (
-   ASSIGN
-   | EQ
-   | NOT_EQ1
-   | NOT_EQ2
-   | IS_
-   | IS_ NOT_
-   | IN_
-   | LIKE_
-   | GLOB_
-   | MATCH_
-   | REGEXP_
-   ) expr
-   | expr AND_ expr
-   | expr OR_ expr
- */
-                    _ => throw new ArgumentOutOfRangeException()
-                };
+                var left = (Expression)(Visit(context.children.First()) ?? throw new NotImplementedException());
+                var right = (Expression)(Visit(context.children.Last()) ?? throw new NotImplementedException());
+                return context.ToBinaryExpression(operand, left, right);
             }
         }
 
-        //throw new NotImplementedException(context.GetText());
         return VisitChildren(context);
     }
-
+    
     public override IResult VisitColumn_access(SQLiteParser.Column_accessContext context)
     {
         var table = _db.Try(context.table_name()?.GetText()) ??
