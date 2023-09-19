@@ -61,10 +61,12 @@ public sealed class SqlVisitor : SQLiteParserBaseVisitor<IResult?>
             .table_name()
             .GetText()
             .Unescape();
+        using var _ = _currentTable.Set(_db[tableName]);
         var projection = context.result_column()
             .Select(col => col.GetColumnName())
             .ToArray();
-        return _db.Select(tableName, projection);
+        var filter = context.whereExpr == null ? null : Visit(context.whereExpr);
+        return _db.Select(tableName, projection, (Expression?)filter);
     }
 
     public override IResult VisitUpdate_stmt(SQLiteParser.Update_stmtContext context)

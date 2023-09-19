@@ -47,6 +47,7 @@ public sealed class BinaryExpression : Expression
             Operator.Multiplication => 
                 l == null || r == null ? null : (dynamic)l * (dynamic)r,
             Operator.Equal => Equals(l, r),
+            Operator.Less => l is IComparable c ? c.CompareTo(r) == -1 : throw new NotSupportedException(),
             _ => throw new ArgumentOutOfRangeException(_op.ToString())
         };
 

@@ -32,7 +32,7 @@ public sealed class FakeDb : Dictionary<string, Table>
         }
     }
 
-    public IResult Select(string tableName, string[] projection)
+    public IResult Select(string tableName, string[] projection, Expression? filter)
     {
         var dbTable = this[tableName];
         var dbSchema = dbTable.Schema;
@@ -42,7 +42,10 @@ public sealed class FakeDb : Dictionary<string, Table>
         if (proj.Length == 0)
             throw new InvalidOperationException(
                 $"No columns selected from table: {tableName}");
-        var table = dbTable
+        var filtered = filter == null
+            ? dbTable
+            : dbTable.Where(filter.Resolve<bool>);
+        var table = filtered
             .Select(dbRow => proj
                 .Select(column => dbRow.Data[column])
                 .ToList())
