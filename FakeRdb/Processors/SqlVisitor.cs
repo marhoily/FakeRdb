@@ -43,7 +43,10 @@ public sealed class SqlVisitor : SQLiteParserBaseVisitor<FakeDbReader>
 
         var tableName = context.table_name().GetText();
         var sqlRows = values.value_row();
-        _db.Insert(tableName, sqlRows, context.column_name(), _parameters);
+        _db.Insert(tableName,
+            (rowIndex, idx) => sqlRows[rowIndex].expr(idx).Resolve(_parameters),
+            context.column_name(), 
+            sqlRows.Length);
        
         return base.VisitInsert_stmt(context);
     }

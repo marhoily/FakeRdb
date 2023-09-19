@@ -3,9 +3,8 @@ namespace FakeRdb;
 public sealed class FakeDb : Dictionary<string, Table>
 {
     public void Insert(string tableName, 
-        SQLiteParser.Value_rowContext[] sqlRows,
-        SQLiteParser.Column_nameContext[] columnNames, 
-        FakeDbParameterCollection parameters)
+        Func<int, int, object?> resolveValue,
+        SQLiteParser.Column_nameContext[] columnNames, int rowCount)
     {
         var table = this[tableName];
         var valueSelectors = table.Schema.Columns
@@ -14,7 +13,8 @@ public sealed class FakeDb : Dictionary<string, Table>
                 var idx = Array.FindIndex(columnNames, col => col.GetText() == field.Name);
                 if (idx != -1)
                 {
-                    return rowIndex => sqlRows[rowIndex].expr(idx).Resolve(parameters, field.FieldType);
+                    return rowIndex => Convert.ChangeType(
+                        resolveValue(rowIndex, idx), field.FieldType);
                 }
                 if (field.IsAutoincrement)
                     return new Func<int, object?>(_ => table.Autoincrement());
@@ -23,7 +23,7 @@ public sealed class FakeDb : Dictionary<string, Table>
             })
             .ToArray();
 
-        for (var i = 0; i < sqlRows.Length; i++)
+        for (var i = 0; i < rowCount; i++)
         {
             var oneRow = valueSelectors.Select(v => v(i)).ToArray();
             table.Add(oneRow);
