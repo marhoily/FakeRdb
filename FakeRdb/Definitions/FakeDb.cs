@@ -2,10 +2,7 @@ namespace FakeRdb;
 
 public sealed class FakeDb : Dictionary<string, Table>
 {
-    public void Insert(string tableName,
-        string[] columns,
-        Func<int, int, object?> cells,
-        int rowCount)
+    public void Insert(string tableName, string[] columns, ValuesTable values)
     {
         var table = this[tableName];
 
@@ -13,7 +10,7 @@ public sealed class FakeDb : Dictionary<string, Table>
             .Select(PrepareColumnValueGenerator)
             .ToArray();
 
-        for (var i = 0; i < rowCount; i++)
+        for (var i = 0; i < values.Rows.Length; i++)
             table.Add(columnGenerator.Select(gen => gen(i)).ToArray());
 
         return;
@@ -23,7 +20,7 @@ public sealed class FakeDb : Dictionary<string, Table>
             var col = Array.IndexOf(columns, field.Name);
             if (col != -1)
                 return row => Convert.ChangeType(
-                    cells(row, col), field.FieldType);
+                    values.Rows[row].Cells[col].Resolve(null!), field.FieldType);
 
             if (field.IsAutoincrement)
                 return _ => table.Autoincrement();

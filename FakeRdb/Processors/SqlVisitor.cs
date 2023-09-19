@@ -2,15 +2,11 @@ using Antlr4.Runtime.Tree;
 
 namespace FakeRdb;
 
-public interface IResult { }
-
-public sealed record Affected(int RecordsCount) : IResult;
-
 public sealed class SqlVisitor : SQLiteParserBaseVisitor<IResult?>
 {
     private readonly FakeDb _db;
     private readonly FakeDbParameterCollection _parameters;
-    private Context<Table> _currentTable;
+    private Scope<Table> _currentTable;
 
     public SqlVisitor(FakeDb db, FakeDbParameterCollection parameters)
     {
@@ -20,7 +16,7 @@ public sealed class SqlVisitor : SQLiteParserBaseVisitor<IResult?>
 
     protected override IResult? AggregateResult(IResult? aggregate, IResult? nextResult)
     {
-        return aggregate ?? nextResult;
+        return nextResult ?? aggregate;
     }
 
     public override IResult? VisitCreate_table_stmt(SQLiteParser.Create_table_stmtContext context)
@@ -39,19 +35,21 @@ public sealed class SqlVisitor : SQLiteParserBaseVisitor<IResult?>
 
     public override IResult? VisitInsert_stmt(SQLiteParser.Insert_stmtContext context)
     {
-        if (context.values_clause() is not { } values)
-            throw new NotImplementedException();
-
+        var valuesTable = Visit(context.values_clause()) ?? throw new InvalidOperationException();
         var tableName = context.table_name().GetText();
         var columns = context.column_name().Select(col => col.GetText()).ToArray();
-        var rows = values.value_row();
-
-        _db.Insert(tableName, columns, GetData, rows.Length);
-
+        _db.Insert(tableName, columns, (ValuesTable)valuesTable);
         return null;
+    }
 
-        object? GetData(int rowIndex, int idx) =>
-            rows[rowIndex].expr(idx).Resolve(_parameters);
+    public override IResult VisitValues_clause(SQLiteParser.Values_clauseContext context)
+    {
+        return new ValuesTable(context.value_row()
+            .Select(r => new ValuesRow(r.expr()
+                .Select(Visit)
+                .Cast<Expression>()
+                .ToArray()))
+            .ToArray());
     }
 
     public override IResult VisitSelect_core(SQLiteParser.Select_coreContext context)
