@@ -2,7 +2,7 @@
 
 namespace FakeRdb.Tests;
 
-public static class DbDataReaderExtensions
+public static class DbDataReaderTestExtensions
 {
     public static void ShouldEqual(this DbDataReader actual, DbDataReader expected, ITestOutputHelper outputHelper)
     {

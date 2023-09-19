@@ -32,7 +32,7 @@ public class FakeDbCommand : DbCommand
     {
         return behavior switch
         {
-            CommandBehavior.Default => _connection.Db.ExecuteReader(CommandText),
+            CommandBehavior.Default => _connection.Db.ExecuteReader(CommandText, Parameters),
             _ => throw new ArgumentOutOfRangeException(nameof(behavior), behavior, null)
         };
     }
@@ -46,8 +46,9 @@ public class FakeDbCommand : DbCommand
         parser.RemoveErrorListeners();
         parser.AddErrorListener(new PanicErrorListener());
         var chatContext = parser.sql_stmt_list();
-        var visitor = new NonQueryVisitor(_connection.Db, Parameters);
-        return visitor.Visit(chatContext);
+        var visitor = new ReaderVisitor(_connection.Db, Parameters);
+        var reader = visitor.Visit(chatContext);
+        return reader?.CountRows() ?? 0;
 
     }
 
