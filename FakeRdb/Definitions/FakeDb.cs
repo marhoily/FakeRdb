@@ -29,13 +29,15 @@ public sealed class FakeDb : Dictionary<string, Table>
         }
     }
 
-    public IResult Select(string tableName, string[] projection, Expression? filter)
+    public IResult Select(string tableName, IProjection[] projection, Expression? filter)
     {
         var dbTable = this[tableName];
         var dbSchema = dbTable.Schema;
-        var proj = projection is ["*"]
-            ? Enumerable.Range(0, dbSchema.Columns.Length).ToArray()
-            : projection.Select(col => dbSchema.IndexOf(col)).ToArray();
+        var proj = projection is [Wildcard]
+            ? Enumerable.Range(0, dbSchema.Columns.Length)
+                .Select(n => new FieldAccessExpression(dbTable.Schema.Columns[n]))
+                .ToArray()
+            : projection.OfType<FieldAccessExpression>().ToArray();
         if (proj.Length == 0)
             throw new InvalidOperationException(
                 $"No columns selected from table: {tableName}");
@@ -44,11 +46,11 @@ public sealed class FakeDb : Dictionary<string, Table>
             : dbTable.Where(filter.Resolve<bool>);
         var table = filtered
             .Select(dbRow => proj
-                .Select(column => dbRow.Data[column])
+                .Select(column => column.Resolve(dbRow))//dbRow.Data[column])
                 .ToList())
             .ToList();
         var schema = proj
-            .Select(column => dbSchema.Columns[column])
+            .Select(column => column.AccessedField)
             .ToArray();
         return new QueryResult(schema, table);
     }

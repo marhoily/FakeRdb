@@ -61,11 +61,15 @@ public sealed class SqlVisitor : SQLiteParserBaseVisitor<IResult?>
             .GetText()
             .Unescape();
         using var _ = _currentTable.Set(_db[tableName]);
-        var projection = context.result_column()
-            .Select(col => col.GetColumnName())
+        var select = context.result_column()
+            .Select(Visit)
+            .Cast<IProjection>()
             .ToArray();
+      // var aggregate = select.OfType<FunctionCallExpression>().ToList();
+      // if (aggregate.Count > 0)
+      //     return _db.SelectAggregate(tableName, aggregate);
         var filter = context.whereExpr == null ? null : Visit(context.whereExpr);
-        return _db.Select(tableName, projection, (Expression?)filter);
+        return _db.Select(tableName, select, (Expression?)filter);
     }
 
     public override IResult VisitUpdate_stmt(SQLiteParser.Update_stmtContext context)
@@ -111,13 +115,27 @@ public sealed class SqlVisitor : SQLiteParserBaseVisitor<IResult?>
         return new ValueExpression(context.GetText().Unquote());
     }
 
+    public override IResult? VisitResult_column(SQLiteParser.Result_columnContext context)
+    {
+        if (context.STAR() != null) 
+            return Wildcard.Instance;
+        
+        return Visit(context.expr());
+    }
+
     public override IResult VisitColumn_access(SQLiteParser.Column_accessContext context)
     {
         var table = _db.Try(context.table_name()?.GetText()) ??
                     _currentTable.Value;
-        var column = context.column_name().GetText();
+        var column = context.column_name().GetText().Unescape();
+
         if (table == null)
             throw new InvalidOperationException("Couldn't resolve table!");
         return new FieldAccessExpression(table.Schema[column]);
+    }
+
+    public override IResult? VisitFunction_call(SQLiteParser.Function_callContext context)
+    {
+        return base.VisitFunction_call(context);
     }
 }

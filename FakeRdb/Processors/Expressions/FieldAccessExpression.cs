@@ -1,10 +1,10 @@
 namespace FakeRdb;
 
-public sealed class FieldAccessExpression : Expression
+public sealed class FieldAccessExpression : Expression, IProjection
 {
-    private readonly Field _accessedField;
-    public FieldAccessExpression(Field field) => _accessedField = field;
-    public override Type ExpressionType => _accessedField.FieldType;
+    public Field AccessedField { get; }
+    public FieldAccessExpression(Field field) => AccessedField = field;
+    public override Type ExpressionType => AccessedField.FieldType;
 
     protected override void SetTarget(Field targetField)
     {
@@ -12,14 +12,13 @@ public sealed class FieldAccessExpression : Expression
         // there's nothing to do here
     }
 
-
     protected override void SetValue(object value) => throw new NotSupportedException();
 
     public override object? Resolve(Row row)
     {
-        if (_accessedField == null)
+        if (AccessedField == null)
             throw new InvalidOperationException(
                 "Cannot resolve value without column");
-        return Convert.ChangeType(row[_accessedField], _accessedField.FieldType);
+        return Convert.ChangeType(row[AccessedField], AccessedField.FieldType);
     }
 }
