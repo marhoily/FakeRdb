@@ -53,5 +53,15 @@ public sealed class UpdateTests : ComparisonTests
                            """);
         AssertReadersMatch("select * from orders");
     }
+    [Fact]
+    public void Based_On_Join_Condition()
+    {
+        AssertReadersMatch("""
+                           UPDATE customers
+                           SET email = 'updated.email@example.com'
+                           WHERE customer_id IN (SELECT customer_id FROM orders WHERE order_date < '2023-09-05');
+                           """);
+        AssertReadersMatch("select * from orders");
+    }
 
 }
