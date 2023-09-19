@@ -1,6 +1,6 @@
 namespace FakeRdb;
 
-public sealed class SqlVisitor : SQLiteParserBaseVisitor<FakeDbReader>
+public sealed class SqlVisitor : SQLiteParserBaseVisitor<DbDataReader?>
 {
     private readonly FakeDb _db;
     private readonly FakeDbParameterCollection _parameters;
@@ -10,8 +10,13 @@ public sealed class SqlVisitor : SQLiteParserBaseVisitor<FakeDbReader>
         _db = db;
         _parameters = parameters;
     }
+    
+    protected override DbDataReader? AggregateResult(DbDataReader? aggregate, DbDataReader? nextResult)
+    {
+        return aggregate ?? nextResult;
+    }
 
-    public override FakeDbReader VisitCreate_table_stmt(SQLiteParser.Create_table_stmtContext context)
+    public override DbDataReader? VisitCreate_table_stmt(SQLiteParser.Create_table_stmtContext context)
     {
         var tableName = context.table_name().GetText();
         var fields = context.column_def().Select(col =>
@@ -21,10 +26,10 @@ public sealed class SqlVisitor : SQLiteParserBaseVisitor<FakeDbReader>
                     col.column_constraint().Any(c => c.AUTOINCREMENT_() != null)))
             .ToArray();
         _db.Add(tableName, new Table(new TableSchema(fields)));
-        return base.VisitCreate_table_stmt(context);
+        return VisitChildren(context);
     }
 
-    public override FakeDbReader VisitInsert_stmt(SQLiteParser.Insert_stmtContext context)
+    public override DbDataReader? VisitInsert_stmt(SQLiteParser.Insert_stmtContext context)
     {
         if (context.values_clause() is not { } values)
             throw new NotImplementedException();
@@ -35,13 +40,13 @@ public sealed class SqlVisitor : SQLiteParserBaseVisitor<FakeDbReader>
 
         _db.Insert(tableName, columns, GetData, rows.Length);
 
-        return base.VisitInsert_stmt(context);
+        return VisitChildren(context);
 
         object? GetData(int rowIndex, int idx) =>
             rows[rowIndex].expr(idx).Resolve(_parameters);
     }
 
-    public override FakeDbReader VisitSelect_core(SQLiteParser.Select_coreContext context)
+    public override DbDataReader VisitSelect_core(SQLiteParser.Select_coreContext context)
     {
         var tableName = context.table_or_subquery()
             .Single()
@@ -52,5 +57,18 @@ public sealed class SqlVisitor : SQLiteParserBaseVisitor<FakeDbReader>
             .Select(col => col.GetColumnName())
             .ToArray();
         return _db.Select(tableName, projection);
+    }
+
+    public override DbDataReader VisitUpdate_stmt(SQLiteParser.Update_stmtContext context)
+    {
+        var table = context.qualified_table_name().GetText();
+        var assignments = context.update_assignment()
+            .Select(a => (
+                ColumnName: a.column_name().GetText(),
+                Value: a.expr().Resolve(_parameters)))
+            .ToArray();
+        var filter = context.where_clause()?.expr().ToFilter(_db[table]);
+        var recordsAffected = _db.Update(table, assignments, filter);
+        return new RecordsAffectedDataReader(recordsAffected);
     }
 }

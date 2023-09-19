@@ -4,7 +4,7 @@ namespace FakeRdb;
 
 public static class FakeDbExt
 {
-    public static FakeDbReader ExecuteReader(this FakeDb db, string sql,
+    public static DbDataReader ExecuteReader(this FakeDb db, string sql,
         FakeDbParameterCollection parameters)
     {
         var inputStream = new AntlrInputStream(sql);
@@ -15,6 +15,6 @@ public static class FakeDbExt
         parser.AddErrorListener(new PanicErrorListener());
         var chatContext = parser.sql_stmt_list();
         var visitor = new SqlVisitor(db,parameters);
-        return visitor.Visit(chatContext);
+        return visitor.Visit(chatContext) ?? new RecordsAffectedDataReader(0);
     }
 }

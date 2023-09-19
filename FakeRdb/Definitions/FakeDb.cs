@@ -13,7 +13,7 @@ public sealed class FakeDb : Dictionary<string, Table>
             .Select(PrepareColumnValueGenerator)
             .ToArray();
 
-        for (var i = 0; i < rowCount; i++) 
+        for (var i = 0; i < rowCount; i++)
             table.Add(columnGenerator.Select(gen => gen(i)).ToArray());
 
         return;
@@ -25,7 +25,7 @@ public sealed class FakeDb : Dictionary<string, Table>
                 return row => Convert.ChangeType(
                     cells(row, col), field.FieldType);
 
-            if (field.IsAutoincrement) 
+            if (field.IsAutoincrement)
                 return _ => table.Autoincrement();
 
             return _ => Activator.CreateInstance(field.FieldType);
@@ -52,5 +52,27 @@ public sealed class FakeDb : Dictionary<string, Table>
             .ToArray();
         return new FakeDbReader(
             new QueryResult(schema, table));
+    }
+    public int Update(
+        string tableName,
+        (string column, object? value)[] assignments,
+        Func<Row, bool>? filter)
+    {
+        var table = this[tableName] ?? throw new ArgumentOutOfRangeException(nameof(tableName));
+        var schema = table.Schema;
+        var compiled = assignments.Select(x =>
+            (column: schema.IndexOf(x.column), x.value))
+            .ToArray();
+        var counter = 0;
+        foreach (var row in table)
+            if (filter == null || filter(row))
+            {
+                counter++;
+                foreach (var (column, value) in compiled)
+                {
+                    row.Data[column] = value;
+                }
+            }
+        return counter;
     }
 }

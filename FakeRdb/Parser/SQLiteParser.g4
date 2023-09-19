@@ -438,13 +438,18 @@ compound_operator:
 update_stmt:
     with_clause? UPDATE_ (
         OR_ (ROLLBACK_ | ABORT_ | REPLACE_ | FAIL_ | IGNORE_)
-    )? qualified_table_name SET_ (column_name | column_name_list) ASSIGN expr (
-        COMMA (column_name | column_name_list) ASSIGN expr
-    )* (
-        FROM_ (table_or_subquery (COMMA table_or_subquery)* | join_clause)
-    )? (WHERE_ expr)? returning_clause?
+    )? qualified_table_name 
+    SET_ update_assignment (COMMA update_assignment)* 
+    (
+    FROM_ (table_or_subquery (COMMA table_or_subquery)* | join_clause)
+    )? where_clause? returning_clause?
 ;
-
+update_assignment:
+    (column_name | column_name_list) ASSIGN expr
+;
+where_clause:
+    WHERE_ expr
+;
 column_name_list:
     OPEN_PAR column_name (COMMA column_name)* CLOSE_PAR
 ;
