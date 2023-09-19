@@ -15,6 +15,11 @@ public static class FakeDbExt
         parser.AddErrorListener(new PanicErrorListener());
         var chatContext = parser.sql_stmt_list();
         var visitor = new SqlVisitor(db,parameters);
-        return visitor.Visit(chatContext) ?? new RecordsAffectedDataReader(0);
+        return visitor.Visit(chatContext) switch
+        {
+            Affected affected => new RecordsAffectedDataReader(affected.RecordsCount),
+            QueryResult queryResult => new FakeDbReader(queryResult),
+            _ => throw new ArgumentOutOfRangeException()
+        };
     }
 }

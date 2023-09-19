@@ -32,7 +32,7 @@ public sealed class FakeDb : Dictionary<string, Table>
         }
     }
 
-    public FakeDbReader Select(string tableName, string[] projection)
+    public IResult Select(string tableName, string[] projection)
     {
         var dbTable = this[tableName];
         var dbSchema = dbTable.Schema;
@@ -50,8 +50,7 @@ public sealed class FakeDb : Dictionary<string, Table>
         var schema = proj
             .Select(column => dbSchema.Columns[column])
             .ToArray();
-        return new FakeDbReader(
-            new QueryResult(schema, table));
+        return new QueryResult(schema, table);
     }
     public int Update(
         string tableName,

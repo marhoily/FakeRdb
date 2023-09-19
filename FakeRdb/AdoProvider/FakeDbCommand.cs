@@ -47,9 +47,8 @@ public class FakeDbCommand : DbCommand
         parser.AddErrorListener(new PanicErrorListener());
         var chatContext = parser.sql_stmt_list();
         var visitor = new SqlVisitor(_connection.Db, Parameters);
-        var reader = visitor.Visit(chatContext);
-        return reader?.CountRows() ?? 0;
-
+        var reader = (Affected?) visitor.Visit(chatContext);
+        return reader?.RecordsCount ?? 0;
     }
 
     public override object ExecuteScalar()
