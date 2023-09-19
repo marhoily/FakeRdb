@@ -8,7 +8,6 @@ public sealed class AggregateFunctionsTests : ComparisonTests
     {
         Sqlite.SeedCustomersOrders();
         Sut.SeedCustomersOrders();
-
     }
 
     [Fact]

@@ -5,6 +5,7 @@ public sealed class FieldAccessExpression : Expression, IProjection
     public Field AccessedField { get; }
     public FieldAccessExpression(Field field) => AccessedField = field;
     public override DynamicType ExpressionType => AccessedField.FieldType;
+    public override string ResultSetName => AccessedField.Name;
 
     protected override void SetTarget(Field targetField)
     {

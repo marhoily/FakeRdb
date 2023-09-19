@@ -80,7 +80,7 @@ public sealed class FakeDb : Dictionary<string, Table>
         var schema = new[]
         {
             new Field(0,
-                "MAX(total_amount)",
+                func.ResultSetName,
                 func.ExpressionType)
         };
         return new QueryResult(schema,

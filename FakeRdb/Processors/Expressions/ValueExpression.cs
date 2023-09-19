@@ -10,6 +10,7 @@ public sealed class ValueExpression : Expression
     }
 
     public override DynamicType ExpressionType { get; }
+    public override string ResultSetName => "VAL";
 
     protected override void SetTarget(Field field) =>
         _value = Convert.ChangeType(_value, field.FieldType);

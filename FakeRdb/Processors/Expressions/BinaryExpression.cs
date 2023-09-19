@@ -31,6 +31,8 @@ public sealed class BinaryExpression : Expression
         throw new InvalidOperationException(
             "Cannot determine ExpressionType of a binary operation before it was resolved");
 
+    public override string ResultSetName => _op.ToString();
+
     public override object? Resolve(params Row[] dataSet)
     {
         var l = _left.Resolve(dataSet);

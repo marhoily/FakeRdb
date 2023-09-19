@@ -44,10 +44,8 @@ public sealed class FunctionCallExpression : Expression
         return new AggregateResult(row, expression.Resolve(row));
     }
 
-    public override DynamicType ExpressionType => _functionName.ToUpperInvariant() switch
-    {
-        "MAX" => _args.Single().ExpressionType,
-        _ => throw new ArgumentOutOfRangeException("Unknown:" + _functionName)
-    };
+    public override DynamicType ExpressionType => _args[0].ExpressionType;
 
+    public override string ResultSetName =>
+        $"{_functionName}({string.Join(", ", _args.Select(a => a.ResultSetName))})";
 }

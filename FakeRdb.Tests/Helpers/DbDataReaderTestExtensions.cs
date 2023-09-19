@@ -56,7 +56,7 @@ public static class DbDataReaderTestExtensions
                 (data?.ToString() ?? "").PadRight(widths[i]));
     }
 
-    private static IEnumerable<(string, string ColumnName)> GetSchema(this DbDataReader reader)
+    private static IEnumerable<(string ColumnType, string ColumnName)> GetSchema(this DbDataReader reader)
     {
         for (var i = 0; i < reader.FieldCount; i++)
         {

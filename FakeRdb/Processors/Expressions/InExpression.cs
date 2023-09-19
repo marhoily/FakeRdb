@@ -29,4 +29,5 @@ public sealed class InExpression : Expression
     }
 
     public override DynamicType ExpressionType => DynamicType.Bool;
+    public override string ResultSetName => "???";
 }
