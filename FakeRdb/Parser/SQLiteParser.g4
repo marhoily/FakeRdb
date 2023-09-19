@@ -239,7 +239,7 @@ expr:
     literal_value
     | BIND_PARAMETER
     | column_access
-    | unary_operator expr
+    | unary_operator
     | expr PIPE2 expr
     | expr ( STAR | DIV | MOD) expr
     | expr ( PLUS | MINUS) expr
@@ -260,7 +260,7 @@ expr:
     ) expr
     | expr AND_ expr
     | expr OR_ expr
-    | function_name OPEN_PAR ((DISTINCT_? expr ( COMMA expr)*) | STAR)? CLOSE_PAR filter_clause? over_clause?
+    | function_call
     | OPEN_PAR expr (COMMA expr)* CLOSE_PAR
     | CAST_ OPEN_PAR expr AS_ type_name CLOSE_PAR
     | expr COLLATE_ collation_name
@@ -280,6 +280,9 @@ expr:
     | raise_function
 ;
 
+function_call:
+    function_name OPEN_PAR ((DISTINCT_? expr ( COMMA expr)*) | STAR)? CLOSE_PAR filter_clause? over_clause?
+;
 column_access: 
     ((schema_name DOT)? table_name DOT)? column_name
 ;
@@ -617,10 +620,10 @@ recursive_select:
 ;
 
 unary_operator:
-    MINUS
+    (MINUS
     | PLUS
     | TILDE
-    | NOT_
+    | NOT_)  expr
 ;
 
 error_message:

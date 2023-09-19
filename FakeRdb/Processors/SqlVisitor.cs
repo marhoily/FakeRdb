@@ -1,6 +1,8 @@
+using Antlr4.Runtime.Tree;
+
 namespace FakeRdb;
 
-public interface IResult{}
+public interface IResult { }
 
 public sealed record Affected(int RecordsCount) : IResult;
 
@@ -15,7 +17,7 @@ public sealed class SqlVisitor : SQLiteParserBaseVisitor<IResult?>
         _db = db;
         _parameters = parameters;
     }
-    
+
     protected override IResult? AggregateResult(IResult? aggregate, IResult? nextResult)
     {
         return aggregate ?? nextResult;
@@ -73,7 +75,7 @@ public sealed class SqlVisitor : SQLiteParserBaseVisitor<IResult?>
         var assignments = context.update_assignment()
             .Select(a => (
                 ColumnName: a.column_name().GetText(),
-                Value: (Expression) Visit(a.expr())!))
+                Value: (Expression)Visit(a.expr())!))
             .ToArray();
         var filter = context.where_clause()?.expr().ToFilter(table);
         var recordsAffected = _db.Update(tableName, assignments, filter);
@@ -84,23 +86,37 @@ public sealed class SqlVisitor : SQLiteParserBaseVisitor<IResult?>
     {
         if (context.BIND_PARAMETER() is { } bind)
         {
-            return Expression.Value(_parameters[bind.GetText()].Value);
+            return new ValueExpression(_parameters[bind.GetText()].Value);
         }
-        if (context.literal_value() is {} literal)
+        if (context.literal_value() is { } literal)
         {
-            return Expression.Value(literal.GetText().Unquote());
+            return new ValueExpression(literal.GetText().Unquote());
+        }
+        if (context.children[0] is SQLiteParser.ExprContext)
+        {
+            if (context.children[1] is ITerminalNode { Symbol.Type: var t })
+            {
+                var left = (Expression)(Visit(context.children[0]) ?? throw new NotImplementedException());
+                var right = (Expression)(Visit(context.children[2]) ?? throw new NotImplementedException());
+                return t switch
+                {
+                    SQLiteLexer.STAR => new BinaryExpression(left, Operator.Mul, right),
+                    _ => throw new ArgumentOutOfRangeException()
+                };
+            }
         }
 
+        //throw new NotImplementedException(context.GetText());
         return VisitChildren(context);
     }
 
     public override IResult VisitColumn_access(SQLiteParser.Column_accessContext context)
     {
-        var table = _db.Try(context.table_name()?.GetText()) ?? 
+        var table = _db.Try(context.table_name()?.GetText()) ??
                     _currentTable.Value;
         var column = context.column_name().GetText();
         if (table == null)
             throw new InvalidOperationException("Couldn't resolve table!");
-        return Expression.Column(table.Schema[column]);
+        return new FieldAccessExpression(table.Schema[column]);
     }
 }
