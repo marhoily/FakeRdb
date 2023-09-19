@@ -1,6 +1,6 @@
 namespace FakeRdb;
 
-public sealed class ReaderVisitor : SQLiteParserBaseVisitor<FakeDbReader>
+public sealed class SqlVisitor : SQLiteParserBaseVisitor<FakeDbReader>
 {
     private readonly FakeDb _db;
     private readonly FakeDbParameterCollection _parameters;
@@ -8,7 +8,7 @@ public sealed class ReaderVisitor : SQLiteParserBaseVisitor<FakeDbReader>
 
     protected override FakeDbReader DefaultResult => _defaultResult!;
 
-    public ReaderVisitor(FakeDb db,  FakeDbParameterCollection parameters)
+    public SqlVisitor(FakeDb db,  FakeDbParameterCollection parameters)
     {
         _db = db;
         _parameters = parameters;
