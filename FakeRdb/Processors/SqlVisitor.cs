@@ -11,17 +11,17 @@ public sealed class SqlVisitor : SQLiteParserBaseVisitor<FakeDbReader>
         _parameters = parameters;
     }
 
-    public override FakeDbReader VisitSelect_core(SQLiteParser.Select_coreContext context)
+    public override FakeDbReader VisitCreate_table_stmt(SQLiteParser.Create_table_stmtContext context)
     {
-        var tableName = context.table_or_subquery()
-            .Single()
-            .table_name()
-            .GetText()
-            .Unescape();
-        var projection = context.result_column()
-            .Select(col => col.GetColumnName())
+        var tableName = context.table_name().GetText();
+        var fields = context.column_def().Select(col =>
+                new Field(col.column_name().GetText(),
+                    col.type_name().GetText(),
+                    col.type_name().ToRuntimeType(),
+                    col.column_constraint().Any(c => c.AUTOINCREMENT_() != null)))
             .ToArray();
-        return _db.Select(tableName, projection);
+        _db.Add(tableName, new Table(new TableSchema(fields)));
+        return base.VisitCreate_table_stmt(context);
     }
 
     public override FakeDbReader VisitInsert_stmt(SQLiteParser.Insert_stmtContext context)
@@ -40,17 +40,17 @@ public sealed class SqlVisitor : SQLiteParserBaseVisitor<FakeDbReader>
         object? GetData(int rowIndex, int idx) =>
             rows[rowIndex].expr(idx).Resolve(_parameters);
     }
-    public override FakeDbReader VisitCreate_table_stmt(SQLiteParser.Create_table_stmtContext context)
-    {
-        var tableName = context.table_name().GetText();
-        var fields = context.column_def().Select(col =>
-                new Field(col.column_name().GetText(),
-                    col.type_name().GetText(),
-                    col.type_name().ToRuntimeType(),
-                    col.column_constraint().Any(c => c.AUTOINCREMENT_() != null)))
-            .ToArray();
-        _db.Add(tableName, new Table(new TableSchema(fields)));
-        return base.VisitCreate_table_stmt(context);
-    }
 
+    public override FakeDbReader VisitSelect_core(SQLiteParser.Select_coreContext context)
+    {
+        var tableName = context.table_or_subquery()
+            .Single()
+            .table_name()
+            .GetText()
+            .Unescape();
+        var projection = context.result_column()
+            .Select(col => col.GetColumnName())
+            .ToArray();
+        return _db.Select(tableName, projection);
+    }
 }
