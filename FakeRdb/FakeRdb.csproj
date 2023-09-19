@@ -7,18 +7,15 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <None Remove="Parser\SQLiteLexer.g4" />
-    <None Remove="Parser\SQLiteParser.g4" />
+    <Compile Remove="Parser\**" />
+    <EmbeddedResource Remove="Parser\**" />
+    <None Remove="Parser\**" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Antlr4 Include="Parser\SQLiteLexer.g4" />
-    <Antlr4 Include="Parser\SQLiteParser.g4" />
-  </ItemGroup>
+
 
   <ItemGroup>
-    <PackageReference Include="Antlr4.Runtime.Standard" Version="4.13.1" />
-    <PackageReference Include="Antlr4BuildTasks" Version="*" PrivateAssets="all" />
+    <ProjectReference Include="..\SqliteSyntax\SqliteSyntax.csproj" />
   </ItemGroup>
 
 </Project>

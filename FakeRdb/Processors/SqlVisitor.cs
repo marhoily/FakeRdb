@@ -101,6 +101,28 @@ public sealed class SqlVisitor : SQLiteParserBaseVisitor<IResult?>
                 return t switch
                 {
                     SQLiteLexer.STAR => new BinaryExpression(left, Operator.Mul, right),
+/*
+ * expr PIPE2 expr
+   | expr ( STAR | DIV | MOD) expr
+   | expr ( PLUS | MINUS) expr
+   | expr ( LT2 | GT2 | AMP | PIPE) expr
+   | expr ( LT | LT_EQ | GT | GT_EQ) expr
+   | expr (
+   ASSIGN
+   | EQ
+   | NOT_EQ1
+   | NOT_EQ2
+   | IS_
+   | IS_ NOT_
+   | IN_
+   | LIKE_
+   | GLOB_
+   | MATCH_
+   | REGEXP_
+   ) expr
+   | expr AND_ expr
+   | expr OR_ expr
+ */
                     _ => throw new ArgumentOutOfRangeException()
                 };
             }

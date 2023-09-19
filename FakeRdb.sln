@@ -7,6 +7,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FakeRdb", "FakeRdb\FakeRdb.
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FakeRdb.Tests", "FakeRdb.Tests\FakeRdb.Tests.csproj", "{C0C6F567-D2FB-4800-95AF-8813B3116D91}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SqliteSyntax", "SqliteSyntax\SqliteSyntax.csproj", "{BD8DB33F-B66B-41D8-B388-623DAA208BCF}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -21,6 +23,10 @@ Global
 		{C0C6F567-D2FB-4800-95AF-8813B3116D91}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{C0C6F567-D2FB-4800-95AF-8813B3116D91}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{C0C6F567-D2FB-4800-95AF-8813B3116D91}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BD8DB33F-B66B-41D8-B388-623DAA208BCF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BD8DB33F-B66B-41D8-B388-623DAA208BCF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BD8DB33F-B66B-41D8-B388-623DAA208BCF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BD8DB33F-B66B-41D8-B388-623DAA208BCF}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -1,0 +1,27 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net7.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Remove="SQLiteLexer.g4" />
+    <None Remove="SQLiteParser.g4" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Antlr4 Include="SQLiteLexer.g4">
+      <Listener>False</Listener>
+    </Antlr4>
+    <Antlr4 Include="SQLiteParser.g4">
+      <Listener>False</Listener>
+    </Antlr4>
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Antlr4.Runtime.Standard" Version="4.13.1" />
+    <PackageReference Include="Antlr4BuildTasks" Version="*" PrivateAssets="all" />
+  </ItemGroup>
+</Project>
