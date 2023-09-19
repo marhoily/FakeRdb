@@ -60,13 +60,19 @@ public sealed class FakeDb : Dictionary<string, Table>
     {
         var dbTable = this[tableName];
         var rows = dbTable.ToArray();
-        var result = aggregate.Single().Resolve<Row?>(rows);
-        var schema = new[] { new Field(0, "MAX(total_amount)", "INTEGER", typeof(long)) };
-        var data = new List<List<object?>>
+        var result = aggregate.Single().Resolve<AggregateResult>(rows);
+        var schema = new[]
         {
-            result?.Data.ToList() ?? new List<object?> { null }
+            new Field(0,
+                "MAX(total_amount)",
+                "INTEGER",
+                typeof(long))
         };
-        return new QueryResult(schema, data);
+        return new QueryResult(schema,
+            new List<List<object?>>
+            {
+                new() { result.Value }
+            });
     }
     
 

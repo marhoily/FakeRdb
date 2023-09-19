@@ -21,9 +21,9 @@ public sealed class InExpression : Expression
         throw new NotImplementedException();
     }
 
-    public override object Resolve(params Row[] row)
+    public override object Resolve(params Row[] dataSet)
     {
-        var n = _needle.Resolve(row);
+        var n = _needle.Resolve(dataSet);
         var nn = Convert.ChangeType(n, _set.Schema.Single().FieldType);
         return _set.Data.Any(r => Equals(nn, r[0]));
     }

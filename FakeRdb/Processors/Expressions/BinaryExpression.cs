@@ -31,10 +31,10 @@ public sealed class BinaryExpression : Expression
         throw new InvalidOperationException(
             "Cannot determine ExpressionType of a binary operation before it was resolved");
 
-    public override object? Resolve(params Row[] row)
+    public override object? Resolve(params Row[] dataSet)
     {
-        var l = _left.Resolve(row);
-        var r = _right.Resolve(row);
+        var l = _left.Resolve(dataSet);
+        var r = _right.Resolve(dataSet);
         if (GetCoercionPriority(_left) < GetCoercionPriority(_right))
             l = Convert.ChangeType(l, 
                 _expressionType = _right.ExpressionType);

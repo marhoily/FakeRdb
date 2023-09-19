@@ -21,12 +21,20 @@ public sealed class FunctionCallExpression : Expression
         throw new NotImplementedException();
     }
 
-    public override object? Resolve(params Row[] row) =>
+    public override object Resolve(params Row[] dataSet) =>
         _functionName switch
         {
-            "MAX" => row.MaxBy(r => _args.Single().Resolve(r)),
+            "MAX" => Max(dataSet),
             _ => throw new ArgumentOutOfRangeException("Unknown:" + _functionName)
         };
+
+    private AggregateResult Max(Row[] dataSet)
+    {
+        var expression = _args.Single();
+        var row = dataSet.MaxBy(r => expression.Resolve(r)) ??
+                  throw new NotImplementedException();
+        return new AggregateResult(row, expression.Resolve(row));
+    }
 
     public override Type ExpressionType => _functionName switch
     {

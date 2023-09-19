@@ -16,7 +16,7 @@ public abstract class Expression : IResult
         return this;
     }
 
-    public abstract object? Resolve(params Row[] row);
-    public T Resolve<T>(params Row[] row) => (T)Resolve(row)!;
+    public abstract object? Resolve(params Row[] dataSet);
+    public T Resolve<T>(params Row[] dataSet) => (T)Resolve(dataSet)!;
     public abstract Type ExpressionType { get; }
 }
