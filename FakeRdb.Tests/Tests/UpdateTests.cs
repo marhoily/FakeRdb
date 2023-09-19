@@ -19,7 +19,6 @@ public sealed class UpdateTests : ComparisonTests
                            WHERE customer_id = 1;
                            """);
         CompareAgainstSqlite("select * from customers");
-
     }
 
     [Fact]
@@ -63,5 +62,4 @@ public sealed class UpdateTests : ComparisonTests
                            """);
         CompareAgainstSqlite("select * from orders");
     }
-
 }
