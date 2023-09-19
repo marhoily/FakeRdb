@@ -36,7 +36,7 @@ public static class ExpExt
             SQLiteLexer.REGEXP_=> new BinaryExpression(Operator.RegExp, left, right),
             SQLiteLexer.AND_=> new BinaryExpression(Operator.And, left, right),
             SQLiteLexer.OR_=> new BinaryExpression(Operator.Or, left, right),
-            _ => throw new ArgumentOutOfRangeException()
+            _ => throw new ArgumentOutOfRangeException(nameof(tokenType))
         };
     }
 }

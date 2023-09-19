@@ -20,6 +20,7 @@ public sealed class FakeDb : Dictionary<string, Table>
             var col = Array.IndexOf(columns, field.Name);
             if (col != -1)
                 return row => Convert.ChangeType(
+                    // TODO: Refactor "null!" (!)
                     values.Rows[row].Cells[col].Resolve(null!), field.FieldType);
 
             if (field.IsAutoincrement)
@@ -81,5 +82,11 @@ public sealed class FakeDb : Dictionary<string, Table>
     public Table? Try(string? tableName)
     {
         return tableName == null ? null : this[tableName];
+    }
+
+    public IResult SelectAggregate(string tableName, 
+        List<FunctionCallExpression> aggregate)
+    {
+        throw new NotImplementedException();
     }
 }
