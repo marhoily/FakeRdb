@@ -13,9 +13,10 @@ public static class DbDataReaderTestExtensions
         actual.GetSchema().Should().BeEquivalentTo(
             expectedSchema, opt => opt.WithStrictOrdering());
         var expectedData = expected.ReadData();
-        outputHelper.PrintOut(expectedSchema
-            .Select(c => c.ColumnName)
-            .ToList(), expectedData);
+        if (actual is not RecordsAffectedDataReader)
+            outputHelper.PrintOut(expectedSchema
+                .Select(c => c.ColumnName)
+                .ToList(), expectedData);
         actual.ReadData().Should().BeEquivalentTo(expectedData,
             opt => opt
                 .WithStrictOrdering()
@@ -41,11 +42,11 @@ public static class DbDataReaderTestExtensions
         var header = "│ " + string.Join(" │ ", h) + " │";
         var top = Border("┌─┬┐");
         var bottom = Border("└─┴┘");
-        var separator = Border("├─┼┤");      
+        var separator = Border("├─┼┤");
         var dataRows = rows.Select(row => "│ " + string.Join(" │ ", RowData(row)) + " │");
 
         output.WriteLine(string.Join(Environment.NewLine,
-            new[] { top, header, separator}
+            new[] { top, header, separator }
                 .Concat(dataRows).Append(bottom)));
         return;
 

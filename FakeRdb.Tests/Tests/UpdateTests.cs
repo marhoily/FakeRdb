@@ -21,4 +21,16 @@ public sealed class UpdateTests : ComparisonTests
         AssertReadersMatch("select * from customers");
 
     }
+
+    [Fact]
+    public void UpdateAmount()
+    {
+        AssertReadersMatch("""
+                           UPDATE orders
+                           SET total_amount = 300.00
+                           WHERE order_id = 2;
+                           """);
+        AssertReadersMatch("select * from orders");
+
+    }
 }
