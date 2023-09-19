@@ -88,23 +88,22 @@ public sealed class SqlVisitor : SQLiteParserBaseVisitor<IResult?>
         {
             return new ValueExpression(_parameters[bind.GetText()].Value);
         }
-        if (context.literal_value() is { } literal)
-        {
-            return new ValueExpression(literal.GetText().Unquote());
-        }
-        if (context.children[0] is SQLiteParser.ExprContext)
-        {
-            if (context.children[1] is ITerminalNode { Symbol.Type: var operand })
-            {
-                var left = (Expression)(Visit(context.children.First()) ?? throw new NotImplementedException());
-                var right = (Expression)(Visit(context.children.Last()) ?? throw new NotImplementedException());
-                return context.ToBinaryExpression(operand, left, right);
-            }
-        }
 
-        return VisitChildren(context);
+        // try and filter out binary\unary expression
+        if (context.children[0] is not SQLiteParser.ExprContext) return VisitChildren(context);
+        if (context.children[1] is not ITerminalNode { Symbol.Type: var operand }) return VisitChildren(context);
+
+        var left = (Expression)(Visit(context.children.First()) ?? throw new NotImplementedException());
+        var right = (Expression)(Visit(context.children.Last()) ?? throw new NotImplementedException());
+        return context.ToBinaryExpression(operand, left, right);
+
     }
-    
+
+    public override IResult VisitLiteral_value(SQLiteParser.Literal_valueContext context)
+    {
+        return new ValueExpression(context.GetText().Unquote());
+    }
+
     public override IResult VisitColumn_access(SQLiteParser.Column_accessContext context)
     {
         var table = _db.Try(context.table_name()?.GetText()) ??
