@@ -20,8 +20,7 @@ public sealed class FakeDb : Dictionary<string, Table>
             var col = Array.IndexOf(columns, field.Name);
             if (col != -1)
                 return row => Convert.ChangeType(
-                    // TODO: Refactor "null!" (!)
-                    values.Rows[row].Cells[col].Resolve(null!), field.FieldType);
+                    values.Rows[row].Cells[col].Resolve(), field.FieldType);
 
             if (field.IsAutoincrement)
                 return _ => table.Autoincrement();
@@ -44,10 +43,10 @@ public sealed class FakeDb : Dictionary<string, Table>
                 $"No columns selected from table: {tableName}");
         var filtered = filter == null
             ? dbTable
-            : dbTable.Where(filter.Resolve<bool>);
+            : dbTable.Where(x => filter.Resolve<bool>(x));
         var table = filtered
             .Select(dbRow => proj
-                .Select(column => column.Resolve(dbRow))//dbRow.Data[column])
+                .Select(column => column.Resolve(dbRow))
                 .ToList())
             .ToList();
         var schema = proj
@@ -55,6 +54,22 @@ public sealed class FakeDb : Dictionary<string, Table>
             .ToArray();
         return new QueryResult(schema, table);
     }
+
+    public IResult SelectAggregate(string tableName,
+        List<FunctionCallExpression> aggregate)
+    {
+        var dbTable = this[tableName];
+        var rows = dbTable.ToArray();
+        var result = aggregate.Single().Resolve<Row?>(rows);
+        var schema = new[] { new Field(0, "MAX(total_amount)", "INTEGER", typeof(long)) };
+        var data = new List<List<object?>>
+        {
+            result?.Data.ToList() ?? new List<object?> { null }
+        };
+        return new QueryResult(schema, data);
+    }
+    
+
     public int Update(
         string tableName,
         (string column, Expression value)[] assignments,
@@ -82,11 +97,5 @@ public sealed class FakeDb : Dictionary<string, Table>
     public Table? Try(string? tableName)
     {
         return tableName == null ? null : this[tableName];
-    }
-
-    public IResult SelectAggregate(string tableName, 
-        List<FunctionCallExpression> aggregate)
-    {
-        throw new NotImplementedException();
     }
 }

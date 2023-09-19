@@ -31,7 +31,7 @@ public sealed class BinaryExpression : Expression
         throw new InvalidOperationException(
             "Cannot determine ExpressionType of a binary operation before it was resolved");
 
-    public override object? Resolve(Row row)
+    public override object? Resolve(params Row[] row)
     {
         var l = _left.Resolve(row);
         var r = _right.Resolve(row);

@@ -12,5 +12,5 @@ public sealed class ValueExpression : Expression
     protected override void SetValue(object value) =>
         throw new NotSupportedException();
 
-    public override object? Resolve(Row row) => _value;
+    public override object? Resolve(params Row[] row) => _value;
 }

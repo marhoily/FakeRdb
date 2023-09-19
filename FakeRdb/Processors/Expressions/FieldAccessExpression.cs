@@ -14,11 +14,11 @@ public sealed class FieldAccessExpression : Expression, IProjection
 
     protected override void SetValue(object value) => throw new NotSupportedException();
 
-    public override object? Resolve(Row row)
+    public override object? Resolve(params Row[] row)
     {
         if (AccessedField == null)
             throw new InvalidOperationException(
                 "Cannot resolve value without column");
-        return Convert.ChangeType(row[AccessedField], AccessedField.FieldType);
+        return Convert.ChangeType(row[0][AccessedField], AccessedField.FieldType);
     }
 }
