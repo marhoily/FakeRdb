@@ -4,11 +4,8 @@ public sealed class SqlVisitor : SQLiteParserBaseVisitor<FakeDbReader>
 {
     private readonly FakeDb _db;
     private readonly FakeDbParameterCollection _parameters;
-    private FakeDbReader? _defaultResult;
 
-    protected override FakeDbReader DefaultResult => _defaultResult!;
-
-    public SqlVisitor(FakeDb db,  FakeDbParameterCollection parameters)
+    public SqlVisitor(FakeDb db, FakeDbParameterCollection parameters)
     {
         _db = db;
         _parameters = parameters;
@@ -16,27 +13,17 @@ public sealed class SqlVisitor : SQLiteParserBaseVisitor<FakeDbReader>
 
     public override FakeDbReader VisitSelect_core(SQLiteParser.Select_coreContext context)
     {
-        var tableName = context.table_or_subquery().Single().table_name().GetText().Unescape();
-        var dbTable = _db[tableName];
-        var dbSchema = dbTable.Schema;
-        var arr = context.result_column();
-
-        var selectedIndices = arr.Length == 1 && arr[0].GetText() == "*"
-            ? Enumerable.Range(0, dbSchema.Columns.Length).ToArray()
-            : arr.Select(col => dbSchema.IndexOf(col.GetColumnName())).ToArray();
-        if (selectedIndices.Length == 0) 
-            throw new InvalidOperationException($"No columns selected from table: {tableName}");
-        var table = dbTable
-            .Select(dbRow => selectedIndices
-                .Select(column => dbRow.Data[column])
-                .ToList())
-            .ToList();
-        var schema = selectedIndices
-            .Select(column => dbSchema.Columns[column])
+        var tableName = context.table_or_subquery()
+            .Single()
+            .table_name()
+            .GetText()
+            .Unescape();
+        var projection = context.result_column()
+            .Select(col => col.GetColumnName())
             .ToArray();
-        return _defaultResult = new FakeDbReader(
-            new QueryResult(schema, table));
+        return _db.Select(tableName, projection);
     }
+
     public override FakeDbReader VisitInsert_stmt(SQLiteParser.Insert_stmtContext context)
     {
         if (context.values_clause() is not { } values)
@@ -47,10 +34,10 @@ public sealed class SqlVisitor : SQLiteParserBaseVisitor<FakeDbReader>
         var rows = values.value_row();
 
         _db.Insert(tableName, columns, GetData, rows.Length);
-       
+
         return base.VisitInsert_stmt(context);
 
-        object? GetData(int rowIndex, int idx) => 
+        object? GetData(int rowIndex, int idx) =>
             rows[rowIndex].expr(idx).Resolve(_parameters);
     }
     public override FakeDbReader VisitCreate_table_stmt(SQLiteParser.Create_table_stmtContext context)
