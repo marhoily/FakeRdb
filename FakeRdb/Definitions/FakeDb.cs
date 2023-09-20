@@ -55,7 +55,7 @@ public sealed class FakeDb : Dictionary<string, Table>
                 .ToList())
             .ToList();
         var schema = proj
-            .Select((exp, n) => new Field(n, exp.ResultSetName, exp.ExpressionType))
+            .Select((exp, n) => new Field(n, exp.ResultName, exp.ExpressionType))
             .ToArray();
         return new QueryResult(schema, data);
 
@@ -90,7 +90,7 @@ public sealed class FakeDb : Dictionary<string, Table>
             var func = aggregate[i];
             var cell = func.Resolve<AggregateResult>(rows);
             schema.Add(new Field(i,
-                func.ResultSetName,
+                func.ResultName,
                     cell.Value.GetTypeAffinity()));
             data.Add(cell.Value);
         }

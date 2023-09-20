@@ -10,7 +10,7 @@ public sealed class ProjectionExpression : IExpression
      * affinity as the table column. 
      */
     public SqliteTypeAffinity ExpressionType => AccessedField.FieldType;
-    public string ResultSetName => AccessedField.Name;
+    public string ResultName => AccessedField.Name;
 
 
 

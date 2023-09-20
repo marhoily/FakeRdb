@@ -9,28 +9,20 @@ public sealed class BinaryExpression : IExpression
 
     public BinaryExpression(Operator op,
         IExpression left, IExpression right,
-        string exp)
+        string originalExpression)
     {
         _left = left;
         _op = op;
         _right = right;
-        ResultSetName = exp;
+        ResultName = originalExpression;
     }
 
     public SqliteTypeAffinity ExpressionType =>
-        /*
-         * Any operators applied to column names,
-         * including the no-op unary "+" operator,
-         * convert the column name into an expression
-         * which always has no affinity.
-         * 
-         * Hence even if X and Y.Z are column names, the expressions +X and +Y.Z are not column names and have no affinity. 
-         */
         _expressionType ??
         throw new InvalidOperationException(
             "Cannot determine ExpressionType of a binary operation before it was resolved");
 
-    public string ResultSetName { get; }
+    public string ResultName { get; }
 
     public object? Eval()
     {
@@ -56,6 +48,13 @@ public sealed class BinaryExpression : IExpression
             : _left.ExpressionType;
 
         var result = Calc(_op, l.Coerce(coerceTo), r.Coerce(coerceTo));
+        
+        /*
+         * Any operators applied to column names, including the no-op unary "+" operator,
+         * convert the column name into an expression which always has no affinity.
+         * Hence even if X and Y.Z are column names, the expressions +X
+         * and +Y.Z are not column names and have no affinity.
+         */
         _expressionType = result.GetTypeAffinity();
         return result;
 

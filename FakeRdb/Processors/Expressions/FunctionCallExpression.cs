@@ -66,6 +66,6 @@ public sealed class FunctionCallExpression : IExpression
         _ => _args[0].ExpressionType
     };
 
-    public string ResultSetName =>
-        $"{_functionName}({string.Join(", ", _args.Select(a => a.ResultSetName))})";
+    public string ResultName =>
+        $"{_functionName}({string.Join(", ", _args.Select(a => a.ResultName))})";
 }

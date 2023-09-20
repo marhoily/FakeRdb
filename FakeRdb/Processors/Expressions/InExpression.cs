@@ -23,5 +23,5 @@ public sealed class InExpression : IExpression
     }
 
     public SqliteTypeAffinity ExpressionType => SqliteTypeAffinity.Integer;
-    public string ResultSetName => "???";
+    public string ResultName => "???";
 }

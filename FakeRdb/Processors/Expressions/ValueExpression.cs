@@ -7,11 +7,11 @@ public sealed class ValueExpression : IExpression
     {
         _value = value.Coerce(type);
         ExpressionType = type;
-        ResultSetName = exp;
+        ResultName = exp;
     }
 
     public SqliteTypeAffinity ExpressionType { get; }
-    public string ResultSetName { get; }
+    public string ResultName { get; }
 
     public object? Eval() => _value;
     public object? Eval(Row dataSet) => _value;
