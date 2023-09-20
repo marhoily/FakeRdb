@@ -78,6 +78,7 @@ public sealed class BinaryExpression : IExpression
                 Operator.Equal => Equals(x, y),
                 Operator.Less => x is IComparable c ? c.CompareTo(y) == -1 : throw new NotSupportedException(),
                 Operator.Addition => (dynamic)x + (dynamic)y,
+                Operator.Concatenation => string.Concat(x, y),
                 _ => throw new ArgumentOutOfRangeException(op.ToString())
             });
         }
