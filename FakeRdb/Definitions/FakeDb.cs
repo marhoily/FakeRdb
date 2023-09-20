@@ -24,12 +24,12 @@ public sealed class FakeDb : Dictionary<string, Table>
                 return row => 
                     values.Rows[row].Cells[col]
                         .Resolve()
-                        .Coerce(field.FieldType.TypeAffinity);
+                        .Coerce(field.FieldType);
 
             if (field.IsAutoincrement)
                 return _ => table.Autoincrement();
 
-            return _ => field.FieldType.TypeAffinity switch
+            return _ => field.FieldType switch
             {
                 SqliteTypeAffinity.Numeric => 0,
                 SqliteTypeAffinity.Integer => 0,
@@ -91,9 +91,7 @@ public sealed class FakeDb : Dictionary<string, Table>
             var cell = func.Resolve<AggregateResult>(rows);
             schema.Add(new Field(i, 
                 func.ResultSetName, 
-                new DynamicType(cell.Value.GetStorageType(),
-                    cell.Value.GetTypeAffinity(),
-                    cell.Value?.GetType() ?? typeof(DBNull))));
+                    cell.Value.GetTypeAffinity()));
             data.Add(cell.Value);
         }
       

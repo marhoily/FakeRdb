@@ -16,10 +16,10 @@ public sealed class DataSeederTests
         _connection.Seed3Albums();
         _fakeDb["Album"].Schema.Columns.Should().BeEquivalentTo(new[]
         {
-            new Field(0, "Id", DynamicType.Integer, true),
-            new Field(1, "Title", DynamicType.Text),
-            new Field(2, "Artist", DynamicType.Text),
-            new Field(3, "Year", DynamicType.Integer),
+            new Field(0, "Id", SqliteTypeAffinity.Integer, true),
+            new Field(1, "Title", SqliteTypeAffinity.Text),
+            new Field(2, "Artist", SqliteTypeAffinity.Text),
+            new Field(3, "Year", SqliteTypeAffinity.Integer),
         });
 
     }

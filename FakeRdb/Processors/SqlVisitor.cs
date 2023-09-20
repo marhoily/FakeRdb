@@ -101,7 +101,7 @@ public sealed class SqlVisitor : SQLiteParserBaseVisitor<IResult?>
         if (context.BIND_PARAMETER() is { } bind)
         {
             var value = _parameters[bind.GetText()].Value;
-            return new ValueExpression(value, value.GetRuntimeType());
+            return new ValueExpression(value, value.GetTypeAffinity());
         }
 
         // try and filter out binary\unary expression
@@ -124,8 +124,9 @@ public sealed class SqlVisitor : SQLiteParserBaseVisitor<IResult?>
         var text = context.GetText();
         var unquote = text.Unquote();
         return new ValueExpression(unquote, unquote != text 
-            ? DynamicType.Text 
-            : DynamicType.Integer);
+            ? SqliteTypeAffinity.Text 
+            // TODO: numeric?
+            : SqliteTypeAffinity.Integer);
     }
 
     public override IResult? VisitResult_column(SQLiteParser.Result_columnContext context)

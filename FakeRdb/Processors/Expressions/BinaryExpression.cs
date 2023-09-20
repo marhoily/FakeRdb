@@ -5,7 +5,7 @@ public sealed class BinaryExpression : Expression
     private readonly Expression _left;
     private readonly Operator _op;
     private readonly Expression _right;
-    private DynamicType? _expressionType;
+    private SqliteTypeAffinity? _expressionType;
 
     public BinaryExpression(Operator op, Expression left, Expression right)
     {
@@ -26,7 +26,7 @@ public sealed class BinaryExpression : Expression
         _right.BindValue(value);
     }
 
-    public override DynamicType ExpressionType =>
+    public override SqliteTypeAffinity ExpressionType =>
         /*
          *Any operators applied to column names, including the no-op unary "+" operator, convert the column name into an expression which always has no affinity. Hence even if X and Y.Z are column names, the expressions +X and +Y.Z are not column names and have no affinity. 
          */
@@ -41,16 +41,21 @@ public sealed class BinaryExpression : Expression
         var l = _left.Resolve(dataSet);
         var r = _right.Resolve(dataSet);
         if (GetCoercionPriority(_left) < GetCoercionPriority(_right))
-            l = Convert.ChangeType(l,
-                _expressionType = _right.ExpressionType);
+        {
+            _expressionType = _right.ExpressionType;
+            l = l.Coerce(_right.ExpressionType);
+        }
         else
-            r = Convert.ChangeType(r,
-                _expressionType = _left.ExpressionType);
+        {
+            _expressionType = _left.ExpressionType;
+            r = r.Coerce(_left.ExpressionType);
+        }
 
         return _op switch
         {
             Operator.Multiplication => (l, r) switch
             {
+                // TODO: move to type coercion code
                 (null, _) or (_, null) => null,
                 (double a, decimal b) => a * (double) b,
                 (decimal a, double b) => (double) a * b,

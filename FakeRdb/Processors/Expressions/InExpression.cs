@@ -24,10 +24,10 @@ public sealed class InExpression : Expression
     public override object Resolve(params Row[] dataSet)
     {
         var n = _needle.Resolve(dataSet);
-        var nn = Convert.ChangeType(n, _set.Schema.Single().FieldType);
+        var nn = n.Coerce(_set.Schema.Single().FieldType);
         return _set.Data.Any(r => Equals(nn, r[0]));
     }
 
-    public override DynamicType ExpressionType => DynamicType.Bool;
+    public override SqliteTypeAffinity ExpressionType => SqliteTypeAffinity.Integer;
     public override string ResultSetName => "???";
 }

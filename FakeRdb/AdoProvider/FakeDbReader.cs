@@ -75,7 +75,7 @@ public sealed class FakeDbReader : DbDataReader
     public override string GetDataTypeName(int ordinal)
     {
         return _queryResult.Schema[ordinal]
-            .FieldType.TypeAffinity
+            .FieldType
             .ToString().ToUpperInvariant();
     }
 
@@ -96,7 +96,8 @@ public sealed class FakeDbReader : DbDataReader
 
     public override Type GetFieldType(int ordinal)
     {
-        return _queryResult.Schema[ordinal].FieldType;
+        throw new NotImplementedException();
+        //return _queryResult.Schema[ordinal];
     }
 
     public override float GetFloat(int ordinal)

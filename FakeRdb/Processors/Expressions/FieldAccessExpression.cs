@@ -9,7 +9,7 @@ public sealed class FieldAccessExpression : Expression, IProjection
      * table (not a VIEW or subquery) then the expression has the same
      * affinity as the table column. 
      */
-    public override DynamicType ExpressionType => AccessedField.FieldType;
+    public override SqliteTypeAffinity ExpressionType => AccessedField.FieldType;
     public override string ResultSetName => AccessedField.Name;
 
     protected override void SetTarget(Field targetField)
@@ -25,7 +25,7 @@ public sealed class FieldAccessExpression : Expression, IProjection
         if (AccessedField == null)
             throw new InvalidOperationException(
                 "Cannot resolve value without column");
-        return dataSet[0][AccessedField].Coerce(AccessedField.FieldType.TypeAffinity);
+        return dataSet[0][AccessedField].Coerce(AccessedField.FieldType);
     }
 
 }

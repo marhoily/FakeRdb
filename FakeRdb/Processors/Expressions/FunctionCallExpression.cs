@@ -40,7 +40,7 @@ public sealed class FunctionCallExpression : Expression, IProjection
         var exp = (FieldAccessExpression)_args.Single();
         var resolve = exp.Resolve(dataSet);
         var field = exp.AccessedField;
-        var affinity = field.FieldType.TypeAffinity;
+        var affinity = field.FieldType;
         var result = resolve.GetStorageType(affinity);
         return result.ToString().ToLowerInvariant();
     }
@@ -63,9 +63,9 @@ public sealed class FunctionCallExpression : Expression, IProjection
     /*
      * An expression of the form "CAST(expr AS type)" has an affinity that is the same as a column with a declared type of "type". 
      */
-    public override DynamicType ExpressionType => _functionName switch
+    public override SqliteTypeAffinity ExpressionType => _functionName switch
     {
-        "typeof" => DynamicType.Text,
+        "typeof" => SqliteTypeAffinity.Text,
         _ => _args[0].ExpressionType
     };
 
