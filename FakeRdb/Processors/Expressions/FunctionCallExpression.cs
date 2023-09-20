@@ -17,7 +17,7 @@ public sealed class FunctionCallExpression : IExpression
         _args = args;
     }
 
-    public object Eval()=> throw new NotSupportedException();
+    public object Eval() => throw new NotSupportedException();
     public object Eval(Row dataSet) =>
         _functionName.ToUpperInvariant() switch
         {

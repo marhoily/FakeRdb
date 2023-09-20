@@ -9,7 +9,7 @@ public sealed class InsertTests : ComparisonTests
         Sqlite.Seed3Albums();
         Sut.Seed3Albums();
     }
-    
+
     [Fact]
     public void Insert_Expression()
     {

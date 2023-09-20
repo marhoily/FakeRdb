@@ -8,7 +8,7 @@ public sealed class SqlVisitor : SQLiteParserBaseVisitor<IResult?>
     private readonly FakeDb _db;
     private readonly FakeDbParameterCollection _parameters;
     private Scope<Table> _currentTable;
-    private static readonly char[] SignsOfReal = {'.','e'};
+    private static readonly char[] SignsOfReal = { '.', 'e' };
 
     public SqlVisitor(string originalSql, FakeDb db, FakeDbParameterCollection parameters)
     {
@@ -28,7 +28,7 @@ public sealed class SqlVisitor : SQLiteParserBaseVisitor<IResult?>
         var fields = context.column_def().Select((col, n) =>
                 new Field(n,
                     col.column_name().GetText(),
-                   // col.type_name().GetText(),
+                    // col.type_name().GetText(),
                     col.type_name().ToRuntimeType(),
                     col.column_constraint().Any(c => c.AUTOINCREMENT_() != null)))
             .ToArray();
@@ -71,13 +71,13 @@ public sealed class SqlVisitor : SQLiteParserBaseVisitor<IResult?>
             .Unescape();
         using var _ = _currentTable.Set(_db[tableName]);
         var select = context.result_column().Select(Visit).ToList();
-            
-       var aggregate = select
-           .OfType<FunctionCallExpression>()
-           .Where(f => f.IsAggregate)
-           .ToList();
-       if (aggregate.Count > 0)
-           return _db.SelectAggregate(tableName, aggregate);
+
+        var aggregate = select
+            .OfType<FunctionCallExpression>()
+            .Where(f => f.IsAggregate)
+            .ToList();
+        if (aggregate.Count > 0)
+            return _db.SelectAggregate(tableName, aggregate);
         var filter = context.whereExpr == null ? null : Visit(context.whereExpr);
         var projection = select.Cast<IProjection>().ToArray();
         return _db.Select(tableName, projection, (IExpression?)filter);
@@ -120,7 +120,7 @@ public sealed class SqlVisitor : SQLiteParserBaseVisitor<IResult?>
             return new InExpression(left, (QueryResult)right);
         }
 
-        return context.ToBinaryExpression(operand, left, 
+        return context.ToBinaryExpression(operand, left,
             (IExpression)right, context.GetOriginalText(_originalSql));
 
     }
@@ -143,9 +143,9 @@ public sealed class SqlVisitor : SQLiteParserBaseVisitor<IResult?>
 
     public override IResult? VisitResult_column(SQLiteParser.Result_columnContext context)
     {
-        if (context.STAR() != null) 
+        if (context.STAR() != null)
             return Wildcard.Instance;
-        
+
         return Visit(context.expr());
     }
 

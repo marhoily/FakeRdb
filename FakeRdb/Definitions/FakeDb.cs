@@ -21,7 +21,7 @@ public sealed class FakeDb : Dictionary<string, Table>
         {
             var col = Array.IndexOf(columns, field.Name);
             if (col != -1)
-                return row => 
+                return row =>
                     values.Rows[row].Cells[col]
                         .Eval()
                         .Coerce(field.FieldType);
@@ -89,16 +89,16 @@ public sealed class FakeDb : Dictionary<string, Table>
         {
             var func = aggregate[i];
             var cell = func.Resolve<AggregateResult>(rows);
-            schema.Add(new Field(i, 
-                func.ResultSetName, 
+            schema.Add(new Field(i,
+                func.ResultSetName,
                     cell.Value.GetTypeAffinity()));
             data.Add(cell.Value);
         }
-      
+
         return new QueryResult(schema.ToArray(),
             new List<List<object?>>
             {
-                data 
+                data
             });
     }
 

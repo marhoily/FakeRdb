@@ -7,7 +7,7 @@ public sealed class BinaryExpression : IExpression
     private readonly IExpression _right;
     private SqliteTypeAffinity? _expressionType;
 
-    public BinaryExpression(Operator op, 
+    public BinaryExpression(Operator op,
         IExpression left, IExpression right,
         string exp)
     {
@@ -34,9 +34,9 @@ public sealed class BinaryExpression : IExpression
         return Eval(l, r);
     }
 
-    public object Eval(params Row[] dataSet)=> throw new NotSupportedException();
+    public object Eval(params Row[] dataSet) => throw new NotSupportedException();
 
-    public object? Eval(Row dataSet) 
+    public object? Eval(Row dataSet)
     {
         var l = _left.Eval(dataSet);
         var r = _right.Eval(dataSet);
