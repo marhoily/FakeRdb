@@ -19,7 +19,12 @@ public sealed class BinaryExpression : IExpression
 
     public SqliteTypeAffinity ExpressionType =>
         /*
-         *Any operators applied to column names, including the no-op unary "+" operator, convert the column name into an expression which always has no affinity. Hence even if X and Y.Z are column names, the expressions +X and +Y.Z are not column names and have no affinity. 
+         * Any operators applied to column names,
+         * including the no-op unary "+" operator,
+         * convert the column name into an expression
+         * which always has no affinity.
+         * 
+         * Hence even if X and Y.Z are column names, the expressions +X and +Y.Z are not column names and have no affinity. 
          */
         _expressionType ??
         throw new InvalidOperationException(
@@ -34,6 +39,7 @@ public sealed class BinaryExpression : IExpression
         return Eval(l, r);
     }
 
+    // Binary operations are not defined ot Tables
     public object Eval(params Row[] dataSet) => throw new NotSupportedException();
 
     public object? Eval(Row dataSet)
@@ -45,34 +51,15 @@ public sealed class BinaryExpression : IExpression
 
     private object? Eval(object? l, object? r)
     {
-        if (GetCoercionPriority(_left) < GetCoercionPriority(_right))
-        {
-            _expressionType = _right.ExpressionType;
-            l = l.Coerce(_right.ExpressionType);
-        }
-        else
-        {
-            _expressionType = _left.ExpressionType;
-            r = r.Coerce(_left.ExpressionType);
-        }
+        var coerceTo = GetPriority(_left) < GetPriority(_right)
+            ? _right.ExpressionType
+            : _left.ExpressionType;
 
-        return _op switch
-        {
-            Operator.Multiplication => (l, r) switch
-            {
-                // TODO: move to type coercion code
-                (null, _) or (_, null) => null,
-                (double a, decimal b) => a * (double)b,
-                (decimal a, double b) => (double)a * b,
-                _ => (dynamic)l * (dynamic)r,
-            },
-            Operator.Equal => Equals(l, r),
-            Operator.Less => l is IComparable c ? c.CompareTo(r) == -1 : throw new NotSupportedException(),
-            Operator.Addition => l == null || r == null ? null : (dynamic)l + (dynamic)r,
-            _ => throw new ArgumentOutOfRangeException(_op.ToString())
-        };
+        var result = Calc(_op, l.Coerce(coerceTo), r.Coerce(coerceTo));
+        _expressionType = result.GetTypeAffinity();
+        return result;
 
-        static int GetCoercionPriority(IExpression exp) =>
+        static int GetPriority(IExpression exp) =>
             exp switch
             {
                 BinaryExpression => 0,
@@ -80,5 +67,19 @@ public sealed class BinaryExpression : IExpression
                 ValueExpression => 0,
                 _ => throw new ArgumentOutOfRangeException(nameof(exp))
             };
+
+        static object? Calc(Operator op, object? x, object? y)
+        {
+            if (x == null || y == null)
+                return null;
+            return (object?)(op switch
+            {
+                Operator.Multiplication => (dynamic)x * (dynamic)y,
+                Operator.Equal => Equals(x, y),
+                Operator.Less => x is IComparable c ? c.CompareTo(y) == -1 : throw new NotSupportedException(),
+                Operator.Addition => (dynamic)x + (dynamic)y,
+                _ => throw new ArgumentOutOfRangeException(op.ToString())
+            });
+        }
     }
 }
