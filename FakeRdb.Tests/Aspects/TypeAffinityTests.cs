@@ -2,7 +2,7 @@ using Xunit.Abstractions;
 
 namespace FakeRdb.Tests;
 
-public sealed class TypeAffinityTests : ComparisonTests
+public sealed class TypeAffinityTests : ComparisonTestBase
 {
     public TypeAffinityTests(ITestOutputHelper output) : base(output)
     {

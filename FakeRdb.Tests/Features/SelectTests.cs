@@ -2,9 +2,9 @@ using Xunit.Abstractions;
 
 namespace FakeRdb.Tests;
 
-public sealed class SimpleSelectTests : ComparisonTests
+public sealed class SelectTests : ComparisonTestBase
 {
-    public SimpleSelectTests(ITestOutputHelper output) : base(output)
+    public SelectTests(ITestOutputHelper output) : base(output)
     {
         Sqlite.Seed3Albums();
         Sut.Seed3Albums();

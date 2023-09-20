@@ -2,7 +2,7 @@ using Xunit.Abstractions;
 
 namespace FakeRdb.Tests;
 
-public sealed class MultiTableSelectTests : ComparisonTests
+public sealed class MultiTableSelectTests : ComparisonTestBase
 {
     public MultiTableSelectTests(ITestOutputHelper output) : base(output)
     {
@@ -15,5 +15,6 @@ public sealed class MultiTableSelectTests : ComparisonTests
     {
         CompareAgainstSqlite("select * from customers");
         CompareAgainstSqlite("select * from orders");
+        CompareAgainstSqlite("select * from orders, customers");
     }
 }

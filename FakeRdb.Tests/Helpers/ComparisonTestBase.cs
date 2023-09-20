@@ -4,13 +4,13 @@ using Xunit.Abstractions;
 
 namespace FakeRdb.Tests;
 
-public abstract class ComparisonTests : IDisposable
+public abstract class ComparisonTestBase : IDisposable
 {
     private readonly ITestOutputHelper _output;
     protected DbConnection Sqlite { get; } = new SqliteConnection("Data Source=:memory:");
     protected DbConnection Sut { get; } = new FakeDbConnection(new FakeDb());
 
-    protected ComparisonTests(ITestOutputHelper output)
+    protected ComparisonTestBase(ITestOutputHelper output)
     {
         _output = output;
         Sqlite.Open();

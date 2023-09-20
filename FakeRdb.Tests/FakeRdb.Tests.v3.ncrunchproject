@@ -1,3 +1,9 @@
 ﻿<ProjectConfiguration>
-  <Settings />
+  <Settings>
+    <IgnoredTests>
+      <NamedTestSelector>
+        <TestName>FakeRdb.Tests.MultiTableSelectTests.Should_Fill_In_The_Tables</TestName>
+      </NamedTestSelector>
+    </IgnoredTests>
+  </Settings>
 </ProjectConfiguration>

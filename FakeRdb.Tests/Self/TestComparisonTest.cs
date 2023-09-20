@@ -3,7 +3,7 @@ using Xunit.Sdk;
 
 namespace FakeRdb.Tests;
 
-public sealed class TestComparisonTest : ComparisonTests
+public sealed class TestComparisonTest : ComparisonTestBase
 {
     public TestComparisonTest(ITestOutputHelper output) : base(output)
     {

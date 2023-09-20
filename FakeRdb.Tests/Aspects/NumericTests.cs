@@ -1,4 +1,4 @@
-﻿namespace FakeRdb.Tests.Libraries;
+﻿namespace FakeRdb.Tests;
 
 public sealed class NumericTests
 {

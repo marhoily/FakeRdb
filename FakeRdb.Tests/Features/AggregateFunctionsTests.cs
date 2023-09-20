@@ -2,7 +2,7 @@ using Xunit.Abstractions;
 
 namespace FakeRdb.Tests;
 
-public sealed class AggregateFunctionsTests : ComparisonTests
+public sealed class AggregateFunctionsTests : ComparisonTestBase
 {
     public AggregateFunctionsTests(ITestOutputHelper output) : base(output)
     {
