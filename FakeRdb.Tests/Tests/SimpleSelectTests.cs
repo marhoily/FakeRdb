@@ -57,8 +57,23 @@ public sealed class SimpleSelectTests : ComparisonTests
         CompareAgainstSqlite("select 1 +1 from Album");
     }
     [Fact]
-    public void Value_In_Select()
+    public void Dot_In_Select()
     {
         CompareAgainstSqlite("select 1.000 from Album");
+    }
+    [Fact]
+    public void Exponent_In_Select()
+    {
+        CompareAgainstSqlite("select 1e-3 from Album");
+    }
+    [Fact]
+    public void Int_In_Select()
+    {
+        CompareAgainstSqlite("select 12 from Album");
+    }
+    [Fact]
+    public void Text_In_Select()
+    {
+        CompareAgainstSqlite("select '12' from Album");
     }
 }
