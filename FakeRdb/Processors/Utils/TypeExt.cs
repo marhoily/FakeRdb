@@ -166,10 +166,11 @@ public static partial class TypeExt
         };
     }
 
-    public static SqliteTypeAffinity ToRuntimeType(this SQLiteParser.Type_nameContext context)
+    public static SqliteTypeAffinity ToRuntimeType(this SQLiteParser.Type_nameContext? context)
     {
-        return context.GetText() switch
+        return context?.GetText() switch
         {
+            null => SqliteTypeAffinity.None,
             "TEXT" => SqliteTypeAffinity.Text,
             "INTEGER" => SqliteTypeAffinity.Integer,
             "NUMERIC" => SqliteTypeAffinity.Numeric,

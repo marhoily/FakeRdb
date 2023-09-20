@@ -19,7 +19,7 @@ public static class FakeDbExt
         {
             Affected affected => new RecordsAffectedDataReader(affected.RecordsCount),
             QueryResult queryResult => new FakeDbReader(queryResult),
-            _ => throw new ArgumentOutOfRangeException()
+            var x => throw new ArgumentOutOfRangeException(x?.ToString())
         };
     }
 }

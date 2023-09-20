@@ -61,6 +61,17 @@ public sealed class SqlVisitor : SQLiteParserBaseVisitor<IResult?>
             .ToArray());
     }
 
+    public override IResult VisitSelect_stmt(SQLiteParser.Select_stmtContext context)
+    {
+        var select = (QueryResult)Visit(context.select_core().Single())!;
+        if (context.order_by_stmt() is { } orderByStmt)
+        {
+            var orderBy = (OrderByClause)Visit(orderByStmt)!;
+            select.Sort(orderBy);
+        }
+
+        return select;
+    }
     public override IResult VisitSelect_core(SQLiteParser.Select_coreContext context)
     {
         var tableName = context.table_or_subquery()
@@ -79,7 +90,8 @@ public sealed class SqlVisitor : SQLiteParserBaseVisitor<IResult?>
             return _db.SelectAggregate(tableName, aggregate);
         var filter = context.whereExpr == null ? null : Visit(context.whereExpr);
         var projection = select.Cast<IProjection>().ToArray();
-        return _db.Select(tableName, projection, (IExpression?)filter);
+        var result = _db.Select(tableName, projection, (IExpression?)filter);
+        return result;
     }
 
     public override IResult VisitUpdate_stmt(SQLiteParser.Update_stmtContext context)
@@ -96,6 +108,13 @@ public sealed class SqlVisitor : SQLiteParserBaseVisitor<IResult?>
         var filter = where == null ? null : (IExpression)Visit(where)!;
         var recordsAffected = _db.Update(tableName, assignments, filter);
         return new Affected(recordsAffected);
+    }
+
+    public override IResult VisitOrder_by_stmt(SQLiteParser.Order_by_stmtContext context)
+    {
+        var orderingTerm = Visit(context.ordering_term().Single())!;
+        var asProjection = (ProjectionExpression)orderingTerm;
+        return new OrderByClause(asProjection.SelectColumn);
     }
 
     public override IResult? VisitExpr(SQLiteParser.ExprContext context)
