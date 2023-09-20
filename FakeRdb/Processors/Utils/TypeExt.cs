@@ -24,10 +24,7 @@ public static partial class TypeExt
             };
         }
     }
-    // Numeric strings consist of optional sign,
-    // any number of digits, optional decimal part and optional
-    // exponential part. Thus +0123.45e6 is a valid numeric value.
-    [GeneratedRegex(@"^(((?!0)|[-+]|(?=0+\.))(\d*\.)?\d+(e[-+]\d+)?)$")]
+    [GeneratedRegex(@"^[-+]?((0(?![0-9])|[1-9]\d*)(\.\d*)?|\.\d+)([eE][-+]?\d+)?$")]
     private static partial Regex IsNumericRegex();
 
     public static bool IsNumeric(this string value)

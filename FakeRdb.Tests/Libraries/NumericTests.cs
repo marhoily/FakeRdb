@@ -92,4 +92,30 @@ public sealed class NumericTests
     {
         value.IsInteger().Should().Be(isInteger);
     }
+
+    [Theory]
+    [InlineData("123", true)]              // Regular integer
+    [InlineData("-123", true)]             // Negative integer
+    [InlineData("+123", true)]             // Positive integer with explicit sign
+    [InlineData("0.123", true)]            // Decimal number
+    [InlineData(".123", true)]             // Decimal without leading zero
+    [InlineData("123.", true)]             // Decimal without trailing digits
+    [InlineData("1.23e-45", true)]         // Decimal with negative exponent
+    [InlineData("1.23e45", true)]          // Decimal with positive exponent
+    [InlineData("+1.23e45", true)]         // Decimal with explicit positive sign and exponent
+    [InlineData("-.123", true)]            // Negative decimal without leading zero
+    [InlineData("+.123", true)]            // Positive decimal without leading zero with explicit sign
+    [InlineData("0123", false)]            // Leading zero
+    [InlineData(".", false)]               // Just a dot
+    [InlineData("-.", false)]              // Negative dot
+    [InlineData("+.", false)]              // Positive dot
+    [InlineData("1.2.3", false)]           // Multiple dots
+    [InlineData("1.23e", false)]           // Incomplete scientific notation
+    [InlineData("1.23e-", false)]          // Incomplete scientific notation with negative
+    [InlineData("abc", false)]             // Non-numeric characters
+    public void IsNumeric(string input, bool expected)
+    {
+        bool result = input.IsNumeric();
+        Assert.Equal(expected, result);
+    }
 }

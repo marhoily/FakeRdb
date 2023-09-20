@@ -67,6 +67,11 @@ public sealed class SimpleSelectTests : ComparisonTests
         CompareAgainstSqlite("select 1e-3 from Album");
     }
     [Fact]
+    public void Decimal_Without_Trailing_Digits_In_Select()
+    {
+        CompareAgainstSqlite("select 123. from Album");
+    }
+    [Fact]
     public void Int_In_Select()
     {
         CompareAgainstSqlite("select 12 from Album");
