@@ -23,7 +23,7 @@ public sealed class FakeDb : Dictionary<string, Table>
             if (col != -1)
                 return row => 
                     values.Rows[row].Cells[col]
-                        .Resolve()
+                        .Eval()
                         .Coerce(field.FieldType);
 
             if (field.IsAutoincrement)
@@ -41,7 +41,7 @@ public sealed class FakeDb : Dictionary<string, Table>
         }
     }
 
-    public IResult Select(string tableName, IProjection[] projection, Expression? filter)
+    public IResult Select(string tableName, IProjection[] projection, IExpression? filter)
     {
         var dbTable = this[tableName];
         var dbSchema = dbTable.Schema;
@@ -51,7 +51,7 @@ public sealed class FakeDb : Dictionary<string, Table>
             : dbTable.Where(x => filter.Resolve<bool>(x));
         var data = filtered
             .Select(dbRow => proj
-                .Select(column => column.Resolve(dbRow))
+                .Select(column => column.Eval(dbRow))
                 .ToList())
             .ToList();
         var schema = proj
@@ -59,18 +59,18 @@ public sealed class FakeDb : Dictionary<string, Table>
             .ToArray();
         return new QueryResult(schema, data);
 
-        Expression[] BuildProjection()
+        IExpression[] BuildProjection()
         {
             if (projection is [Wildcard])
             {
                 var all = Enumerable.Range(0, dbSchema.Columns.Length)
                     .Select(n => new FieldAccessExpression(dbTable.Schema.Columns[n]))
-                    .Cast<Expression>()
+                    .Cast<IExpression>()
                     .ToArray();
                 return all;
             }
 
-            var result = projection.OfType<Expression>().ToArray();
+            var result = projection.OfType<IExpression>().ToArray();
             if (result.Length == 0)
                 throw new InvalidOperationException(
                     $"No columns selected from table: {tableName}");
@@ -105,8 +105,8 @@ public sealed class FakeDb : Dictionary<string, Table>
 
     public int Update(
         string tableName,
-        (string column, Expression value)[] assignments,
-        Expression? filter)
+        (string column, IExpression value)[] assignments,
+        IExpression? filter)
     {
         var table = this[tableName] ?? throw new ArgumentOutOfRangeException(nameof(tableName));
         var schema = table.Schema;
@@ -120,7 +120,7 @@ public sealed class FakeDb : Dictionary<string, Table>
                 counter++;
                 foreach (var (column, value) in compiled)
                 {
-                    row.Data[column] = value.Resolve(row)
+                    row.Data[column] = value.Eval(row)
                         .Coerce(schema.Columns[column].FieldType);
                 }
             }

@@ -1,3 +1,3 @@
 namespace FakeRdb;
 
-public sealed record ValuesRow(Expression[] Cells) : IResult;
+public sealed record ValuesRow(IExpression[] Cells) : IResult;

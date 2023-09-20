@@ -57,7 +57,7 @@ public sealed class SqlVisitor : SQLiteParserBaseVisitor<IResult?>
         return new ValuesTable(context.value_row()
             .Select(r => new ValuesRow(r.expr()
                 .Select(Visit)
-                .Cast<Expression>()
+                .Cast<IExpression>()
                 .ToArray()))
             .ToArray());
     }
@@ -80,7 +80,7 @@ public sealed class SqlVisitor : SQLiteParserBaseVisitor<IResult?>
            return _db.SelectAggregate(tableName, aggregate);
         var filter = context.whereExpr == null ? null : Visit(context.whereExpr);
         var projection = select.Cast<IProjection>().ToArray();
-        return _db.Select(tableName, projection, (Expression?)filter);
+        return _db.Select(tableName, projection, (IExpression?)filter);
     }
 
     public override IResult VisitUpdate_stmt(SQLiteParser.Update_stmtContext context)
@@ -91,10 +91,10 @@ public sealed class SqlVisitor : SQLiteParserBaseVisitor<IResult?>
         var assignments = context.update_assignment()
             .Select(a => (
                 ColumnName: a.column_name().GetText(),
-                Value: (Expression)Visit(a.expr())!))
+                Value: (IExpression)Visit(a.expr())!))
             .ToArray();
         var where = context.where_clause()?.expr();
-        var filter = where == null ? null : (Expression)Visit(where)!;
+        var filter = where == null ? null : (IExpression)Visit(where)!;
         var recordsAffected = _db.Update(tableName, assignments, filter);
         return new Affected(recordsAffected);
     }
@@ -113,7 +113,7 @@ public sealed class SqlVisitor : SQLiteParserBaseVisitor<IResult?>
         if (context.children[0] is not SQLiteParser.ExprContext) return VisitChildren(context);
         if (context.children[1] is not ITerminalNode { Symbol.Type: var operand }) return VisitChildren(context);
 
-        var left = (Expression)(Visit(context.children.First()) ?? throw new NotImplementedException());
+        var left = (IExpression)(Visit(context.children.First()) ?? throw new NotImplementedException());
         var right = Visit(context.children.Last()) ?? throw new NotImplementedException();
         if (operand == SQLiteLexer.IN_)
         {
@@ -121,7 +121,7 @@ public sealed class SqlVisitor : SQLiteParserBaseVisitor<IResult?>
         }
 
         return context.ToBinaryExpression(operand, left, 
-            (Expression)right, context.GetOriginalText(_originalSql));
+            (IExpression)right, context.GetOriginalText(_originalSql));
 
     }
 
@@ -163,7 +163,7 @@ public sealed class SqlVisitor : SQLiteParserBaseVisitor<IResult?>
     public override IResult VisitFunction_call(SQLiteParser.Function_callContext context)
     {
         var functionName = context.function_name().GetText()!;
-        var args = context.expr().Select(Visit).Cast<Expression>().ToArray();
+        var args = context.expr().Select(Visit).Cast<IExpression>().ToArray();
         return new FunctionCallExpression(
             functionName,
             args);

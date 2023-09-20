@@ -1,6 +1,6 @@
 namespace FakeRdb;
 
-public sealed class ValueExpression : Expression
+public sealed class ValueExpression : IExpression
 {
     private readonly object? _value;
     public ValueExpression(object? value, SqliteTypeAffinity type, string exp)
@@ -10,8 +10,8 @@ public sealed class ValueExpression : Expression
         ResultSetName = exp;
     }
 
-    public override SqliteTypeAffinity ExpressionType { get; }
-    public override string ResultSetName { get; }
+    public SqliteTypeAffinity ExpressionType { get; }
+    public string ResultSetName { get; }
 
-    public override object? Resolve(params Row[] dataSet) => _value;
+    public object? Eval(params Row[] dataSet) => _value;
 }

@@ -1,14 +1,14 @@
 namespace FakeRdb;
 
-public sealed class BinaryExpression : Expression
+public sealed class BinaryExpression : IExpression
 {
-    private readonly Expression _left;
+    private readonly IExpression _left;
     private readonly Operator _op;
-    private readonly Expression _right;
+    private readonly IExpression _right;
     private SqliteTypeAffinity? _expressionType;
 
     public BinaryExpression(Operator op, 
-        Expression left, Expression right,
+        IExpression left, IExpression right,
         string exp)
     {
         _left = left;
@@ -17,7 +17,7 @@ public sealed class BinaryExpression : Expression
         ResultSetName = exp;
     }
 
-    public override SqliteTypeAffinity ExpressionType =>
+    public SqliteTypeAffinity ExpressionType =>
         /*
          *Any operators applied to column names, including the no-op unary "+" operator, convert the column name into an expression which always has no affinity. Hence even if X and Y.Z are column names, the expressions +X and +Y.Z are not column names and have no affinity. 
          */
@@ -25,12 +25,12 @@ public sealed class BinaryExpression : Expression
         throw new InvalidOperationException(
             "Cannot determine ExpressionType of a binary operation before it was resolved");
 
-    public override string ResultSetName { get; }
+    public string ResultSetName { get; }
 
-    public override object? Resolve(params Row[] dataSet)
+    public object? Eval(params Row[] dataSet)
     {
-        var l = _left.Resolve(dataSet);
-        var r = _right.Resolve(dataSet);
+        var l = _left.Eval(dataSet);
+        var r = _right.Eval(dataSet);
         if (GetCoercionPriority(_left) < GetCoercionPriority(_right))
         {
             _expressionType = _right.ExpressionType;
@@ -58,7 +58,7 @@ public sealed class BinaryExpression : Expression
             _ => throw new ArgumentOutOfRangeException(_op.ToString())
         };
 
-        static int GetCoercionPriority(Expression exp) =>
+        static int GetCoercionPriority(IExpression exp) =>
             exp switch
             {
                 BinaryExpression => 0,

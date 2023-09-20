@@ -5,6 +5,8 @@ namespace FakeRdb;
 
 public static class ExpExt
 {
+    public static T Resolve<T>(this IExpression exp, params Row[] dataSet) => (T)exp.Eval(dataSet)!;
+
     public static string GetOriginalText(this ParserRuleContext context, string original)
     {
         int start = context.Start.StartIndex;
@@ -17,7 +19,7 @@ public static class ExpExt
 
         return "";
     }
-    public static BinaryExpression ToBinaryExpression(this SQLiteParser.ExprContext context, int tokenType, Expression left, Expression right, string exp)
+    public static BinaryExpression ToBinaryExpression(this SQLiteParser.ExprContext context, int tokenType, IExpression left, IExpression right, string exp)
     {
         return tokenType switch
         {
