@@ -12,7 +12,7 @@ public sealed class AliasingTests : ComparisonTestBase
 
     [Theory]
    // [InlineData("Cannot alias *", "SELECT * as x FROM Album")]
-   // [InlineData("Column alias", "SELECT year as x FROM Album")]
+    [InlineData("Column alias", "SELECT year as x FROM Album")]
     [InlineData("Alias reference", "SELECT year as x, x+1 FROM Album")] // Error
     public void F(string d, string sql)
     {
