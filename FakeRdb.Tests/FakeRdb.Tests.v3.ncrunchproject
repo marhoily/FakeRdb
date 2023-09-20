@@ -4,6 +4,9 @@
       <NamedTestSelector>
         <TestName>FakeRdb.Tests.MultiTableSelectTests.Should_Fill_In_The_Tables</TestName>
       </NamedTestSelector>
+      <NamedTestSelector>
+        <TestName>FakeRdb.Tests.OrderByTests.F("Order by", "SELECT * FROM T ORDER BY X")</TestName>
+      </NamedTestSelector>
     </IgnoredTests>
   </Settings>
 </ProjectConfiguration>
