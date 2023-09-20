@@ -44,6 +44,9 @@ public sealed class FunctionCallExpression : Expression
         return new AggregateResult(row, expression.Resolve(row));
     }
 
+    /*
+     * An expression of the form "CAST(expr AS type)" has an affinity that is the same as a column with a declared type of "type". 
+     */
     public override DynamicType ExpressionType => _args[0].ExpressionType;
 
     public override string ResultSetName =>

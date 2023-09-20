@@ -4,6 +4,11 @@ public sealed class FieldAccessExpression : Expression, IProjection
 {
     public Field AccessedField { get; }
     public FieldAccessExpression(Field field) => AccessedField = field;
+    /*
+     * When an expression is a simple reference to a column of a real
+     * table (not a VIEW or subquery) then the expression has the same
+     * affinity as the table column. 
+     */
     public override DynamicType ExpressionType => AccessedField.FieldType;
     public override string ResultSetName => AccessedField.Name;
 

@@ -1,19 +1,5 @@
 namespace FakeRdb;
 
-public enum SqliteStorageType{Null, Integer, Real, Text, Blob}
-public enum SqliteTypeAffinity{Numeric, Integer, Real, Text, Blob}
-
-public sealed record DynamicType(SqliteStorageType StorageType, SqliteTypeAffinity TypeAffinity, Type RuntimeType)
-{
-    public static readonly DynamicType Text = new(SqliteStorageType.Text, SqliteTypeAffinity.Text, typeof(string));
-    public static readonly DynamicType Bool = new(SqliteStorageType.Integer, SqliteTypeAffinity.Integer, typeof(bool));
-    public static readonly DynamicType Integer = new(SqliteStorageType.Integer, SqliteTypeAffinity.Integer, typeof(long));
-    public static readonly DynamicType Numeric = new(SqliteStorageType.Real, SqliteTypeAffinity.Numeric, typeof(decimal));
-    public static readonly DynamicType Null = new(SqliteStorageType.Null, SqliteTypeAffinity.Blob, typeof(DBNull));
-
-    public static implicit operator Type(DynamicType dynamicType) => dynamicType.RuntimeType;
-}
-
 public sealed class FakeDb : Dictionary<string, Table>
 {
     public void Insert(string tableName, string[] columns, ValuesTable values)
@@ -81,7 +67,7 @@ public sealed class FakeDb : Dictionary<string, Table>
         {
             new Field(0,
                 func.ResultSetName,
-                func.ExpressionType)
+                result.Value.GetRuntimeType())
         };
         return new QueryResult(schema,
             new List<List<object?>>

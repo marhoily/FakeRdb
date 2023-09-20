@@ -35,6 +35,12 @@ public sealed class SqlVisitor : SQLiteParserBaseVisitor<IResult?>
 
     public override IResult VisitInsert_stmt(SQLiteParser.Insert_stmtContext context)
     {
+        /*
+         * The right-hand operand of an IN or NOT IN operator has no
+         * affinity if the operand is a list, or has the same affinity
+         * as the affinity of the result set expression if the operand
+         * is a SELECT. 
+         */
         var valuesTable = Visit(context.values_clause()) ?? throw new InvalidOperationException();
         var tableName = context.table_name().GetText();
         var columns = context.column_name().Select(col => col.GetText()).ToArray();
