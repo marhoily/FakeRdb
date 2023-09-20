@@ -52,8 +52,13 @@ public sealed class SimpleSelectTests : ComparisonTests
         CompareAgainstSqlite("select year+ 1 from Album");
     }
     [Fact]
-    public void Expr_In_Select()
+    public void Binary_In_Select()
     {
         CompareAgainstSqlite("select 1 +1 from Album");
+    }
+    [Fact]
+    public void Value_In_Select()
+    {
+        CompareAgainstSqlite("select 1.000 from Album");
     }
 }
