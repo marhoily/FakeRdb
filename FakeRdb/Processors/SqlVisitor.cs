@@ -135,8 +135,8 @@ public sealed class SqlVisitor : SQLiteParserBaseVisitor<IResult?>
         SqliteTypeAffinity GetLexicalAffinity()
         {
             if (unquote != text) return SqliteTypeAffinity.Text;
-            if (!text.IsNumeric()) return SqliteTypeAffinity.Text;
-            if (text.IndexOfAny(SignsOfReal) != -1) return SqliteTypeAffinity.Real;
+            if (!unquote.IsNumeric()) return SqliteTypeAffinity.Text;
+            if (unquote.IndexOfAny(SignsOfReal) != -1) return SqliteTypeAffinity.Real;
             return SqliteTypeAffinity.Integer;
         }
     }
