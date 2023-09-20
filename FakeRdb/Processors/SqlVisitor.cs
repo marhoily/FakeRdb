@@ -8,6 +8,7 @@ public sealed class SqlVisitor : SQLiteParserBaseVisitor<IResult?>
     private readonly FakeDb _db;
     private readonly FakeDbParameterCollection _parameters;
     private Scope<Table> _currentTable;
+    private static readonly char[] SignsOfReal = {'.','e'};
 
     public SqlVisitor(string originalSql, FakeDb db, FakeDbParameterCollection parameters)
     {
@@ -102,9 +103,10 @@ public sealed class SqlVisitor : SQLiteParserBaseVisitor<IResult?>
     {
         if (context.BIND_PARAMETER() is { } bind)
         {
-            var value = _parameters[bind.GetText()].Value;
+            var exp = bind.GetText();
+            var value = _parameters[exp].Value;
             var affinity = value.GetTypeAffinity();
-            return new ValueExpression(value, affinity);
+            return new ValueExpression(value, affinity, exp);
         }
 
         // try and filter out binary\unary expression
@@ -127,10 +129,16 @@ public sealed class SqlVisitor : SQLiteParserBaseVisitor<IResult?>
     {
         var text = context.GetText();
         var unquote = text.Unquote();
-        return new ValueExpression(unquote, unquote != text 
-            ? SqliteTypeAffinity.Text 
-            // TODO: numeric?
-            : SqliteTypeAffinity.Integer);
+        var affinity = GetLexicalAffinity();
+        return new ValueExpression(unquote, affinity, text);
+
+        SqliteTypeAffinity GetLexicalAffinity()
+        {
+            if (unquote != text) return SqliteTypeAffinity.Text;
+            if (!text.IsNumeric()) return SqliteTypeAffinity.Text;
+            if (text.IndexOfAny(SignsOfReal) != -1) return SqliteTypeAffinity.Real;
+            return SqliteTypeAffinity.Integer;
+        }
     }
 
     public override IResult? VisitResult_column(SQLiteParser.Result_columnContext context)

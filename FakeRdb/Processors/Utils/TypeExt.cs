@@ -30,7 +30,7 @@ public static partial class TypeExt
     [GeneratedRegex(@"^(((?!0)|[-+]|(?=0+\.))(\d*\.)?\d+(e\d+)?)$")]
     private static partial Regex IsNumericRegex();
 
-    static bool IsNumeric(this string value)
+    public static bool IsNumeric(this string value)
     {
         return IsNumericRegex().IsMatch(value);
     }
