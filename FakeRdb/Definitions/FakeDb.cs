@@ -120,9 +120,8 @@ public sealed class FakeDb : Dictionary<string, Table>
                 counter++;
                 foreach (var (column, value) in compiled)
                 {
-                    
-                    row.Data[column] = value
-                        .Resolve(row).Coerce(schema.Columns[column].FieldType);
+                    row.Data[column] = value.Resolve(row)
+                        .Coerce(schema.Columns[column].FieldType);
                 }
             }
         return counter;
