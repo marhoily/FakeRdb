@@ -10,75 +10,24 @@ public sealed class SimpleSelectTests : ComparisonTests
         Sut.Seed3Albums();
     }
 
-    [Fact]
-    public void Table_Not_Found()
+    [Theory]
+    [InlineData("Table not found", "SELECT * FROM Wrong")]
+    [InlineData("Select every column", "SELECT * FROM Album")]
+    [InlineData("Select one column", "SELECT Title FROM Album")]
+    [InlineData("Select a wrong column", "SELECT Wrong FROM Album")]
+    [InlineData("Select a case-sensitive column", "SELECT title FROM Album")]
+    [InlineData("Escape using []", "SELECT [title] FROM [Album]")]
+    [InlineData("Escape using ``", "SELECT `title` FROM `Album`")]
+    [InlineData("Use column name in the right value of an expression", "select year+ 1 from Album")]
+    [InlineData("Binary operation in select", "select 1 +1 from Album")]
+    [InlineData("Floating number with a dot in select", "select 1.000 from Album")]
+    [InlineData("Number with exponent in select", "select 1e-3 from Album")]
+    [InlineData("Decimal without trailing digits in select", "select 123. from Album")]
+    [InlineData("Integer in select", "select 12 from Album")]
+    [InlineData("Text in select", "select '12' from Album")]
+    public void F(string d, string sql)
     {
-        CompareAgainstSqlite("SELECT * FROM Wrong");
+        CompareAgainstSqlite(sql, d);
     }
 
-    [Fact]
-    public void Select_EveryColumn()
-    {
-        CompareAgainstSqlite("SELECT * FROM Album");
-    }
-    [Fact]
-    public void Select_OneColumn()
-    {
-        CompareAgainstSqlite("SELECT Title FROM Album");
-    }
-    [Fact]
-    public void Select_Wrong_Column()
-    {
-        CompareAgainstSqlite("SELECT Wrong FROM Album");
-    }
-    [Fact]
-    public void Select_CaseSensitive_Column()
-    {
-        CompareAgainstSqlite("SELECT title FROM Album");
-    }
-    [Fact]
-    public void Select_Escaped_Column()
-    {
-        CompareAgainstSqlite("SELECT [title] FROM Album");
-    }
-    [Fact]
-    public void Select_Escaped_Table()
-    {
-        CompareAgainstSqlite("SELECT `title` FROM `Album`");
-    }
-    [Fact]
-    public void ColumnName_In_RValue()
-    {
-        CompareAgainstSqlite("select year+ 1 from Album");
-    }
-    [Fact]
-    public void Binary_In_Select()
-    {
-        CompareAgainstSqlite("select 1 +1 from Album");
-    }
-    [Fact]
-    public void Dot_In_Select()
-    {
-        CompareAgainstSqlite("select 1.000 from Album");
-    }
-    [Fact]
-    public void Exponent_In_Select()
-    {
-        CompareAgainstSqlite("select 1e-3 from Album");
-    }
-    [Fact]
-    public void Decimal_Without_Trailing_Digits_In_Select()
-    {
-        CompareAgainstSqlite("select 123. from Album");
-    }
-    [Fact]
-    public void Int_In_Select()
-    {
-        CompareAgainstSqlite("select 12 from Album");
-    }
-    [Fact]
-    public void Text_In_Select()
-    {
-        CompareAgainstSqlite("select '12' from Album");
-    }
 }

@@ -24,8 +24,9 @@ public abstract class ComparisonTests : IDisposable
         GC.SuppressFinalize(this);
     }
 
-    protected void CompareAgainstSqlite(string sql)
+    protected void CompareAgainstSqlite(string sql, string? description = null)
     {
+        if (description != null) _output.WriteLine(description);
         var cmd1 = Sqlite.CreateCommand();
         cmd1.CommandText = sql;
         var (expected, x1) = cmd1.SafeExecuteReader();
