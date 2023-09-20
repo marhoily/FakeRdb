@@ -21,11 +21,6 @@ public sealed class FunctionCallExpression : Expression
     {
     }
 
-    protected override void SetValue(object value)
-    {
-        throw new NotImplementedException();
-    }
-
     public override object Resolve(params Row[] dataSet) =>
         _functionName.ToUpperInvariant() switch
         {

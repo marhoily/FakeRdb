@@ -18,8 +18,6 @@ public sealed class FieldAccessExpression : Expression
         // there's nothing to do here
     }
 
-    protected override void SetValue(object value) => throw new NotSupportedException();
-
     public override object? Resolve(params Row[] dataSet)
     {
         if (AccessedField == null)

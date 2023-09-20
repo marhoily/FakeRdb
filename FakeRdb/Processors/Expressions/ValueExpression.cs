@@ -15,8 +15,5 @@ public sealed class ValueExpression : Expression
     protected override void SetTarget(Field field) =>
         _value = _value.Coerce(field.FieldType);
 
-    protected override void SetValue(object value) =>
-        throw new NotSupportedException();
-
     public override object? Resolve(params Row[] dataSet) => _value;
 }

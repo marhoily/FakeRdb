@@ -23,12 +23,6 @@ public sealed class BinaryExpression : Expression
         _right.BindTarget(field);
     }
 
-    protected override void SetValue(object value)
-    {
-        _left.BindValue(value);
-        _right.BindValue(value);
-    }
-
     public override SqliteTypeAffinity ExpressionType =>
         /*
          *Any operators applied to column names, including the no-op unary "+" operator, convert the column name into an expression which always has no affinity. Hence even if X and Y.Z are column names, the expressions +X and +Y.Z are not column names and have no affinity. 

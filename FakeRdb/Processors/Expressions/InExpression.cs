@@ -16,11 +16,6 @@ public sealed class InExpression : Expression
         throw new NotImplementedException();
     }
 
-    protected override void SetValue(object value)
-    {
-        throw new NotImplementedException();
-    }
-
     public override object Resolve(params Row[] dataSet)
     {
         var n = _needle.Resolve(dataSet);
