@@ -17,18 +17,24 @@ public sealed class FunctionCallExpression : IExpression
         _args = args;
     }
 
+    public object Eval()=> throw new NotSupportedException();
+    public object Eval(Row dataSet) =>
+        _functionName.ToUpperInvariant() switch
+        {
+            "TYPEOF" => TypeOf(dataSet),
+            _ => throw new ArgumentOutOfRangeException("Unknown:" + _functionName)
+        };
     public object Eval(params Row[] dataSet) =>
         _functionName.ToUpperInvariant() switch
         {
             "MAX" => Max(dataSet),
             "MIN" => Min(dataSet),
-            "TYPEOF" => TypeOf(dataSet),
             _ => throw new ArgumentOutOfRangeException("Unknown:" + _functionName)
         };
 
-    private object TypeOf(Row[] dataSet)
+    private object TypeOf(Row dataSet)
     {
-        var exp = (FieldAccessExpression)_args.Single();
+        var exp = (ProjectionExpression)_args.Single();
         var resolve = exp.Eval(dataSet);
         var field = exp.AccessedField;
         var affinity = field.FieldType;

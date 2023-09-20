@@ -11,7 +11,11 @@ public sealed class InExpression : IExpression
         _set = set;
     }
 
-    public object Eval(params Row[] dataSet)
+    public object Eval()=> throw new NotSupportedException();
+
+    public object Eval(params Row[] dataSet) => throw new NotSupportedException();
+
+    public object Eval(Row dataSet)
     {
         var n = _needle.Eval(dataSet);
         var nn = n.Coerce(_set.Schema.Single().FieldType);

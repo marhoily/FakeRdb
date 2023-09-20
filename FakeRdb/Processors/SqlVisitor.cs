@@ -157,7 +157,7 @@ public sealed class SqlVisitor : SQLiteParserBaseVisitor<IResult?>
 
         if (table == null)
             throw new InvalidOperationException("Couldn't resolve table!");
-        return new FieldAccessExpression(table.Schema[column]);
+        return new ProjectionExpression(table.Schema[column]);
     }
 
     public override IResult VisitFunction_call(SQLiteParser.Function_callContext context)

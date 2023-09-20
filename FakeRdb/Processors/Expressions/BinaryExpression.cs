@@ -27,10 +27,24 @@ public sealed class BinaryExpression : IExpression
 
     public string ResultSetName { get; }
 
-    public object? Eval(params Row[] dataSet)
+    public object? Eval()
+    {
+        var l = _left.Eval();
+        var r = _right.Eval();
+        return Eval(l, r);
+    }
+
+    public object Eval(params Row[] dataSet)=> throw new NotSupportedException();
+
+    public object? Eval(Row dataSet) 
     {
         var l = _left.Eval(dataSet);
         var r = _right.Eval(dataSet);
+        return Eval(l, r);
+    }
+
+    private object? Eval(object? l, object? r)
+    {
         if (GetCoercionPriority(_left) < GetCoercionPriority(_right))
         {
             _expressionType = _right.ExpressionType;
@@ -48,8 +62,8 @@ public sealed class BinaryExpression : IExpression
             {
                 // TODO: move to type coercion code
                 (null, _) or (_, null) => null,
-                (double a, decimal b) => a * (double) b,
-                (decimal a, double b) => (double) a * b,
+                (double a, decimal b) => a * (double)b,
+                (decimal a, double b) => (double)a * b,
                 _ => (dynamic)l * (dynamic)r,
             },
             Operator.Equal => Equals(l, r),
@@ -62,10 +76,9 @@ public sealed class BinaryExpression : IExpression
             exp switch
             {
                 BinaryExpression => 0,
-                FieldAccessExpression => 1,
+                ProjectionExpression => 1,
                 ValueExpression => 0,
                 _ => throw new ArgumentOutOfRangeException(nameof(exp))
             };
     }
-
 }

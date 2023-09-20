@@ -64,7 +64,7 @@ public sealed class FakeDb : Dictionary<string, Table>
             if (projection is [Wildcard])
             {
                 var all = Enumerable.Range(0, dbSchema.Columns.Length)
-                    .Select(n => new FieldAccessExpression(dbTable.Schema.Columns[n]))
+                    .Select(n => new ProjectionExpression(dbTable.Schema.Columns[n]))
                     .Cast<IExpression>()
                     .ToArray();
                 return all;

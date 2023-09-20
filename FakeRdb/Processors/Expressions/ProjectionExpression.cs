@@ -1,9 +1,9 @@
 namespace FakeRdb;
 
-public sealed class FieldAccessExpression : IExpression
+public sealed class ProjectionExpression : IExpression
 {
     public Field AccessedField { get; }
-    public FieldAccessExpression(Field field) => AccessedField = field;
+    public ProjectionExpression(Field field) => AccessedField = field;
     /*
      * When an expression is a simple reference to a column of a real
      * table (not a VIEW or subquery) then the expression has the same
@@ -13,12 +13,15 @@ public sealed class FieldAccessExpression : IExpression
     public string ResultSetName => AccessedField.Name;
 
 
-    public object? Eval(params Row[] dataSet)
+
+    public object Eval()=> throw new NotSupportedException();
+    public object Eval(params Row[] dataSet) => throw new NotSupportedException();
+    public object? Eval(Row dataSet)
     {
         if (AccessedField == null)
             throw new InvalidOperationException(
                 "Cannot resolve value without column");
-        return dataSet[0][AccessedField].Coerce(AccessedField.FieldType);
+        return dataSet[AccessedField].Coerce(AccessedField.FieldType);
     }
 
 }
