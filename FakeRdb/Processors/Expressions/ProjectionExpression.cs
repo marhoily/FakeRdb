@@ -2,26 +2,17 @@ namespace FakeRdb;
 
 public sealed class ProjectionExpression : IExpression
 {
-    public Field AccessedField { get; }
-    public ProjectionExpression(Field field) => AccessedField = field;
+    public Field SelectColumn { get; }
+    public ProjectionExpression(Field selectColumn) => SelectColumn = selectColumn;
     /*
      * When an expression is a simple reference to a column of a real
      * table (not a VIEW or subquery) then the expression has the same
      * affinity as the table column. 
      */
-    public SqliteTypeAffinity ExpressionType => AccessedField.FieldType;
-    public string ResultName => AccessedField.Name;
-
-
+    public SqliteTypeAffinity ExpressionType => SelectColumn.FieldType;
+    public string ResultName => SelectColumn.Name;
 
     public object Eval() => throw new NotSupportedException();
     public object Eval(Row[] dataSet) => throw new NotSupportedException();
-    public object? Eval(Row dataSet)
-    {
-        if (AccessedField == null)
-            throw new InvalidOperationException(
-                "Cannot resolve value without column");
-        return dataSet[AccessedField].Coerce(AccessedField.FieldType);
-    }
-
+    public object? Eval(Row dataSet) => dataSet[SelectColumn];
 }

@@ -36,7 +36,7 @@ public sealed class FunctionCallExpression : IExpression
     {
         var exp = (ProjectionExpression)_args.Single();
         var resolve = exp.Eval(dataSet);
-        var field = exp.AccessedField;
+        var field = exp.SelectColumn;
         var affinity = field.FieldType;
         var result = resolve.GetStorageType(affinity);
         return result.ToString().ToLowerInvariant();
