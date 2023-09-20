@@ -5,6 +5,8 @@ public sealed class FakeDb : Dictionary<string, Table>
     public void Insert(string tableName, string[] columns, ValuesTable values)
     {
         var table = this[tableName];
+        if (columns.Length == 0) // TODO: Should it be here or in outer method? Is there more efficient way?
+            columns = table.Schema.Columns.Select(c => c.Name).ToArray();
 
         var columnGenerator = table.Schema.Columns
             .Select(PrepareColumnValueGenerator)
@@ -19,14 +21,23 @@ public sealed class FakeDb : Dictionary<string, Table>
         {
             var col = Array.IndexOf(columns, field.Name);
             if (col != -1)
-                return row => Convert.ChangeType(
-                    values.Rows[row].Cells[col].Resolve(), 
-                    field.FieldType);
+                return row => 
+                    values.Rows[row].Cells[col]
+                        .Resolve()
+                        .Coerce(field.FieldType.TypeAffinity);
 
             if (field.IsAutoincrement)
                 return _ => table.Autoincrement();
 
-            return _ => Activator.CreateInstance(field.FieldType);
+            return _ => field.FieldType.TypeAffinity switch
+            {
+                SqliteTypeAffinity.Numeric => 0,
+                SqliteTypeAffinity.Integer => 0,
+                SqliteTypeAffinity.Real => 0,
+                SqliteTypeAffinity.Text => "",
+                SqliteTypeAffinity.Blob => Array.Empty<byte>(),
+                _ => throw new ArgumentOutOfRangeException()
+            };
         }
     }
 
@@ -34,26 +45,37 @@ public sealed class FakeDb : Dictionary<string, Table>
     {
         var dbTable = this[tableName];
         var dbSchema = dbTable.Schema;
-        var proj = projection is [Wildcard]
-            ? Enumerable.Range(0, dbSchema.Columns.Length)
-                .Select(n => new FieldAccessExpression(dbTable.Schema.Columns[n]))
-                .ToArray()
-            : projection.OfType<FieldAccessExpression>().ToArray();
-        if (proj.Length == 0)
-            throw new InvalidOperationException(
-                $"No columns selected from table: {tableName}");
+        var proj = BuildProjection(dbTable);
         var filtered = filter == null
             ? dbTable
             : dbTable.Where(x => filter.Resolve<bool>(x));
-        var table = filtered
+        var data = filtered
             .Select(dbRow => proj
                 .Select(column => column.Resolve(dbRow))
                 .ToList())
             .ToList();
         var schema = proj
-            .Select(column => column.AccessedField)
+            .Select((exp, n) => new Field(n, exp.ResultSetName, exp.ExpressionType))
             .ToArray();
-        return new QueryResult(schema, table);
+        return new QueryResult(schema, data);
+
+        Expression[] BuildProjection(Table table)
+        {
+            if (projection is [Wildcard])
+            {
+                var all = Enumerable.Range(0, dbSchema.Columns.Length)
+                    .Select(n => new FieldAccessExpression(dbTable.Schema.Columns[n]))
+                    .Cast<Expression>()
+                    .ToArray();
+                return all;
+            }
+
+            var result = projection.OfType<Expression>().ToArray();
+            if (result.Length == 0)
+                throw new InvalidOperationException(
+                    $"No columns selected from table: {tableName}");
+            return result;
+        }
     }
 
     public IResult SelectAggregate(string tableName,
@@ -61,21 +83,27 @@ public sealed class FakeDb : Dictionary<string, Table>
     {
         var dbTable = this[tableName];
         var rows = dbTable.ToArray();
-        var func = aggregate.Single();
-        var result = func.Resolve<AggregateResult>(rows);
-        var schema = new[]
+        var schema = new List<Field>();
+        var data = new List<object?>();
+        for (var i = 0; i < aggregate.Count; i++)
         {
-            new Field(0,
-                func.ResultSetName,
-                result.Value.GetRuntimeType())
-        };
-        return new QueryResult(schema,
+            var func = aggregate[i];
+            var cell = func.Resolve<AggregateResult>(rows);
+            schema.Add(new Field(i, 
+                func.ResultSetName, 
+                new DynamicType(cell.Value.GetStorageType(),
+                    cell.Value.GetTypeAffinity(),
+                    cell.Value?.GetType() ?? typeof(DBNull))));
+            data.Add(cell.Value);
+        }
+      
+        return new QueryResult(schema.ToArray(),
             new List<List<object?>>
             {
-                new() { result.Value }
+                data 
             });
     }
-    
+
 
     public int Update(
         string tableName,

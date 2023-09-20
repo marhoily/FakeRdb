@@ -69,7 +69,10 @@ public sealed class SqlVisitor : SQLiteParserBaseVisitor<IResult?>
         using var _ = _currentTable.Set(_db[tableName]);
         var select = context.result_column().Select(Visit).ToList();
             
-       var aggregate = select.OfType<FunctionCallExpression>().ToList();
+       var aggregate = select
+           .OfType<FunctionCallExpression>()
+           .Where(f => f.IsAggregate)
+           .ToList();
        if (aggregate.Count > 0)
            return _db.SelectAggregate(tableName, aggregate);
         var filter = context.whereExpr == null ? null : Visit(context.whereExpr);

@@ -53,5 +53,6 @@ public enum SqliteTypeAffinity
     ///     another and no attempt is made to coerce data from one storage class into
     ///     another.
     /// </summary>
-    Blob
+    Blob,
+    None = Blob
 }

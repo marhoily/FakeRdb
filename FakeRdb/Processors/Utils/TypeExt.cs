@@ -6,6 +6,24 @@ namespace FakeRdb;
 
 public static partial class TypeExt
 {
+    public static readonly IComparer<object?> Comparer = new SqliteComparer();
+    private sealed class SqliteComparer : IComparer<object?>
+    {
+        public int Compare(object? x, object? y)
+        {
+            return (x, y) switch
+            {
+                (null, null) => 0,
+                (null, _) => -1,
+                (_, null) => -1,
+                (long a, double b) => ((double)a).CompareTo(b),
+                (IComparable a, _) => a.CompareTo(y),
+                //(long a, long b) => a.CompareTo(b),
+                _ => throw new NotImplementedException(
+                    $"Comparer of: {x.GetType().Name}; {y.GetType().Name}")
+            };
+        }
+    }
     // Numeric strings consist of optional sign,
     // any number of digits, optional decimal part and optional
     // exponential part. Thus +0123.45e6 is a valid numeric value.
@@ -16,8 +34,8 @@ public static partial class TypeExt
     {
         return IsNumericRegex().IsMatch(value);
     }
-    public static SqliteStorageType GetStorageTypeType(
-        this object? obj, SqliteTypeAffinity columnAffinity)
+    public static SqliteStorageType GetStorageType(
+        this object? obj, SqliteTypeAffinity columnAffinity = SqliteTypeAffinity.None)
     {
         var dataAffinity = obj switch
         {
@@ -26,21 +44,21 @@ public static partial class TypeExt
                 ? SqliteStorageType.Integer
                 : SqliteStorageType.Real
                 : SqliteStorageType.Text,
-            int or 
-                long or 
-                byte or 
-                char or 
+            int or
+                long or
+                byte or
+                char or
                 byte => SqliteStorageType.Integer,
-            decimal m => m.IsInteger() 
-                ? SqliteStorageType.Integer 
+            decimal m => m.IsInteger()
+                ? SqliteStorageType.Integer
                 : SqliteStorageType.Real,
-            double d => d.IsInteger() 
-                ? SqliteStorageType.Integer 
+            double d => d.IsInteger()
+                ? SqliteStorageType.Integer
                 : SqliteStorageType.Real,
-            float f => f.IsInteger() 
-                ? SqliteStorageType.Integer 
+            float f => f.IsInteger()
+                ? SqliteStorageType.Integer
                 : SqliteStorageType.Real,
-            _ => throw new ArgumentOutOfRangeException(obj.GetType().Name)
+            _ => SqliteStorageType.Blob
         };
         return (dataAffinity, columnAffinity) switch
         {
@@ -73,7 +91,48 @@ public static partial class TypeExt
              * class over another and no attempt is made to coerce
              * data from one storage class into another.
              */
+            (_, SqliteTypeAffinity.Blob) => obj switch
+            {
+                null => SqliteStorageType.Null,
+                string => SqliteStorageType.Text,
+                int or
+                    long or
+                    byte or
+                    char or
+                    byte => SqliteStorageType.Integer,
+                decimal => SqliteStorageType.Real,
+                double => SqliteStorageType.Real,
+                float => SqliteStorageType.Real,
+                _ => SqliteStorageType.Blob
+            },
+
             var (i, _) => i
+        };
+    }
+    public static SqliteTypeAffinity GetTypeAffinity(this object? obj)
+    {
+        return obj switch
+        {
+            null => SqliteTypeAffinity.None,
+            string s => s.IsNumeric() ? s.IsInteger()
+                ? SqliteTypeAffinity.Integer
+                : SqliteTypeAffinity.Real
+                : SqliteTypeAffinity.Text,
+            int or
+                long or
+                byte or
+                char or
+                byte => SqliteTypeAffinity.Integer,
+            decimal m => m.IsInteger()
+                ? SqliteTypeAffinity.Integer
+                : SqliteTypeAffinity.Real,
+            double d => d.IsInteger()
+                ? SqliteTypeAffinity.Integer
+                : SqliteTypeAffinity.Real,
+            float f => f.IsInteger()
+                ? SqliteTypeAffinity.Integer
+                : SqliteTypeAffinity.Real,
+            _ => SqliteTypeAffinity.Blob
         };
     }
 
@@ -92,6 +151,21 @@ public static partial class TypeExt
     public static bool IsInteger(this decimal value)
     {
         return value % 1 == 0;
+    }
+
+    public static object? Coerce(this object? obj, SqliteTypeAffinity affinity)
+    {
+        return (obj, obj.GetStorageType(affinity)) switch
+        {
+            (null, _) => null,
+            (string s, SqliteStorageType.Integer) =>
+                (long)BigInteger.Parse(s, NumberStyles.Float, CultureInfo.InvariantCulture),
+            (_, SqliteStorageType.Integer) => Convert.ChangeType(obj, typeof(long)),
+            (_, SqliteStorageType.Real) => Convert.ChangeType(obj, typeof(double)),
+            (_, SqliteStorageType.Text) => Convert.ChangeType(obj, typeof(string)),
+            (_, SqliteStorageType.Blob) => obj,
+            _ => throw new ArgumentOutOfRangeException()
+        };
     }
     public static DynamicType GetRuntimeType(this object? obj)
     {
@@ -113,6 +187,8 @@ public static partial class TypeExt
             "TEXT" => DynamicType.Text,
             "INTEGER" => DynamicType.Integer,
             "NUMERIC" => DynamicType.Numeric,
+            "REAL" => DynamicType.Real,
+            "BLOB" => DynamicType.Blob,
             var x => throw new ArgumentOutOfRangeException(x)
         };
     }

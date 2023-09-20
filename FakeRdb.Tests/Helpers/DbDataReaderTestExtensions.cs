@@ -72,11 +72,7 @@ public static class DbDataReaderTestExtensions
             var row = new List<object?>();
             for (var i = 0; i < reader.FieldCount; i++)
             {
-                var value = reader.GetDataTypeName(i) switch
-                {
-                    "NUMERIC" => reader.GetDecimal(i),
-                    _ => reader.GetValue(i),
-                };
+                var value = reader.GetValue(i);
                 row.Add(value == DBNull.Value ? null : value);
             }
             rows.Add(row);

@@ -25,6 +25,7 @@ public sealed class FieldAccessExpression : Expression, IProjection
         if (AccessedField == null)
             throw new InvalidOperationException(
                 "Cannot resolve value without column");
-        return Convert.ChangeType(dataSet[0][AccessedField], AccessedField.FieldType);
+        return dataSet[0][AccessedField].Coerce(AccessedField.FieldType.TypeAffinity);
     }
+
 }
