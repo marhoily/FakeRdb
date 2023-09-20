@@ -103,7 +103,8 @@ public sealed class SqlVisitor : SQLiteParserBaseVisitor<IResult?>
         if (context.BIND_PARAMETER() is { } bind)
         {
             var value = _parameters[bind.GetText()].Value;
-            return new ValueExpression(value, value.GetTypeAffinity());
+            var affinity = value.GetTypeAffinity();
+            return new ValueExpression(value, affinity);
         }
 
         // try and filter out binary\unary expression

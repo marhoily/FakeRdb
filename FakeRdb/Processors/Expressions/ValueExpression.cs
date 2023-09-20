@@ -5,12 +5,12 @@ public sealed class ValueExpression : Expression
     private object? _value;
     public ValueExpression(object? value, SqliteTypeAffinity type)
     {
-        _value = value;
+        _value = value.Coerce(type);
         ExpressionType = type;
     }
 
     public override SqliteTypeAffinity ExpressionType { get; }
-    public override string ResultSetName => "VAL";
+    public override string ResultSetName => "VAL"; // TODO: Cover
 
     protected override void SetTarget(Field field) =>
         _value = _value.Coerce(field.FieldType);

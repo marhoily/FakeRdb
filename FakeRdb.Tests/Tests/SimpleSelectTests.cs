@@ -8,7 +8,6 @@ public sealed class SimpleSelectTests : ComparisonTests
     {
         Sqlite.Seed3Albums();
         Sut.Seed3Albums();
-
     }
 
     [Fact]
@@ -51,5 +50,10 @@ public sealed class SimpleSelectTests : ComparisonTests
     public void ColumnName_In_RValue()
     {
         CompareAgainstSqlite("select year+ 1 from Album");
+    }
+    [Fact]
+    public void Expr_In_Select()
+    {
+        CompareAgainstSqlite("select 1 +1 from Album");
     }
 }
