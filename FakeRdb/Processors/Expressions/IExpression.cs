@@ -6,5 +6,5 @@ public interface IExpression : IProjection
     public SqliteTypeAffinity ExpressionType { get; }
     public object? Eval();
     public object? Eval(Row dataSet);
-    public object? Eval(params Row[] dataSet);
+    public object? Eval(Row[] dataSet);
 }

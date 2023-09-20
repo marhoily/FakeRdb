@@ -24,7 +24,7 @@ public sealed class FunctionCallExpression : IExpression
             "TYPEOF" => TypeOf(dataSet),
             _ => throw new ArgumentOutOfRangeException("Unknown:" + _functionName)
         };
-    public object Eval(params Row[] dataSet) =>
+    public object Eval(Row[] dataSet) =>
         _functionName.ToUpperInvariant() switch
         {
             "MAX" => Max(dataSet),

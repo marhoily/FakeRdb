@@ -15,5 +15,5 @@ public sealed class ValueExpression : IExpression
 
     public object? Eval() => _value;
     public object? Eval(Row dataSet) => _value;
-    public object? Eval(params Row[] dataSet) => _value;
+    public object? Eval(Row[] dataSet) => _value;
 }

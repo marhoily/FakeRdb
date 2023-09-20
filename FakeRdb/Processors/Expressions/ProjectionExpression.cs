@@ -15,7 +15,7 @@ public sealed class ProjectionExpression : IExpression
 
 
     public object Eval() => throw new NotSupportedException();
-    public object Eval(params Row[] dataSet) => throw new NotSupportedException();
+    public object Eval(Row[] dataSet) => throw new NotSupportedException();
     public object? Eval(Row dataSet)
     {
         if (AccessedField == null)

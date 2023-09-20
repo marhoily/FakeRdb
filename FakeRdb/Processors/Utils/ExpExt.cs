@@ -5,7 +5,7 @@ namespace FakeRdb;
 
 public static class ExpExt
 {
-    public static T Resolve<T>(this IExpression exp, params Row[] dataSet) => (T)exp.Eval(dataSet)!;
+    public static T Resolve<T>(this IExpression exp, Row[] dataSet) => (T)exp.Eval(dataSet)!;
     public static T Resolve<T>(this IExpression exp, Row dataSet) => (T)exp.Eval(dataSet)!;
     public static T Resolve<T>(this IExpression exp) => (T)exp.Eval()!;
 

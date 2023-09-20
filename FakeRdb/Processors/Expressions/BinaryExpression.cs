@@ -40,7 +40,7 @@ public sealed class BinaryExpression : IExpression
     }
 
     // Binary operations are not defined ot Tables
-    public object Eval(params Row[] dataSet) => throw new NotSupportedException();
+    public object Eval(Row[] dataSet) => throw new NotSupportedException();
 
     public object? Eval(Row dataSet)
     {
