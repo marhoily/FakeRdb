@@ -43,38 +43,55 @@ public sealed class FakeDb : Dictionary<string, Table>
 
     public IResult Select(string tableName, IProjection[] projection, IExpression? filter)
     {
-        var dbTable = this[tableName];
-        var dbSchema = dbTable.Schema;
-        var proj = BuildProjection();
-        var filtered = filter == null
-            ? dbTable
-            : dbTable.Where(x => filter.Resolve<bool>(x));
-        var data = filtered
-            .Select(dbRow => proj
-                .Select(column => column.Eval(dbRow))
-                .ToList())
-            .ToList();
-        var schema = proj
-            .Select((exp, n) => new Field(n, exp.ResultName, exp.ExpressionType))
-            .ToArray();
+        var table = this[tableName];
+        var selectors = CompileProjection(table, projection);
+        if (selectors.Length == 0)
+            throw new InvalidOperationException(
+                $"No columns selected from table: {tableName}");
+        var data = BuildData(table, selectors, filter);
+        var schema = BuildSchema(selectors);
         return new QueryResult(schema, data);
 
-        IExpression[] BuildProjection()
+        static IExpression[] CompileProjection(Table table, IProjection[] projection)
         {
             if (projection is [Wildcard])
             {
-                var all = Enumerable.Range(0, dbSchema.Columns.Length)
-                    .Select(n => new ProjectionExpression(dbTable.Schema.Columns[n]))
+                return Enumerable.Range(0, table.Schema.Columns.Length)
+                    .Select(n => new ProjectionExpression(table.Schema.Columns[n]))
                     .Cast<IExpression>()
                     .ToArray();
-                return all;
             }
 
-            var result = projection.OfType<IExpression>().ToArray();
-            if (result.Length == 0)
-                throw new InvalidOperationException(
-                    $"No columns selected from table: {tableName}");
-            return result;
+            return projection.OfType<IExpression>().ToArray();
+        }
+
+        static List<List<object?>> BuildData(Table source, IExpression[] proj, IExpression? filter)
+        {
+            var temp = ApplyFilter(source, filter);
+            return ApplyProjection(temp, proj);
+        }
+
+        static Field[] BuildSchema(IEnumerable<IExpression> selectors)
+        {
+            return selectors
+                .Select((column, n) => new Field(n, column.ResultName, column.ExpressionType))
+                .ToArray();
+        }
+
+        static IEnumerable<Row> ApplyFilter(Table source, IExpression? expression)
+        {
+            return expression == null
+                ? source
+                : source.Where(expression.Resolve<bool>);
+        }
+
+        static List<List<object?>> ApplyProjection(IEnumerable<Row> rows, IExpression[] selectors)
+        {
+            return rows
+                .Select(row => selectors
+                    .Select(selector => selector.Eval(row))
+                    .ToList())
+                .ToList();
         }
     }
 
