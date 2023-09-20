@@ -1,6 +1,6 @@
 namespace FakeRdb;
 
-public abstract class Expression : IResult
+public abstract class Expression : IProjection
 {
     protected abstract void SetTarget(Field field);
     protected abstract void SetValue(object value);

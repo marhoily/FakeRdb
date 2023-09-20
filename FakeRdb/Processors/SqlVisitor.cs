@@ -4,12 +4,14 @@ namespace FakeRdb;
 
 public sealed class SqlVisitor : SQLiteParserBaseVisitor<IResult?>
 {
+    private readonly string _originalSql;
     private readonly FakeDb _db;
     private readonly FakeDbParameterCollection _parameters;
     private Scope<Table> _currentTable;
 
-    public SqlVisitor(FakeDb db, FakeDbParameterCollection parameters)
+    public SqlVisitor(string originalSql, FakeDb db, FakeDbParameterCollection parameters)
     {
+        _originalSql = originalSql;
         _db = db;
         _parameters = parameters;
     }
@@ -115,7 +117,8 @@ public sealed class SqlVisitor : SQLiteParserBaseVisitor<IResult?>
             return new InExpression(left, (QueryResult)right);
         }
 
-        return context.ToBinaryExpression(operand, left, (Expression)right);
+        return context.ToBinaryExpression(operand, left, 
+            (Expression)right, context.GetOriginalText(_originalSql));
 
     }
 

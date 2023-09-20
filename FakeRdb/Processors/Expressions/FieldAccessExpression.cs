@@ -1,6 +1,6 @@
 namespace FakeRdb;
 
-public sealed class FieldAccessExpression : Expression, IProjection
+public sealed class FieldAccessExpression : Expression
 {
     public Field AccessedField { get; }
     public FieldAccessExpression(Field field) => AccessedField = field;

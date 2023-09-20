@@ -46,7 +46,7 @@ public class FakeDbCommand : DbCommand
         parser.RemoveErrorListeners();
         parser.AddErrorListener(new PanicErrorListener());
         var chatContext = parser.sql_stmt_list();
-        var visitor = new SqlVisitor(_connection.Db, Parameters);
+        var visitor = new SqlVisitor(CommandText, _connection.Db, Parameters);
         var reader = (Affected?) visitor.Visit(chatContext);
         return reader?.RecordsCount ?? 0;
     }

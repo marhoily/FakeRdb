@@ -7,11 +7,14 @@ public sealed class BinaryExpression : Expression
     private readonly Expression _right;
     private SqliteTypeAffinity? _expressionType;
 
-    public BinaryExpression(Operator op, Expression left, Expression right)
+    public BinaryExpression(Operator op, 
+        Expression left, Expression right,
+        string exp)
     {
         _left = left;
         _op = op;
         _right = right;
+        ResultSetName = exp;
     }
 
     protected override void SetTarget(Field field)
@@ -34,7 +37,7 @@ public sealed class BinaryExpression : Expression
         throw new InvalidOperationException(
             "Cannot determine ExpressionType of a binary operation before it was resolved");
 
-    public override string ResultSetName => _op.ToString();
+    public override string ResultSetName { get; }
 
     public override object? Resolve(params Row[] dataSet)
     {

@@ -1,6 +1,6 @@
 namespace FakeRdb;
 
-public sealed class FunctionCallExpression : Expression, IProjection
+public sealed class FunctionCallExpression : Expression
 {
     private static readonly string[] AggregateFunctions =
     {

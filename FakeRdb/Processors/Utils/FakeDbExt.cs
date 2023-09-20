@@ -14,7 +14,7 @@ public static class FakeDbExt
         parser.RemoveErrorListeners();
         parser.AddErrorListener(new PanicErrorListener());
         var chatContext = parser.sql_stmt_list();
-        var visitor = new SqlVisitor(db,parameters);
+        var visitor = new SqlVisitor(sql, db,parameters);
         return visitor.Visit(chatContext) switch
         {
             Affected affected => new RecordsAffectedDataReader(affected.RecordsCount),
