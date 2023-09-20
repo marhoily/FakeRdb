@@ -111,8 +111,7 @@ public sealed class FakeDb : Dictionary<string, Table>
         var table = this[tableName] ?? throw new ArgumentOutOfRangeException(nameof(tableName));
         var schema = table.Schema;
         var compiled = assignments.Select(x =>
-            (column: schema.IndexOf(x.column),
-             value: x.value.BindTarget(schema[x.column])))
+            (column: schema.IndexOf(x.column), x.value))
             .ToArray();
         var counter = 0;
         foreach (var row in table)
@@ -121,7 +120,9 @@ public sealed class FakeDb : Dictionary<string, Table>
                 counter++;
                 foreach (var (column, value) in compiled)
                 {
-                    row.Data[column] = value.Resolve(row);
+                    
+                    row.Data[column] = value
+                        .Resolve(row).Coerce(schema.Columns[column].FieldType);
                 }
             }
         return counter;

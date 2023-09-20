@@ -17,10 +17,6 @@ public sealed class FunctionCallExpression : Expression
         _args = args;
     }
 
-    protected override void SetTarget(Field field)
-    {
-    }
-
     public override object Resolve(params Row[] dataSet) =>
         _functionName.ToUpperInvariant() switch
         {

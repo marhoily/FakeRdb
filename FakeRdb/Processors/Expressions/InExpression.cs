@@ -11,11 +11,6 @@ public sealed class InExpression : Expression
         _set = set;
     }
 
-    protected override void SetTarget(Field field)
-    {
-        throw new NotImplementedException();
-    }
-
     public override object Resolve(params Row[] dataSet)
     {
         var n = _needle.Resolve(dataSet);
