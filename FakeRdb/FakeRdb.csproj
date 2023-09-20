@@ -12,8 +12,6 @@
     <None Remove="Parser\**" />
   </ItemGroup>
 
-
-
   <ItemGroup>
     <ProjectReference Include="..\SqliteSyntax\SqliteSyntax.csproj" />
   </ItemGroup>
