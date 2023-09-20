@@ -22,7 +22,7 @@ public sealed class BinaryExpression : IExpression
         throw new InvalidOperationException(
             "Cannot determine ExpressionType of a binary operation before it was resolved");
 
-    public string ResultName { get; }
+    public string ResultName { get; private set; }
 
     public object? Eval()
     {
@@ -33,6 +33,7 @@ public sealed class BinaryExpression : IExpression
 
     // Binary operations are not defined ot Tables
     public object Eval(Row[] dataSet) => throw new NotSupportedException();
+    public void SetAlias(string value) => ResultName = value;
 
     public object? Eval(Row dataSet)
     {

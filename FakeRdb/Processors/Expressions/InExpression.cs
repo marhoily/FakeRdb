@@ -23,5 +23,6 @@ public sealed class InExpression : IExpression
     }
 
     public SqliteTypeAffinity ExpressionType => SqliteTypeAffinity.Integer;
-    public string ResultName => "???";
+    public void SetAlias(string value) => ResultName = value;
+    public string ResultName { get; private set; } = "???";
 }

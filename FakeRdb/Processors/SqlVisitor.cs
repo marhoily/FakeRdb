@@ -28,7 +28,6 @@ public sealed class SqlVisitor : SQLiteParserBaseVisitor<IResult?>
         var fields = context.column_def().Select((col, n) =>
                 new Field(n,
                     col.column_name().GetText(),
-                    // col.type_name().GetText(),
                     col.type_name().ToRuntimeType(),
                     col.column_constraint().Any(c => c.AUTOINCREMENT_() != null)))
             .ToArray();
@@ -141,12 +140,14 @@ public sealed class SqlVisitor : SQLiteParserBaseVisitor<IResult?>
         }
     }
 
-    public override IResult? VisitResult_column(SQLiteParser.Result_columnContext context)
+    public override IResult VisitResult_column(SQLiteParser.Result_columnContext context)
     {
         if (context.STAR() != null)
             return Wildcard.Instance;
-
-        return Visit(context.expr());
+        var result = (IExpression?)Visit(context.expr()) ?? throw new Exception();
+        if (context.column_alias() is {} alias) 
+            result.SetAlias(alias.GetText().Unquote());
+        return result;
     }
 
     public override IResult VisitColumn_access(SQLiteParser.Column_accessContext context)

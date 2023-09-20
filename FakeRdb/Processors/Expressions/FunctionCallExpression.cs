@@ -8,6 +8,7 @@ public sealed class FunctionCallExpression : IExpression
     };
     private readonly string _functionName;
     private readonly IExpression[] _args;
+    private string? _alias;
 
     public bool IsAggregate => AggregateFunctions.Contains(_functionName.ToUpperInvariant());
 
@@ -66,6 +67,7 @@ public sealed class FunctionCallExpression : IExpression
         _ => _args[0].ExpressionType
     };
 
-    public string ResultName =>
+    public void SetAlias(string value) => _alias = value;
+    public string ResultName => _alias ??
         $"{_functionName}({string.Join(", ", _args.Select(a => a.ResultName))})";
 }
