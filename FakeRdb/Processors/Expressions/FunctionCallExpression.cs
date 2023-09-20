@@ -8,7 +8,6 @@ public sealed class FunctionCallExpression : Expression, IProjection
     };
     private readonly string _functionName;
     private readonly Expression[] _args;
-    private Field _field;
 
     public bool IsAggregate => AggregateFunctions.Contains(_functionName.ToUpperInvariant());
 
@@ -20,7 +19,6 @@ public sealed class FunctionCallExpression : Expression, IProjection
 
     protected override void SetTarget(Field field)
     {
-        _field = field;
     }
 
     protected override void SetValue(object value)

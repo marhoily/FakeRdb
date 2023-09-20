@@ -45,7 +45,7 @@ public sealed class FakeDb : Dictionary<string, Table>
     {
         var dbTable = this[tableName];
         var dbSchema = dbTable.Schema;
-        var proj = BuildProjection(dbTable);
+        var proj = BuildProjection();
         var filtered = filter == null
             ? dbTable
             : dbTable.Where(x => filter.Resolve<bool>(x));
@@ -59,7 +59,7 @@ public sealed class FakeDb : Dictionary<string, Table>
             .ToArray();
         return new QueryResult(schema, data);
 
-        Expression[] BuildProjection(Table table)
+        Expression[] BuildProjection()
         {
             if (projection is [Wildcard])
             {
