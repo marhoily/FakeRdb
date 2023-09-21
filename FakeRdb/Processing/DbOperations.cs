@@ -49,7 +49,7 @@ public static class DbOperations
             throw new InvalidOperationException(
                 $"No columns selected from table: {tableName}");
         var data = BuildData(table, selectors, filter);
-        var schema = BuildSchema(selectors, data);
+        var schema = BuildSchema(selectors);
         return new QueryResult(schema, data);
 
         static IExpression[] CompileProjection(Table table, IProjection[] projection)
@@ -71,22 +71,13 @@ public static class DbOperations
             return ApplyProjection(temp, proj);
         }
 
-        static ResultSchema BuildSchema(IEnumerable<IExpression> selectors, List<List<object?>> data)
+        static ResultSchema BuildSchema(IEnumerable<IExpression> selectors)
         {
-            var firstRow = data.FirstOrDefault();
             return new ResultSchema(selectors
-                .Select((column, n) => new ColumnDefinition(column.ResultName,
-                    ResolveColumnType(column, firstRow, n)))
+                .Select(column => new ColumnDefinition(
+                    column.ResultName,
+                    column.ExpressionType))
                 .ToArray());
-        }
-
-        static TypeAffinity ResolveColumnType(IExpression column, List<object?>? firstRow, int n)
-        {
-            if (column.ExpressionType != TypeAffinity.NotSet)
-                return column.ExpressionType;
-            if (firstRow == null)
-                return TypeAffinity.Blob;
-            return firstRow[n].GetTypeAffinity();
         }
 
         static IEnumerable<Row> ApplyFilter(Table source, IExpression? expression)
