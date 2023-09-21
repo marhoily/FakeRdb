@@ -120,7 +120,6 @@ public static class DbOperations
             });
     }
 
-
     public static int Update(this Database db, 
         string tableName,
         (string column, IExpression value)[] assignments,
@@ -143,6 +142,13 @@ public static class DbOperations
                 }
             }
         return counter;
+    }
+    public static int Delete(this Database db, string tableName)
+    {
+        var table = db[tableName];
+        var affected = table.Count;
+        table.Clear();
+        return affected;
     }
 
     public static Table? Try(this Database db, string? tableName)

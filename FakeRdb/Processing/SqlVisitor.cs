@@ -176,4 +176,10 @@ public sealed class SqlVisitor : SQLiteParserBaseVisitor<IResult?>
             functionName,
             args);
     }
+
+    public override IResult VisitDelete_stmt(SQLiteParser.Delete_stmtContext context)
+    {
+        var tableName = context.qualified_table_name().GetText();
+        return new Affected(_db.Delete(tableName));
+    }
 }
