@@ -6,7 +6,7 @@ public sealed class OrderByClause : IResult
 
     public OrderByClause(Field field) => _field = field;
 
-    public IComparer<List<object?>> GetComparer(ResultSchema schema) => 
+    public IComparer<List<object?>> GetComparer(ResultSchema schema) =>
         new Comparer(schema.IndexOf(_field));
 
     private sealed class Comparer : IComparer<List<object?>>
@@ -28,11 +28,8 @@ public sealed class OrderByClause : IResult
             var a = x[_columnIndex];
             var b = y[_columnIndex];
             if (ReferenceEquals(a, b)) return 0;
-            if (a == null) return 1;
-            if (b == null) return -1;
-            if (a is IComparable ca) return ca.CompareTo(b);
-            if (b is IComparable cb) return -cb.CompareTo(a);
-            throw new NotImplementedException();
+            return ComparisonRules.CompareSqliteObjects(a, b);
         }
+
     }
 }
