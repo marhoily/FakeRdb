@@ -1,6 +1,4 @@
-﻿using Xunit.Abstractions;
-
-namespace FakeRdb.Tests;
+﻿namespace FakeRdb.Tests;
 
 public static class DbDataReaderTestExtensions
 {
@@ -49,6 +47,11 @@ public static class DbDataReaderTestExtensions
         List<string> headers,
         List<List<object?>> rows)
     {
+        if (headers.Count != 0 && rows.Count == 0)
+        {
+            output.WriteLine(string.Join(", ", headers));
+            return;
+        }
         var widths = Enumerable.Range(0, headers.Count)
             .Select(i => Math.Max(
                 headers[i].Length,

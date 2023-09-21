@@ -1,5 +1,3 @@
-using Xunit.Abstractions;
-
 namespace FakeRdb.Tests;
 
 public sealed class SelectTests : ComparisonTestBase

@@ -1,6 +1,5 @@
 using System.Text.RegularExpressions;
 using Microsoft.Data.Sqlite;
-using Xunit.Abstractions;
 
 namespace FakeRdb.Tests;
 
@@ -24,6 +23,7 @@ public abstract class ComparisonTestBase : IDisposable
         GC.SuppressFinalize(this);
     }
 
+    protected void Execute(string sql) => CompareAgainstSqlite(sql, null, false);
     protected void CompareAgainstSqlite(string sql, string? description = null, bool printOut = true)
     {
         if (printOut)
