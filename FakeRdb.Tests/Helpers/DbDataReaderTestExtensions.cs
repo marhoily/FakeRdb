@@ -4,7 +4,8 @@ namespace FakeRdb.Tests;
 
 public static class DbDataReaderTestExtensions
 {
-    public static void ShouldEqual(this DbDataReader actual, DbDataReader expected, ITestOutputHelper outputHelper)
+    public static void ShouldEqual(this DbDataReader actual, DbDataReader expected, ITestOutputHelper outputHelper,
+        bool printOut)
     {
         actual.IsClosed.Should().BeFalse();
         expected.IsClosed.Should().BeFalse();
@@ -15,10 +16,13 @@ public static class DbDataReaderTestExtensions
         var expectedData = expected.ReadData();
         var actualData = actual.ReadData();
 
-        outputHelper.WriteLine("--- Expected --- ");
-        Print(expectedSchema, expectedData);
-        outputHelper.WriteLine("--- Actual ---");
-        Print(actualSchema, actualData);
+        if (printOut)
+        {
+            outputHelper.WriteLine("--- Expected --- ");
+            Print(expectedSchema, expectedData);
+            outputHelper.WriteLine("--- Actual ---");
+            Print(actualSchema, actualData);
+        }
 
         actualSchema.Should().BeEquivalentTo(
             expectedSchema, opt => opt.WithStrictOrdering());

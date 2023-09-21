@@ -24,10 +24,13 @@ public abstract class ComparisonTestBase : IDisposable
         GC.SuppressFinalize(this);
     }
 
-    protected void CompareAgainstSqlite(string sql, string? description = null)
+    protected void CompareAgainstSqlite(string sql, string? description = null, bool printOut = true)
     {
-        if (description != null) _output.WriteLine($"--- {description} ---");
-        _output.WriteLine(sql);
+        if (printOut)
+        {
+            if (description != null) _output.WriteLine($"--- {description} ---");
+            _output.WriteLine(sql);
+        }
 
         var cmd1 = Sqlite.CreateCommand();
         cmd1.CommandText = sql;
@@ -48,7 +51,7 @@ public abstract class ComparisonTestBase : IDisposable
         }
         else
         {
-            actual!.ShouldEqual(expected!, _output);
+            actual!.ShouldEqual(expected!, _output, printOut);
         }
     }
 
