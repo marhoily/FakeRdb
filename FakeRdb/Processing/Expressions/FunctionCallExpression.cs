@@ -47,22 +47,22 @@ public sealed class FunctionCallExpression : IExpression
         var expression = _args.Single();
         var row = dataSet.MaxBy(r => expression.Eval(r), TypeExt.Comparer) ??
                   throw new NotImplementedException();
-        return new AggregateResult(row, expression.Eval(row));
+        return new AggregateResult(row.Data, expression.Eval(row));
     }
     private AggregateResult Min(Row[] dataSet)
     {
         var expression = _args.Single();
         var row = dataSet.MinBy(r => expression.Eval(r), TypeExt.Comparer) ??
                   throw new NotImplementedException();
-        return new AggregateResult(row, expression.Eval(row));
+        return new AggregateResult(row.Data, expression.Eval(row));
     }
 
     /*
      * An expression of the form "CAST(expr AS type)" has an affinity that is the same as a column with a declared type of "type". 
      */
-    public SqliteTypeAffinity ExpressionType => _functionName switch
+    public TypeAffinity ExpressionType => _functionName switch
     {
-        "typeof" => SqliteTypeAffinity.Text,
+        "typeof" => TypeAffinity.Text,
         _ => _args[0].ExpressionType
     };
 

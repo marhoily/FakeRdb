@@ -1,4 +1,4 @@
-﻿using static FakeRdb.SqliteTypeAffinity;
+﻿using static FakeRdb.TypeAffinity;
 
 namespace FakeRdb.Tests;
 
@@ -135,7 +135,7 @@ public sealed class NumericTests
     [InlineData("2.0", Real, typeof(double))]
     [InlineData("2.0", Numeric, typeof(long))]
     [InlineData("'2.0'", Integer, typeof(string))]
-    public void SqliteTypeConversionTheory(string? input, SqliteTypeAffinity affinity, Type expectedType)
+    public void SqliteTypeConversionTheory(string? input, TypeAffinity affinity, Type expectedType)
     {
         var result = input.ConvertToSqliteType(affinity);
         Assert.IsType(expectedType, result);
@@ -161,7 +161,7 @@ public sealed class NumericTests
     [InlineData("abc", Blob)]
     [InlineData("", Blob)]
     [InlineData(null, None)]
-    public void LexicalAffinityTheory(string input, SqliteTypeAffinity expectedAffinity)
+    public void LexicalAffinityTheory(string input, TypeAffinity expectedAffinity)
     {
         Assert.Equal(expectedAffinity, input.GetLexicalAffinity());
     }

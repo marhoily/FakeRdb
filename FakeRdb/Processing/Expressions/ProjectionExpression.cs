@@ -15,7 +15,7 @@ public sealed class ProjectionExpression : IExpression
      * table (not a VIEW or subquery) then the expression has the same
      * affinity as the table column.
      */
-    public SqliteTypeAffinity ExpressionType => SelectColumn.FieldType;
+    public TypeAffinity ExpressionType => SelectColumn.FieldType;
     public string ResultName { get; private set; }
     public void SetAlias(string value) => ResultName = value;
 

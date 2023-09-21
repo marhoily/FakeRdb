@@ -22,7 +22,7 @@ public sealed class InExpression : IExpression
         return _set.Data.Any(r => Equals(nn, r[0]));
     }
 
-    public SqliteTypeAffinity ExpressionType => SqliteTypeAffinity.Integer;
+    public TypeAffinity ExpressionType => TypeAffinity.Integer;
     public void SetAlias(string value) => ResultName = value;
     public string ResultName { get; private set; } = "???";
 }

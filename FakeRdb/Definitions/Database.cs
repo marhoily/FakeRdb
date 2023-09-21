@@ -33,5 +33,5 @@ public sealed class TableSchema
 
 }
 public sealed record Field(int ColumnIndex, string Name, 
-    SqliteTypeAffinity FieldType, 
+    TypeAffinity FieldType, 
     bool IsAutoincrement = false);

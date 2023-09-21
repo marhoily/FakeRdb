@@ -1,6 +1,6 @@
 namespace FakeRdb;
 
-public enum SqliteTypeAffinity
+public enum TypeAffinity
 {
     /// <summary>
     /// Used for syntax CREATE TABLE tableName (ColumnWithoutTypeHint);

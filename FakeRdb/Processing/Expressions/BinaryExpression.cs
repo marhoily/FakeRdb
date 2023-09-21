@@ -5,7 +5,7 @@ public sealed class BinaryExpression : IExpression
     private readonly IExpression _left;
     private readonly Operator _op;
     private readonly IExpression _right;
-    private SqliteTypeAffinity? _expressionType;
+    private TypeAffinity? _expressionType;
 
     public BinaryExpression(Operator op,
         IExpression left, IExpression right,
@@ -17,7 +17,7 @@ public sealed class BinaryExpression : IExpression
         ResultName = originalExpression;
     }
 
-    public SqliteTypeAffinity ExpressionType =>
+    public TypeAffinity ExpressionType =>
         _expressionType ??
         throw new InvalidOperationException(
             "Cannot determine ExpressionType of a binary operation before it was resolved");

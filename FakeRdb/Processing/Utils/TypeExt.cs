@@ -33,7 +33,7 @@ public static partial class TypeExt
     }
 
     public static SqliteStorageType GetStorageType(
-        this object? obj, SqliteTypeAffinity columnAffinity = SqliteTypeAffinity.None)
+        this object? obj, TypeAffinity columnAffinity = TypeAffinity.None)
     {
         var dataAffinity = obj switch
         {
@@ -64,11 +64,11 @@ public static partial class TypeExt
              * storage classes NULL, TEXT or BLOB. If numerical 
              * data is inserted into a column with TEXT affinity 
              * it is converted into text form before being stored.*/
-            (SqliteStorageType.Null, SqliteTypeAffinity.Text)
+            (SqliteStorageType.Null, TypeAffinity.Text)
                 => SqliteStorageType.Null,
-            (SqliteStorageType.Blob, SqliteTypeAffinity.Text)
+            (SqliteStorageType.Blob, TypeAffinity.Text)
                 => SqliteStorageType.Blob,
-            (_, SqliteTypeAffinity.Text)
+            (_, TypeAffinity.Text)
                 => SqliteStorageType.Text,
 
             /* A column with NUMERIC affinity may contain values
@@ -77,19 +77,19 @@ public static partial class TypeExt
              * A column that uses INTEGER affinity behaves the same
              * as a column with NUMERIC affinity.
              */
-            (var n, SqliteTypeAffinity.Numeric or SqliteTypeAffinity.Integer)
+            (var n, TypeAffinity.Numeric or TypeAffinity.Integer)
                 => n,
 
-            (SqliteStorageType.Integer, SqliteTypeAffinity.Real)
+            (SqliteStorageType.Integer, TypeAffinity.Real)
                 => SqliteStorageType.Real,
-            (var r, SqliteTypeAffinity.Real)
+            (var r, TypeAffinity.Real)
                 => r,
             /*
              * A column with affinity BLOB does not prefer one storage
              * class over another and no attempt is made to coerce
              * data from one storage class into another.
              */
-            (_, SqliteTypeAffinity.Blob) => obj switch
+            (_, TypeAffinity.Blob) => obj switch
             {
                 null => SqliteStorageType.Null,
                 string => SqliteStorageType.Text,
@@ -107,46 +107,46 @@ public static partial class TypeExt
             var (i, _) => i
         };
     }
-    public static SqliteTypeAffinity GetTypeAffinity(this object? obj)
+    public static TypeAffinity GetTypeAffinity(this object? obj)
     {
         return obj switch
         {
-            null => SqliteTypeAffinity.None,
-            string => SqliteTypeAffinity.Text,
+            null => TypeAffinity.None,
+            string => TypeAffinity.Text,
             int or
                 long or
                 byte or
                 char or
-                byte => SqliteTypeAffinity.Integer,
+                byte => TypeAffinity.Integer,
             double or 
-                float => SqliteTypeAffinity.Real,
-            _ => SqliteTypeAffinity.Blob
+                float => TypeAffinity.Real,
+            _ => TypeAffinity.Blob
         };
     }
-    public static SqliteTypeAffinity GetSimplifyingAffinity(this object? obj)
+    public static TypeAffinity GetSimplifyingAffinity(this object? obj)
     {
         return obj switch
         {
-            null => SqliteTypeAffinity.None,
+            null => TypeAffinity.None,
             string s => s.IsNumeric() ? s.IsInteger()
-                ? SqliteTypeAffinity.Integer
-                : SqliteTypeAffinity.Real
-                : SqliteTypeAffinity.Text,
+                ? TypeAffinity.Integer
+                : TypeAffinity.Real
+                : TypeAffinity.Text,
             int or
                 long or
                 byte or
                 char or
-                byte => SqliteTypeAffinity.Integer,
+                byte => TypeAffinity.Integer,
             decimal m => m.IsInteger()
-                ? SqliteTypeAffinity.Integer
-                : SqliteTypeAffinity.Real,
+                ? TypeAffinity.Integer
+                : TypeAffinity.Real,
             double d => d.IsInteger()
-                ? SqliteTypeAffinity.Integer
-                : SqliteTypeAffinity.Real,
+                ? TypeAffinity.Integer
+                : TypeAffinity.Real,
             float f => f.IsInteger()
-                ? SqliteTypeAffinity.Integer
-                : SqliteTypeAffinity.Real,
-            _ => SqliteTypeAffinity.Blob
+                ? TypeAffinity.Integer
+                : TypeAffinity.Real,
+            _ => TypeAffinity.Blob
         };
     }
 
@@ -167,7 +167,7 @@ public static partial class TypeExt
         return value % 1 == 0;
     }
 
-    public static object? Coerce(this object? obj, SqliteTypeAffinity affinity)
+    public static object? Coerce(this object? obj, TypeAffinity affinity)
     {
         return (obj, obj.GetStorageType(affinity)) switch
         {
@@ -181,7 +181,7 @@ public static partial class TypeExt
             _ => throw new ArgumentOutOfRangeException()
         };
     }
-    public static object? ConvertToSqliteType(this object? input, SqliteTypeAffinity affinity)
+    public static object? ConvertToSqliteType(this object? input, TypeAffinity affinity)
     {
         if (input is not string s)
         {
@@ -190,12 +190,12 @@ public static partial class TypeExt
 
         var result = affinity switch
         {
-            SqliteTypeAffinity.Integer =>
+            TypeAffinity.Integer =>
                 long.TryParse(s, NumberStyles.Any,
                     CultureInfo.InvariantCulture, out var integer) ? integer : input,
-            SqliteTypeAffinity.Real =>
+            TypeAffinity.Real =>
                 double.TryParse(s, out var real) ? real : input,
-            SqliteTypeAffinity.Numeric =>
+            TypeAffinity.Numeric =>
                 long.TryParse(s, NumberStyles.Any,
                     CultureInfo.InvariantCulture, out var integer) ? integer :
                 double.TryParse(s, out var real) ? real : input,
@@ -259,50 +259,50 @@ public static partial class TypeExt
 
         return input;
     }
-    public static SqliteTypeAffinity GetLexicalAffinity(this string? input)
+    public static TypeAffinity GetLexicalAffinity(this string? input)
     {
         if (input == null)
         {
-            return SqliteTypeAffinity.None;
+            return TypeAffinity.None;
         }
 
         if (string.Equals(input, "NULL", StringComparison.OrdinalIgnoreCase))
         {
-            return SqliteTypeAffinity.None;
+            return TypeAffinity.None;
         }
 
         if (IsBlob().IsMatch(input))
         {
-            return SqliteTypeAffinity.Blob;
+            return TypeAffinity.Blob;
         }
 
         if (long.TryParse(input, out _))
         {
-            return SqliteTypeAffinity.Integer;
+            return TypeAffinity.Integer;
         }
 
         if (double.TryParse(input, out _))
         {
-            return SqliteTypeAffinity.Real;
+            return TypeAffinity.Real;
         }
 
         if (input.StartsWith("'") && input.EndsWith("'"))
         {
-            return SqliteTypeAffinity.Text;
+            return TypeAffinity.Text;
         }
 
-        return SqliteTypeAffinity.None;
+        return TypeAffinity.None;
     }
-    public static SqliteTypeAffinity ToRuntimeType(this SQLiteParser.Type_nameContext? context)
+    public static TypeAffinity ToRuntimeType(this SQLiteParser.Type_nameContext? context)
     {
         return context?.GetText().ToUpperInvariant() switch
         {
-            null => SqliteTypeAffinity.NotSet,
-            "TEXT" => SqliteTypeAffinity.Text,
-            "INTEGER" => SqliteTypeAffinity.Integer,
-            "NUMERIC" => SqliteTypeAffinity.Numeric,
-            "REAL" => SqliteTypeAffinity.Real,
-            "BLOB" => SqliteTypeAffinity.Blob,
+            null => TypeAffinity.NotSet,
+            "TEXT" => TypeAffinity.Text,
+            "INTEGER" => TypeAffinity.Integer,
+            "NUMERIC" => TypeAffinity.Numeric,
+            "REAL" => TypeAffinity.Real,
+            "BLOB" => TypeAffinity.Blob,
             var x => throw new ArgumentOutOfRangeException(x)
         };
     }

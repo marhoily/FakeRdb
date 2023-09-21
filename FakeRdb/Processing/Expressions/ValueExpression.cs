@@ -3,7 +3,7 @@ namespace FakeRdb;
 public sealed class ValueExpression : IExpression
 {
     private readonly object? _value;
-    public ValueExpression(object? value, SqliteTypeAffinity type, string exp)
+    public ValueExpression(object? value, TypeAffinity type, string exp)
     {
         _value = value.Coerce(type);
         ExpressionType = type;
@@ -16,7 +16,7 @@ public sealed class ValueExpression : IExpression
         ResultName = value;
     }
 
-    public SqliteTypeAffinity ExpressionType { get; }
+    public TypeAffinity ExpressionType { get; }
     public string ResultName { get; private set; }
     public void SetAlias(string value) => ResultName = value;
 

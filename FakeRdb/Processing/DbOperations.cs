@@ -31,11 +31,11 @@ public static class DbOperations
 
             return _ => field.FieldType switch
             {
-                SqliteTypeAffinity.Numeric => 0,
-                SqliteTypeAffinity.Integer => 0,
-                SqliteTypeAffinity.Real => 0.0,
-                SqliteTypeAffinity.Text => "",
-                SqliteTypeAffinity.Blob => Array.Empty<byte>(),
+                TypeAffinity.Numeric => 0,
+                TypeAffinity.Integer => 0,
+                TypeAffinity.Real => 0.0,
+                TypeAffinity.Text => "",
+                TypeAffinity.Blob => Array.Empty<byte>(),
                 _ => throw new ArgumentOutOfRangeException()
             };
         }
@@ -75,18 +75,17 @@ public static class DbOperations
         {
             var firstRow = data.FirstOrDefault();
             return new ResultSchema(selectors
-                .Select((column, n) => new ColumnDefinition(n,
-                    column.ResultName,
+                .Select((column, n) => new ColumnDefinition(column.ResultName,
                     ResolveColumnType(column, firstRow, n)))
                 .ToArray());
         }
 
-        static SqliteTypeAffinity ResolveColumnType(IExpression column, List<object?>? firstRow, int n)
+        static TypeAffinity ResolveColumnType(IExpression column, List<object?>? firstRow, int n)
         {
-            if (column.ExpressionType != SqliteTypeAffinity.NotSet)
+            if (column.ExpressionType != TypeAffinity.NotSet)
                 return column.ExpressionType;
             if (firstRow == null)
-                return SqliteTypeAffinity.Blob;
+                return TypeAffinity.Blob;
             return firstRow[n].GetTypeAffinity();
         }
 
@@ -118,8 +117,7 @@ public static class DbOperations
         {
             var func = aggregate[i];
             var cell = func.Resolve<AggregateResult>(rows);
-            schema.Add(new ColumnDefinition(i,
-                func.ResultName,
+            schema.Add(new ColumnDefinition(func.ResultName,
                 cell.Value.GetSimplifyingAffinity()));
             data.Add(cell.Value);
         }
