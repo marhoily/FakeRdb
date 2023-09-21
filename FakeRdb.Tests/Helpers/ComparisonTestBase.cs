@@ -23,7 +23,17 @@ public abstract class ComparisonTestBase : IDisposable
         GC.SuppressFinalize(this);
     }
 
-    protected void Execute(string sql) => CompareAgainstSqlite(sql, null, false);
+    protected void Execute(string sql)
+    {
+        var cmd1 = Sqlite.CreateCommand();
+        cmd1.CommandText = sql;
+        cmd1.SafeExecuteReader();
+
+        var cmd2 = Sut.CreateCommand();
+        cmd2.CommandText = sql;
+        cmd2.SafeExecuteReader();
+    }
+
     protected void CompareAgainstSqlite(string sql, string? description = null, bool printOut = true)
     {
         if (printOut)

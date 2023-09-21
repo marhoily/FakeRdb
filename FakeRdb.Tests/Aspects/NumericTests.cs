@@ -1,4 +1,6 @@
-﻿namespace FakeRdb.Tests;
+﻿using static FakeRdb.SqliteTypeAffinity;
+
+namespace FakeRdb.Tests;
 
 public sealed class NumericTests
 {
@@ -21,11 +23,11 @@ public sealed class NumericTests
     [InlineData("1E3", true)]
     // Small fractions
     [InlineData("1.000000000000001", false)]
-    [InlineData("1.0000000000000001", false)]  
+    [InlineData("1.0000000000000001", false)]
     // Very large number, close to the upper limit of double.
-    [InlineData("1e308", true)]  
+    [InlineData("1e308", true)]
     // Very close to zero, lower limit of positive values for double.
-    [InlineData("1e-324", false)]  
+    [InlineData("1e-324", false)]
 
     [InlineData("1e", false)]  // Incomplete scientific notation.
     [InlineData("e1", false)]  // Invalid format.
@@ -117,5 +119,53 @@ public sealed class NumericTests
     {
         bool result = input.IsNumeric();
         Assert.Equal(expected, result);
+    }
+
+
+    [Theory]
+    [InlineData("123", Integer, typeof(long))]
+    [InlineData("'123'", Integer, typeof(string))]
+    [InlineData("123.456", Real, typeof(double))]
+    [InlineData("'123.456'", Real, typeof(string))]
+    [InlineData("NotANumber", Integer, typeof(string))]
+    [InlineData("123", Text, typeof(string))]
+    [InlineData("123", Numeric, typeof(long))]
+    [InlineData("123.456", Numeric, typeof(double))]
+    [InlineData("'123'", Numeric, typeof(string))]
+    [InlineData("2.0", Real, typeof(double))]
+    [InlineData("2.0", Numeric, typeof(double))]
+    [InlineData("'2.0'", Integer, typeof(string))]
+    [InlineData("x'1234'", Integer, typeof(byte[]))]
+    [InlineData("x'1234", Integer, typeof(string))]
+    [InlineData("x'123'", Integer, typeof(string))]
+    public void SqliteTypeConversionTheory(string? input, SqliteTypeAffinity affinity, Type expectedType)
+    {
+        var result = input.ConvertToSqliteType(affinity);
+        Assert.IsType(expectedType, result);
+    }
+    [Theory]
+    [InlineData("123", Integer)]
+    [InlineData("'123'", Text)]
+    [InlineData("123.456", Real)]
+    [InlineData("'123.456'", Text)]
+    [InlineData("x'1234'", Blob)]
+    [InlineData("NULL", None)]
+    [InlineData("2.0", Real)]
+    [InlineData("'2.0'", Text)]
+    [InlineData("1.0e3", Real)]
+    [InlineData("-123", Integer)]
+    [InlineData("-123.456", Real)]
+    [InlineData("0", Integer)]
+    [InlineData("0.0", Real)]
+    [InlineData("-0", Integer)]
+    [InlineData("''", Text)]
+    [InlineData("' '", Text)]
+    [InlineData("x''", Blob)]
+    [InlineData("abc", Blob)]
+    [InlineData("", Blob)]
+    [InlineData(null, None)]
+    public void LexicalAffinityTheory(string input, SqliteTypeAffinity expectedAffinity)
+    {
+        Assert.Equal(expectedAffinity, input.GetLexicalAffinity());
     }
 }

@@ -9,6 +9,12 @@ public sealed class ValueExpression : IExpression
         ExpressionType = type;
         ResultName = exp;
     }
+    public ValueExpression(string value)
+    {
+        ExpressionType = value.GetLexicalAffinity();
+        _value = value.CoerceToLexicalAffinity();
+        ResultName = value;
+    }
 
     public SqliteTypeAffinity ExpressionType { get; }
     public string ResultName { get; private set; }

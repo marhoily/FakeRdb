@@ -165,10 +165,151 @@ public static partial class TypeExt
             _ => throw new ArgumentOutOfRangeException()
         };
     }
+    public static object? ConvertToSqliteType(this string? input, SqliteTypeAffinity affinity)
+    {
+        if (input == null)
+        {
+            return null;
+        }
+        // Check if the input starts with "x" or "X" and has valid length
+        if (input.StartsWith("x'", StringComparison.OrdinalIgnoreCase) && 
+            input.EndsWith("'") && input.Length % 2== 1)
+        {
+            return input.ConvertHexToBytes();
+        }
 
+        switch (affinity)
+        {
+            case SqliteTypeAffinity.Integer:
+                if (long.TryParse(input, out var intValue))
+                {
+                    return intValue;
+                }
+
+                return input;
+
+            case SqliteTypeAffinity.Text:
+                return input;
+
+            case SqliteTypeAffinity.Real:
+                if (double.TryParse(input, out var realValue))
+                {
+                    return realValue;
+                }
+
+                return input;
+
+            case SqliteTypeAffinity.Numeric:
+                if (long.TryParse(input, out var numericIntValue))
+                {
+                    return numericIntValue;
+                }
+                if (double.TryParse(input, out var numericRealValue))
+                {
+                    return numericRealValue;
+                }
+
+                return input;
+
+            case SqliteTypeAffinity.None:
+                return input;
+
+            default:
+                throw new ArgumentException("Invalid SQLite affinity type");
+        }
+    }
+
+    private static byte[] ConvertHexToBytes(this string input)
+    {
+        // Extract the hexadecimal part
+        var hex = input.Substring(2, input.Length - 3);
+
+        // Convert the hexadecimal string to a byte array
+        var bytes = new byte[hex.Length / 2];
+        for (var i = 0; i < hex.Length; i += 2)
+        {
+            var byteValue = hex.Substring(i, 2);
+            bytes[i / 2] = Convert.ToByte(byteValue, 16);
+        }
+
+        return bytes;
+    }
+
+    [GeneratedRegex("^x'[0-9a-fA-F]*'$")]
+    private static partial Regex IsBlob();
+
+
+    public static object? CoerceToLexicalAffinity(this string? input)
+    {
+        if (input == null)
+        {
+            return null;
+        }
+
+        if (string.Equals(input, "NULL", StringComparison.OrdinalIgnoreCase))
+        {
+            return null;
+        }
+
+        if (IsBlob().IsMatch(input))
+        {
+            return input.ConvertHexToBytes();
+        }
+
+        if (long.TryParse(input, out var integer))
+        {
+            return integer;
+        }
+
+        if (double.TryParse(input, out var real))
+        {
+            return real;
+        }
+
+        if (input.StartsWith("'") && input.EndsWith("'"))
+        {
+            return input[1..^1];
+        }
+
+        return input;
+    }
+    public static SqliteTypeAffinity GetLexicalAffinity(this string? input)
+    {
+        if (input == null)
+        {
+            return SqliteTypeAffinity.None;
+        }
+
+        if (string.Equals(input, "NULL", StringComparison.OrdinalIgnoreCase))
+        {
+            return SqliteTypeAffinity.None;
+        }
+
+        if (IsBlob().IsMatch(input))
+        {
+            return SqliteTypeAffinity.Blob;
+        }
+
+        if (long.TryParse(input, out _))
+        {
+            return SqliteTypeAffinity.Integer;
+        }
+
+        if (double.TryParse(input, out _))
+        {
+            return SqliteTypeAffinity.Real;
+        }
+
+        if (input.StartsWith("'") && input.EndsWith("'"))
+        {
+            return SqliteTypeAffinity.Text;
+        }
+
+        return SqliteTypeAffinity.None;
+    }
     public static SqliteTypeAffinity ToRuntimeType(this SQLiteParser.Type_nameContext? context)
     {
-        return context?.GetText() switch
+        return context?.GetText().ToUpperInvariant() switch
         {
             null => SqliteTypeAffinity.NotSet,
             "TEXT" => SqliteTypeAffinity.Text,
