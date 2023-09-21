@@ -133,11 +133,8 @@ public sealed class NumericTests
     [InlineData("123.456", Numeric, typeof(double))]
     [InlineData("'123'", Numeric, typeof(string))]
     [InlineData("2.0", Real, typeof(double))]
-    [InlineData("2.0", Numeric, typeof(double))]
+    [InlineData("2.0", Numeric, typeof(long))]
     [InlineData("'2.0'", Integer, typeof(string))]
-    [InlineData("x'1234'", Integer, typeof(byte[]))]
-    [InlineData("x'1234", Integer, typeof(string))]
-    [InlineData("x'123'", Integer, typeof(string))]
     public void SqliteTypeConversionTheory(string? input, SqliteTypeAffinity affinity, Type expectedType)
     {
         var result = input.ConvertToSqliteType(affinity);

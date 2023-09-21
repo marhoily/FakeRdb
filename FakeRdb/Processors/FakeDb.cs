@@ -24,7 +24,7 @@ public sealed class FakeDb : Dictionary<string, Table>
                 return row =>
                     values.Rows[row].Cells[col]
                         .Eval()
-                        .Coerce(field.FieldType);
+                        .ConvertToSqliteType(field.FieldType);
 
             if (field.IsAutoincrement)
                 return _ => table.Autoincrement();

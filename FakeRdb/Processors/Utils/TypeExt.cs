@@ -165,58 +165,28 @@ public static partial class TypeExt
             _ => throw new ArgumentOutOfRangeException()
         };
     }
-    public static object? ConvertToSqliteType(this string? input, SqliteTypeAffinity affinity)
+    public static object? ConvertToSqliteType(this object? input, SqliteTypeAffinity affinity)
     {
-        if (input == null)
+        if (input is not string s)
         {
-            return null;
-        }
-        // Check if the input starts with "x" or "X" and has valid length
-        if (input.StartsWith("x'", StringComparison.OrdinalIgnoreCase) && 
-            input.EndsWith("'") && input.Length % 2== 1)
-        {
-            return input.ConvertHexToBytes();
+            return input;
         }
 
-        switch (affinity)
+        var result = affinity switch
         {
-            case SqliteTypeAffinity.Integer:
-                if (long.TryParse(input, out var intValue))
-                {
-                    return intValue;
-                }
+            SqliteTypeAffinity.Integer =>
+                long.TryParse(s, NumberStyles.Any,
+                    CultureInfo.InvariantCulture, out var integer) ? integer : input,
+            SqliteTypeAffinity.Real =>
+                double.TryParse(s, out var real) ? real : input,
+            SqliteTypeAffinity.Numeric =>
+                long.TryParse(s, NumberStyles.Any,
+                    CultureInfo.InvariantCulture, out var integer) ? integer :
+                double.TryParse(s, out var real) ? real : input,
+            _ => input
+        };
+        return result;
 
-                return input;
-
-            case SqliteTypeAffinity.Text:
-                return input;
-
-            case SqliteTypeAffinity.Real:
-                if (double.TryParse(input, out var realValue))
-                {
-                    return realValue;
-                }
-
-                return input;
-
-            case SqliteTypeAffinity.Numeric:
-                if (long.TryParse(input, out var numericIntValue))
-                {
-                    return numericIntValue;
-                }
-                if (double.TryParse(input, out var numericRealValue))
-                {
-                    return numericRealValue;
-                }
-
-                return input;
-
-            case SqliteTypeAffinity.None:
-                return input;
-
-            default:
-                throw new ArgumentException("Invalid SQLite affinity type");
-        }
     }
 
     private static byte[] ConvertHexToBytes(this string input)
