@@ -26,7 +26,9 @@ public abstract class ComparisonTestBase : IDisposable
 
     protected void CompareAgainstSqlite(string sql, string? description = null)
     {
-        if (description != null) _output.WriteLine(description);
+        if (description != null) _output.WriteLine($"--- {description} ---");
+        _output.WriteLine(sql);
+
         var cmd1 = Sqlite.CreateCommand();
         cmd1.CommandText = sql;
         var (expected, x1) = cmd1.SafeExecuteReader();

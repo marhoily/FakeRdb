@@ -9,15 +9,20 @@ public static class DbDataReaderTestExtensions
         actual.IsClosed.Should().BeFalse();
         expected.IsClosed.Should().BeFalse();
         expected.RecordsAffected.Should().Be(actual.RecordsAffected);
+
         var expectedSchema = expected.GetSchema().ToList();
-        actual.GetSchema().Should().BeEquivalentTo(
-            expectedSchema, opt => opt.WithStrictOrdering());
+        var actualSchema = actual.GetSchema().ToList();
         var expectedData = expected.ReadData();
-        if (actual is not RecordsAffectedDataReader)
-            outputHelper.PrintOut(expectedSchema
-                .Select(c => c.ColumnName)
-                .ToList(), expectedData);
-        actual.ReadData().Should().BeEquivalentTo(expectedData,
+        var actualData = actual.ReadData();
+
+        outputHelper.WriteLine("--- Expected --- ");
+        Print(expectedSchema, expectedData);
+        outputHelper.WriteLine("--- Actual ---");
+        Print(actualSchema, actualData);
+
+        actualSchema.Should().BeEquivalentTo(
+            expectedSchema, opt => opt.WithStrictOrdering());
+        actualData.Should().BeEquivalentTo(expectedData,
             opt => opt
                 .WithStrictOrdering()
                 .Using<double>(ctx => ctx.Subject.Should()
@@ -26,6 +31,14 @@ public static class DbDataReaderTestExtensions
                 .Using<float>(ctx => ctx.Subject.Should()
                     .BeApproximately(ctx.Expectation, 1e-4f))
                 .WhenTypeIs<float>());
+        return;
+
+        void Print(List<(string ColumnType, string ColumnName)> schema, List<List<object?>> rows)
+        {
+            outputHelper.PrintOut(schema
+                .Select(c => c.ColumnName + ": " + c.ColumnType)
+                .ToList(), rows);
+        }
     }
 
     private static void PrintOut(this ITestOutputHelper output,
