@@ -7,7 +7,8 @@ public sealed class SqlVisitor : SQLiteParserBaseVisitor<IResult?>
     private readonly string _originalSql;
     private readonly Database _db;
     private readonly FakeDbParameterCollection _parameters;
-    private Scope<Table> _currentTable;
+    private Scoped<Table> _currentTable;
+    private Scoped<Dictionary<string, string>> _alias;
 
     public SqlVisitor(string originalSql, Database db, FakeDbParameterCollection parameters)
     {
@@ -28,6 +29,12 @@ public sealed class SqlVisitor : SQLiteParserBaseVisitor<IResult?>
 
             _ => throw new ArgumentOutOfRangeException()
         };
+    }
+
+    public override IResult? VisitSql_stmt(SQLiteParser.Sql_stmtContext context)
+    {
+        using var _ = _alias.Set(new Dictionary<string, string>());
+        return VisitChildren(context);
     }
 
     public override IResult? VisitCreate_table_stmt(SQLiteParser.Create_table_stmtContext context)

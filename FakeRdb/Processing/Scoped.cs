@@ -1,9 +1,9 @@
 namespace FakeRdb;
 
-public struct Scope<T> : IDisposable
+public struct Scoped<T> : IDisposable
 {
     public T? Value { get; private set; }
-    public Scope<T> Set(T? value)
+    public Scoped<T> Set(T? value)
     {
         Value = value;
         return this;
