@@ -72,22 +72,6 @@ public static class DatabaseSeeder
 
 
     }
-    public static void SeedHeterogeneousData(this DbConnection connection)
-    {
-        using var cmd = connection.CreateCommand();
-        cmd.CommandText =
-            """
-            CREATE TABLE T (X,Y,Z);
-            INSERT INTO T (X, Y, Z) 
-            VALUES 
-                ('Banana', 5, '2022-01-10'),
-                (12345, 'Apple', x'4D414E47'),   -- x'4D414E47' is a BLOB literal for 'MANG'
-                ('Orange', 8.23, 'This is text.'),
-                (98765, x'01020304', 999),
-                (3.1415, 'Another text', x'ABCDE12345');
-            """;
-        cmd.ExecuteNonQuery();
-    }
     public static void SeedColumnAffinityTable(this DbConnection connection)
     {
         using var cmd = connection.CreateCommand();
