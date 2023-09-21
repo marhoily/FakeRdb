@@ -1,10 +1,10 @@
 namespace FakeRdb;
 
-public sealed class FakeDb : Dictionary<string, Table>
+public static class DbOperations
 {
-    public void Insert(string tableName, string[] columns, ValuesTable values)
+    public static void Insert(this Database db, string tableName, string[] columns, ValuesTable values)
     {
-        var table = this[tableName];
+        var table = db[tableName];
         if (columns.Length == 0) // TODO: Should it be here or in outer method? Is there more efficient way?
             columns = table.Schema.Columns.Select(c => c.Name).ToArray();
 
@@ -41,9 +41,9 @@ public sealed class FakeDb : Dictionary<string, Table>
         }
     }
 
-    public IResult Select(string tableName, IProjection[] projection, IExpression? filter)
+    public static IResult Select(this Database db, string tableName, IProjection[] projection, IExpression? filter)
     {
-        var table = this[tableName];
+        var table = db[tableName];
         var selectors = CompileProjection(table, projection);
         if (selectors.Length == 0)
             throw new InvalidOperationException(
@@ -75,8 +75,8 @@ public sealed class FakeDb : Dictionary<string, Table>
         {
             var firstRow = data.FirstOrDefault();
             return selectors
-                .Select((column, n) => new Field(n, 
-                    column.ResultName, 
+                .Select((column, n) => new Field(n,
+                    column.ResultName,
                     ResolveColumnType(column, firstRow, n)))
                 .ToArray();
         }
@@ -107,10 +107,10 @@ public sealed class FakeDb : Dictionary<string, Table>
         }
     }
 
-    public IResult SelectAggregate(string tableName,
+    public static IResult SelectAggregate(this Database db, string tableName,
         List<FunctionCallExpression> aggregate)
     {
-        var dbTable = this[tableName];
+        var dbTable = db[tableName];
         var rows = dbTable.ToArray();
         var schema = new List<Field>();
         var data = new List<object?>();
@@ -120,7 +120,7 @@ public sealed class FakeDb : Dictionary<string, Table>
             var cell = func.Resolve<AggregateResult>(rows);
             schema.Add(new Field(i,
                 func.ResultName,
-                    cell.Value.GetSimplifyingAffinity()));
+                cell.Value.GetSimplifyingAffinity()));
             data.Add(cell.Value);
         }
 
@@ -132,15 +132,15 @@ public sealed class FakeDb : Dictionary<string, Table>
     }
 
 
-    public int Update(
+    public static int Update(this Database db, 
         string tableName,
         (string column, IExpression value)[] assignments,
         IExpression? filter)
     {
-        var table = this[tableName] ?? throw new ArgumentOutOfRangeException(nameof(tableName));
+        var table = db[tableName] ?? throw new ArgumentOutOfRangeException(nameof(tableName));
         var schema = table.Schema;
         var compiled = assignments.Select(x =>
-            (column: schema.IndexOf(x.column), x.value))
+                (column: schema.IndexOf(x.column), x.value))
             .ToArray();
         var counter = 0;
         foreach (var row in table)
@@ -156,8 +156,8 @@ public sealed class FakeDb : Dictionary<string, Table>
         return counter;
     }
 
-    public Table? Try(string? tableName)
+    public static Table? Try(this Database db, string? tableName)
     {
-        return tableName == null ? null : this[tableName];
+        return tableName == null ? null : db[tableName];
     }
 }

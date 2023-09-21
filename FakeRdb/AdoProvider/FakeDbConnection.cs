@@ -6,7 +6,7 @@ public sealed class FakeDbConnection : DbConnection
 {
     private ConnectionState _state;
 
-    public FakeDbConnection(FakeDb db)
+    public FakeDbConnection(Database db)
     {
         Db = db;
         _state = ConnectionState.Closed;
@@ -28,7 +28,7 @@ public sealed class FakeDbConnection : DbConnection
     public override string ServerVersion => "";
     public override ConnectionState State => _state;
     protected override DbProviderFactory? DbProviderFactory { get; }
-    public FakeDb Db { get; set; }
+    public Database Db { get; set; }
 
     protected override DbCommand CreateDbCommand()
     {

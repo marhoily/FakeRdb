@@ -7,7 +7,7 @@ public abstract class ComparisonTestBase : IDisposable
 {
     private readonly ITestOutputHelper _output;
     protected DbConnection Sqlite { get; } = new SqliteConnection("Data Source=:memory:");
-    protected DbConnection Sut { get; } = new FakeDbConnection(new FakeDb());
+    protected DbConnection Sut { get; } = new FakeDbConnection(new Database());
 
     protected ComparisonTestBase(ITestOutputHelper output)
     {

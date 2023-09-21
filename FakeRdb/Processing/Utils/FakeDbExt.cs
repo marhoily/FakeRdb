@@ -4,7 +4,7 @@ namespace FakeRdb;
 
 public static class FakeDbExt
 {
-    public static DbDataReader ExecuteReader(this FakeDb db, string sql,
+    public static DbDataReader ExecuteReader(this Database db, string sql,
         FakeDbParameterCollection parameters)
     {
         var inputStream = new AntlrInputStream(sql);

@@ -1,26 +1,23 @@
 namespace FakeRdb;
 
-public sealed class TableSchema
+public static class SchemaOperations
 {
     private const StringComparison NameRule = StringComparison.InvariantCultureIgnoreCase;
-    public Field[] Columns { get; }
 
-    public TableSchema(Field[] columns)
+    public static Field Get(this TableSchema schema, string fieldName)
     {
-        Columns = columns;
+        return Array.Find(schema.Columns, f => string.Equals(f.Name, fieldName, NameRule)) ??
+               throw FieldNotFound(fieldName);
     }
-    public Field this [string name] => 
-        Array.Find(Columns, f => string.Equals(f.Name, name, NameRule)) ??
-        throw FieldNotFound(name);
 
     private static InvalidOperationException FieldNotFound(string name)
     {
         return new InvalidOperationException($"Column {name} is not found");
     }
 
-    public int IndexOf(string columnName)
+    public static int IndexOf(this TableSchema schema, string columnName)
     {
-        var result = Array.FindIndex(Columns, 
+        var result = Array.FindIndex(schema.Columns, 
             field => string.Equals(field.Name, columnName, NameRule));
         if (result == -1)
             throw FieldNotFound(columnName);

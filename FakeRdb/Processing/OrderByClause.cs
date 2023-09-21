@@ -13,7 +13,11 @@ public sealed class OrderByClause : IResult
     {
         private readonly int _columnIndex;
 
-        public Comparer(int columnIndex) => _columnIndex = columnIndex;
+        public Comparer(int columnIndex)
+        {
+            if (columnIndex < 0) throw new ArgumentOutOfRangeException(nameof(columnIndex));
+            _columnIndex = columnIndex;
+        }
 
         public int Compare(List<object?>? x, List<object?>? y)
         {

@@ -5,11 +5,11 @@ namespace FakeRdb;
 public sealed class SqlVisitor : SQLiteParserBaseVisitor<IResult?>
 {
     private readonly string _originalSql;
-    private readonly FakeDb _db;
+    private readonly Database _db;
     private readonly FakeDbParameterCollection _parameters;
     private Scope<Table> _currentTable;
 
-    public SqlVisitor(string originalSql, FakeDb db, FakeDbParameterCollection parameters)
+    public SqlVisitor(string originalSql, Database db, FakeDbParameterCollection parameters)
     {
         _originalSql = originalSql;
         _db = db;
@@ -165,7 +165,7 @@ public sealed class SqlVisitor : SQLiteParserBaseVisitor<IResult?>
 
         if (table == null)
             throw new InvalidOperationException("Couldn't resolve table!");
-        return new ProjectionExpression(table.Schema[column]);
+        return new ProjectionExpression(table.Schema.Get(column));
     }
 
     public override IResult VisitFunction_call(SQLiteParser.Function_callContext context)
