@@ -33,7 +33,7 @@ public sealed class FakeDb : Dictionary<string, Table>
             {
                 SqliteTypeAffinity.Numeric => 0,
                 SqliteTypeAffinity.Integer => 0,
-                SqliteTypeAffinity.Real => 0,
+                SqliteTypeAffinity.Real => 0.0,
                 SqliteTypeAffinity.Text => "",
                 SqliteTypeAffinity.Blob => Array.Empty<byte>(),
                 _ => throw new ArgumentOutOfRangeException()
@@ -120,7 +120,7 @@ public sealed class FakeDb : Dictionary<string, Table>
             var cell = func.Resolve<AggregateResult>(rows);
             schema.Add(new Field(i,
                 func.ResultName,
-                    cell.Value.GetTypeAffinity()));
+                    cell.Value.GetSimplifyingAffinity()));
             data.Add(cell.Value);
         }
 

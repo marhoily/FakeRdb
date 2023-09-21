@@ -112,6 +112,22 @@ public static partial class TypeExt
         return obj switch
         {
             null => SqliteTypeAffinity.None,
+            string => SqliteTypeAffinity.Text,
+            int or
+                long or
+                byte or
+                char or
+                byte => SqliteTypeAffinity.Integer,
+            double or 
+                float => SqliteTypeAffinity.Real,
+            _ => SqliteTypeAffinity.Blob
+        };
+    }
+    public static SqliteTypeAffinity GetSimplifyingAffinity(this object? obj)
+    {
+        return obj switch
+        {
+            null => SqliteTypeAffinity.None,
             string s => s.IsNumeric() ? s.IsInteger()
                 ? SqliteTypeAffinity.Integer
                 : SqliteTypeAffinity.Real

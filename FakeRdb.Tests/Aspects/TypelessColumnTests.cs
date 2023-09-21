@@ -25,6 +25,7 @@ public sealed class TypelessColumnTests : ComparisonTestBase
 
     [Theory]
     [InlineData("integer", "1")]
+    [InlineData("text", "'1'")]
     public void Test(string d, string v)
     {
         CompareAgainstSqlite(
