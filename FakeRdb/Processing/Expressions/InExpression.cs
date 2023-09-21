@@ -18,7 +18,7 @@ public sealed class InExpression : IExpression
     public object Eval(Row dataSet)
     {
         var n = _needle.Eval(dataSet);
-        var nn = n.Coerce(_set.Schema.Single().FieldType);
+        var nn = n.Coerce(_set.Schema.Columns.Single().FieldType);
         return _set.Data.Any(r => Equals(nn, r[0]));
     }
 

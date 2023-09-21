@@ -6,8 +6,8 @@ public sealed class OrderByClause : IResult
 
     public OrderByClause(Field field) => _field = field;
 
-    public IComparer<List<object?>> GetComparer(Field[] schema) => 
-        new Comparer(Array.IndexOf(schema, _field));
+    public IComparer<List<object?>> GetComparer(ResultSchema schema) => 
+        new Comparer(schema.IndexOf(_field));
 
     private sealed class Comparer : IComparer<List<object?>>
     {

@@ -71,14 +71,14 @@ public static class DbOperations
             return ApplyProjection(temp, proj);
         }
 
-        static Field[] BuildSchema(IEnumerable<IExpression> selectors, List<List<object?>> data)
+        static ResultSchema BuildSchema(IEnumerable<IExpression> selectors, List<List<object?>> data)
         {
             var firstRow = data.FirstOrDefault();
-            return selectors
-                .Select((column, n) => new Field(n,
+            return new ResultSchema(selectors
+                .Select((column, n) => new ColumnDefinition(n,
                     column.ResultName,
                     ResolveColumnType(column, firstRow, n)))
-                .ToArray();
+                .ToArray());
         }
 
         static SqliteTypeAffinity ResolveColumnType(IExpression column, List<object?>? firstRow, int n)
@@ -112,19 +112,20 @@ public static class DbOperations
     {
         var dbTable = db[tableName];
         var rows = dbTable.ToArray();
-        var schema = new List<Field>();
+        var schema = new List<ColumnDefinition>();
         var data = new List<object?>();
         for (var i = 0; i < aggregate.Count; i++)
         {
             var func = aggregate[i];
             var cell = func.Resolve<AggregateResult>(rows);
-            schema.Add(new Field(i,
+            schema.Add(new ColumnDefinition(i,
                 func.ResultName,
                 cell.Value.GetSimplifyingAffinity()));
             data.Add(cell.Value);
         }
 
-        return new QueryResult(schema.ToArray(),
+        return new QueryResult(
+            new ResultSchema(schema.ToArray()),
             new List<List<object?>>
             {
                 data

@@ -11,7 +11,7 @@ public sealed class FakeDbReader : DbDataReader
     }
 
     public override int Depth => 0;
-    public override int FieldCount => _queryResult.Schema.Length;
+    public override int FieldCount => _queryResult.Schema.Columns.Length;
 
     public override object this[int ordinal] => GetValue(ordinal);
 
@@ -74,7 +74,7 @@ public sealed class FakeDbReader : DbDataReader
 
     public override string GetDataTypeName(int ordinal)
     {
-        return _queryResult.Schema[ordinal]
+        return _queryResult.Schema.Columns[ordinal]
             .FieldType
             .ToString().ToUpperInvariant();
     }
@@ -127,14 +127,14 @@ public sealed class FakeDbReader : DbDataReader
 
     public override string GetName(int ordinal)
     {
-        return _queryResult.Schema[ordinal].Name;
+        return _queryResult.Schema.Columns[ordinal].Name;
     }
 
     public override int GetOrdinal(string name)
     {
-        for (int i = 0; i < _queryResult.Schema.Length; i++)
+        for (int i = 0; i < _queryResult.Schema.Columns.Length; i++)
         {
-            if (string.Equals(_queryResult.Schema[i].Name, name, StringComparison.OrdinalIgnoreCase))
+            if (string.Equals(_queryResult.Schema.Columns[i].Name, name, StringComparison.OrdinalIgnoreCase))
             {
                 return i;
             }
@@ -155,7 +155,7 @@ public sealed class FakeDbReader : DbDataReader
 
     public override int GetValues(object[] values)
     {
-        var count = Math.Min(values.Length, _queryResult.Schema.Length);
+        var count = Math.Min(values.Length, _queryResult.Schema.Columns.Length);
         for (int i = 0; i < count; i++)
         {
             values[i] = GetValue(i);
