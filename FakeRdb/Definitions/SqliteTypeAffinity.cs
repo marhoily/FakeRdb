@@ -3,6 +3,10 @@ namespace FakeRdb;
 public enum SqliteTypeAffinity
 {
     /// <summary>
+    /// Used for syntax CREATE TABLE tableName (ColumnWithoutTypeHint);
+    /// </summary>
+    NotSet,
+    /// <summary>
     ///     A column with NUMERIC affinity may contain values using all five
     ///     storage classes. When text data is inserted into a NUMERIC column, the
     ///     storage class of the text is converted to INTEGER or REAL (in order of

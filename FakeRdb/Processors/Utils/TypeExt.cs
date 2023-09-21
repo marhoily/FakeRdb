@@ -170,7 +170,7 @@ public static partial class TypeExt
     {
         return context?.GetText() switch
         {
-            null => SqliteTypeAffinity.None,
+            null => SqliteTypeAffinity.NotSet,
             "TEXT" => SqliteTypeAffinity.Text,
             "INTEGER" => SqliteTypeAffinity.Integer,
             "NUMERIC" => SqliteTypeAffinity.Numeric,

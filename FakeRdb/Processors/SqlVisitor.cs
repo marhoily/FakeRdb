@@ -72,6 +72,7 @@ public sealed class SqlVisitor : SQLiteParserBaseVisitor<IResult?>
 
         return select;
     }
+
     public override IResult VisitSelect_core(SQLiteParser.Select_coreContext context)
     {
         var tableName = context.table_or_subquery()

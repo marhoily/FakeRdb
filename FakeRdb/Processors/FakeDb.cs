@@ -49,7 +49,7 @@ public sealed class FakeDb : Dictionary<string, Table>
             throw new InvalidOperationException(
                 $"No columns selected from table: {tableName}");
         var data = BuildData(table, selectors, filter);
-        var schema = BuildSchema(selectors);
+        var schema = BuildSchema(selectors, data);
         return new QueryResult(schema, data);
 
         static IExpression[] CompileProjection(Table table, IProjection[] projection)
@@ -71,11 +71,23 @@ public sealed class FakeDb : Dictionary<string, Table>
             return ApplyProjection(temp, proj);
         }
 
-        static Field[] BuildSchema(IEnumerable<IExpression> selectors)
+        static Field[] BuildSchema(IEnumerable<IExpression> selectors, List<List<object?>> data)
         {
+            var firstRow = data.FirstOrDefault();
             return selectors
-                .Select((column, n) => new Field(n, column.ResultName, column.ExpressionType))
+                .Select((column, n) => new Field(n, 
+                    column.ResultName, 
+                    ResolveColumnType(column, firstRow, n)))
                 .ToArray();
+        }
+
+        static SqliteTypeAffinity ResolveColumnType(IExpression column, List<object?>? firstRow, int n)
+        {
+            if (column.ExpressionType != SqliteTypeAffinity.NotSet)
+                return column.ExpressionType;
+            if (firstRow == null)
+                return SqliteTypeAffinity.Blob;
+            return firstRow[n].GetTypeAffinity();
         }
 
         static IEnumerable<Row> ApplyFilter(Table source, IExpression? expression)
