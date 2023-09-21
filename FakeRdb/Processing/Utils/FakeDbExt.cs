@@ -15,7 +15,7 @@ public static class FakeDbExt
         parser.AddErrorListener(new PanicErrorListener());
         var chatContext = parser.sql_stmt_list();
         var visitor = new SqlVisitor(sql, db,parameters);
-        return visitor.Visit(chatContext).PostProcess();
+        return visitor.Visit(chatContext);
     }
     public static DbDataReader ExecuteReader(this Database db, 
         string sql, FakeDbParameterCollection parameters)

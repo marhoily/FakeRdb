@@ -2,7 +2,7 @@ namespace FakeRdb;
 
 public static class QueryResultOperations
 {
-    public static IResult? PostProcess(this IResult? result)
+    public static IResult PostProcess(this IResult result)
     {
         if (result is not QueryResult q) return result;
         

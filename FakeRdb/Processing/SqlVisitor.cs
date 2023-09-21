@@ -69,7 +69,7 @@ public sealed class SqlVisitor : SQLiteParserBaseVisitor<IResult?>
             select.Sort(orderBy);
         }
 
-        return select;
+        return select.PostProcess();
     }
 
     public override IResult VisitSelect_core(SQLiteParser.Select_coreContext context)

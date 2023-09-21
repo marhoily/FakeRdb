@@ -11,7 +11,8 @@ public sealed class DeleteTests : ComparisonTestBase
     [Fact]
     public void Delete_All()
     {
-        CompareAgainstSqlite("DELETE FROM Album");
-        CompareAgainstSqlite("SELECT * FROM Album");
+        CompareAgainstSqlite(
+            "DELETE FROM Album; " +
+            "SELECT * FROM Album");
     }
 }
