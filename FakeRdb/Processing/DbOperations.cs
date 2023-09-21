@@ -84,7 +84,7 @@ public static class DbOperations
         {
             return expression == null
                 ? source
-                : source.Where(expression.Resolve<bool>);
+                : source.Where(expression.Eval<bool>);
         }
 
         static List<List<object?>> ApplyProjection(IEnumerable<Row> rows, IExpression[] selectors)
@@ -106,7 +106,7 @@ public static class DbOperations
         var data = new List<object?>();
         foreach (var func in aggregate)
         {
-            var cell = func.Resolve<AggregateResult>(rows);
+            var cell = func.Eval<AggregateResult>(rows);
             schema.Add(new ColumnDefinition(func.ResultName,
                 cell.Value.GetSimplifyingAffinity()));
             data.Add(cell.Value);
@@ -132,7 +132,7 @@ public static class DbOperations
             .ToArray();
         var counter = 0;
         foreach (var row in table)
-            if (filter == null || filter.Resolve<bool>(row))
+            if (filter == null || filter.Eval<bool>(row))
             {
                 counter++;
                 foreach (var (column, value) in compiled)
@@ -146,6 +146,9 @@ public static class DbOperations
     public static int Delete(this Database db, string tableName, IExpression? projection)
     {
         var table = db[tableName];
+        if (projection != null) 
+            return table.RemoveAll(projection.Eval<bool>);
+
         var affected = table.Count;
         table.Clear();
         return affected;
