@@ -143,7 +143,7 @@ public static class DbOperations
             }
         return counter;
     }
-    public static int Delete(this Database db, string tableName)
+    public static int Delete(this Database db, string tableName, IExpression? projection)
     {
         var table = db[tableName];
         var affected = table.Count;

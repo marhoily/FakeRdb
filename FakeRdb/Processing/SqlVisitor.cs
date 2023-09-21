@@ -181,14 +181,19 @@ public sealed class SqlVisitor : SQLiteParserBaseVisitor<IResult?>
     {
         var functionName = context.function_name().GetText()!;
         var args = context.expr().Select(Visit).Cast<IExpression>().ToArray();
-        return new FunctionCallExpression(
-            functionName,
-            args);
+        return new FunctionCallExpression(functionName, args);
     }
 
     public override IResult VisitDelete_stmt(SQLiteParser.Delete_stmtContext context)
     {
         var tableName = context.qualified_table_name().GetText();
-        return new Affected(_db.Delete(tableName));
+        _currentTable.Set(_db[tableName]);
+        return new Affected(_db.Delete(tableName, GetPredicate()));
+        IExpression? GetPredicate()
+        {
+            if (context.expr() is {} where)
+                return (IExpression?)Visit(where);
+            return null;
+        }
     }
 }
