@@ -113,9 +113,8 @@ public static class DbOperations
         var rows = dbTable.ToArray();
         var schema = new List<ColumnDefinition>();
         var data = new List<object?>();
-        for (var i = 0; i < aggregate.Count; i++)
+        foreach (var func in aggregate)
         {
-            var func = aggregate[i];
             var cell = func.Resolve<AggregateResult>(rows);
             schema.Add(new ColumnDefinition(func.ResultName,
                 cell.Value.GetSimplifyingAffinity()));
