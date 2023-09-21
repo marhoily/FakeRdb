@@ -7,7 +7,7 @@ public static class DbDataReaderTestExtensions
     {
         actual.IsClosed.Should().BeFalse();
         expected.IsClosed.Should().BeFalse();
-        expected.RecordsAffected.Should().Be(actual.RecordsAffected);
+        actual.RecordsAffected.Should().Be(expected.RecordsAffected);
 
         var expectedSchema = expected.GetSchema().ToList();
         var actualSchema = actual.GetSchema().ToList();

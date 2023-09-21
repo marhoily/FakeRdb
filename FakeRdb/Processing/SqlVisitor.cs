@@ -18,7 +18,16 @@ public sealed class SqlVisitor : SQLiteParserBaseVisitor<IResult?>
 
     protected override IResult? AggregateResult(IResult? aggregate, IResult? nextResult)
     {
-        return nextResult ?? aggregate;
+        return (nextResult, aggregate) switch{
+            (null, null) => null,
+            (var x, null) => x,
+            (null, var y) => y,
+            (QueryResult q, Affected a) => q.Merge(a),
+            (Affected a, QueryResult q) => q.Merge(a),
+            (Affected x, Affected y) => new Affected(x.RecordsCount + y.RecordsCount),
+
+            _ => throw new ArgumentOutOfRangeException()
+        };
     }
 
     public override IResult? VisitCreate_table_stmt(SQLiteParser.Create_table_stmtContext context)

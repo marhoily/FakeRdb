@@ -21,7 +21,7 @@ public sealed class FakeDbReader : DbDataReader
 
     public override bool IsClosed => false;
 
-    public override int RecordsAffected => -1;
+    public override int RecordsAffected => _queryResult.RecordsCount;
 
     public override bool Read()
     {
