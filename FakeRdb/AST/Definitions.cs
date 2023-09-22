@@ -24,6 +24,8 @@ public interface IR : IResult
     public sealed record LiteralExp(string Value) : IExpression;
     public sealed record InExp(IExpression Needle, QueryResult Haystack) : IExpression;
 
+    public sealed record ValuesTable(ValuesRow[] Rows) : IResult;
+    public sealed record ValuesRow(IExpression[] Cells);
     public static QueryResult Execute(SelectStmt stmt)
     {
         return Inner(stmt.Queries.Single(),

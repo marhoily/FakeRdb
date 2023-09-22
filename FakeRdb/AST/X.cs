@@ -16,6 +16,66 @@ public static class X
             _ => throw new ArgumentOutOfRangeException(nameof(arg))
         };
     }
+    public static object? Eval(this IR.IExpression arg)
+    {
+        return arg switch {
+            IR.AggregateExp aggregateExp => throw new NotImplementedException(),
+            IR.BinaryExp binaryExp => binaryExp.Eval(),
+            IR.BindExp bindExp => bindExp.Value,
+            IR.ColumnExp columnExp => throw new NotImplementedException(),
+            IR.InExp inExp => throw new NotImplementedException(),
+            IR.LiteralExp literalExp => literalExp.Value.CoerceToLexicalAffinity(),
+            IR.ScalarExp scalarExp => throw new NotImplementedException(),
+            _ => throw new ArgumentOutOfRangeException(nameof(arg))
+        };
+    }
+    
+    public static object? Eval(this IR.BinaryExp arg)
+    {
+        var l = arg.Left.Eval();
+        var r = arg.Right.Eval();
+        return arg.Eval(l, r);
+    }
 
+    private static object? Eval(this IR.BinaryExp arg, object? l, object? r)
+    {
+        var coerceTo = GetPriority(arg.Left) < GetPriority(arg.Right)
+            ? arg.Left.GetTypeAffinity()
+            : arg.Right.GetTypeAffinity();
 
+        var result = Calc(arg.Op, l.Coerce(coerceTo), r.Coerce(coerceTo));
+        
+        /*
+         * Any operators applied to column names, including the no-op unary "+" operator,
+         * convert the column name into an expression which always has no affinity.
+         * Hence even if X and Y.Z are column names, the expressions +X
+         * and +Y.Z are not column names and have no affinity.
+         */
+        result.GetTypeAffinity();
+        return result;
+
+        static int GetPriority(IR.IExpression exp) =>
+            exp switch
+            {
+                IR.BinaryExp => 0,
+                IR.ColumnExp => 1,
+                IR.LiteralExp => 0,
+                _ => throw new ArgumentOutOfRangeException(nameof(exp))
+            };
+
+        static object? Calc(Operator op, object? x, object? y)
+        {
+            if (x == null || y == null)
+                return null;
+            return (object?)(op switch
+            {
+                Operator.Multiplication => (dynamic)x * (dynamic)y,
+                Operator.Equal => Equals(x, y),
+                Operator.Less => x is IComparable c ? c.CompareTo(y) == -1 : throw new NotSupportedException(),
+                Operator.Addition => (dynamic)x + (dynamic)y,
+                Operator.Concatenation => string.Concat(x, y),
+                _ => throw new ArgumentOutOfRangeException(op.ToString())
+            });
+        }
+    }
 }

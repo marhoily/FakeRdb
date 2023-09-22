@@ -14,6 +14,3 @@ public sealed record QueryResult(
 public sealed record ResultSchema(ColumnDefinition[] Columns);
 public sealed record ColumnDefinition(string Name, TypeAffinity FieldType);
 
-public sealed record ValuesTable(ValuesRow[] Rows) : IResult;
-
-public sealed record ValuesRow(IExpression[] Cells);

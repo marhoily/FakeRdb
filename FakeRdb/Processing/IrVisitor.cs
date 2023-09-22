@@ -72,18 +72,18 @@ public sealed class IrVisitor : SQLiteParserBaseVisitor<IResult?>
         var valuesTable = Visit(context.values_clause()) ?? throw new InvalidOperationException();
         var tableName = context.table_name().GetText();
         var columns = context.column_name().Select(col => col.GetText()).ToArray();
-        var values = (ValuesTable)valuesTable;
+        var values = (IR.ValuesTable)valuesTable;
         _db.Insert(tableName, columns, values);
         return new Affected(values.Rows.Length);
     }
 
     public override IResult VisitValues_clause(SQLiteParser.Values_clauseContext context)
     {
-        return new ValuesTable(context.value_row()
-            .Select(r => new ValuesRow(r.expr()
+        return new IR.ValuesTable(context.value_row()
+            .Select(r => new IR.ValuesRow(r.expr()
                 .Select(Visit)
                 .Cast<IR.IExpression>()
-                .Select(X.Convert)
+              //  .Select(X.Convert)
                 .ToArray()))
             .ToArray());
     }

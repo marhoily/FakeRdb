@@ -2,7 +2,7 @@ namespace FakeRdb;
 
 public static class DbOperations
 {
-    public static void Insert(this Database db, string tableName, string[] columns, ValuesTable values)
+    public static void Insert(this Database db, string tableName, string[] columns, IR.ValuesTable values)
     {
         var table = db[tableName];
         if (columns.Length == 0) // TODO: Should it be here or in outer method? Is there more efficient way?
