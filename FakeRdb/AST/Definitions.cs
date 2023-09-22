@@ -33,7 +33,7 @@ public interface IR : IResult
                 .ToList();
             if (aggregate.Count > 0)
                 return db.SelectAggregate(query.TableName, aggregate);
-            var result = db.Select2(query.TableName, query.Columns, query.Where?.Convert());
+            var result = db.Select(query.TableName, query.Columns, query.Where?.Convert());
             if (orderingTerm != null)
             {
                 var clause = new OrderByClause(orderingTerm.Column);
@@ -60,45 +60,5 @@ public static class X
         };
     }
 
-    public static QueryResult Select2(this Database db, 
-        string tableName, IR.ResultColumn[] projection, IExpression? filter)
-    {
-        var table = db[tableName];
-        var selectors = projection.Select(c => c.Exp.Convert()).ToArray();
-        var data = BuildData(table, selectors, filter);
-        var schema = BuildSchema(projection, selectors);
-        return new QueryResult(schema, data);
-
-        static List<List<object?>> BuildData(Table source, IExpression[] proj, IExpression? filter)
-        {
-            var temp = ApplyFilter(source, filter);
-            return ApplyProjection(temp, proj);
-        }
-
-        static ResultSchema BuildSchema(IR.ResultColumn[] columns, IExpression[] expressions)
-        {
-            return new ResultSchema(columns.Zip(expressions)
-                .Select(column => new ColumnDefinition(
-                    column.First.Alias ?? column.Second.ResultName,
-                    column.Second.ExpressionType))
-                .ToArray());
-        }
-
-        static IEnumerable<Row> ApplyFilter(Table source, IExpression? expression)
-        {
-            return expression == null
-                ? source
-                : source.Where(expression.Eval<bool>);
-        }
-
-        static List<List<object?>> ApplyProjection(IEnumerable<Row> rows, IExpression[] selectors)
-        {
-            return rows
-                .Select(row => selectors
-                    .Select(selector => selector.Eval(row))
-                    .ToList())
-                .ToList();
-        }
-    }
 
 }

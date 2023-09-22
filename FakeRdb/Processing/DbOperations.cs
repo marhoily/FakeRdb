@@ -41,29 +41,14 @@ public static class DbOperations
         }
     }
 
-    public static QueryResult Select(this Database db, string tableName, IProjection[] projection, IExpression? filter)
+    public static QueryResult Select(this Database db, 
+        string tableName, IR.ResultColumn[] projection, IExpression? filter)
     {
         var table = db[tableName];
-        var selectors = CompileProjection(table, projection);
-        if (selectors.Length == 0)
-            throw new InvalidOperationException(
-                $"No columns selected from table: {tableName}");
+        var selectors = projection.Select(c => c.Exp.Convert()).ToArray();
         var data = BuildData(table, selectors, filter);
-        var schema = BuildSchema(selectors);
+        var schema = BuildSchema(projection, selectors);
         return new QueryResult(schema, data);
-
-        static IExpression[] CompileProjection(Table table, IProjection[] projection)
-        {
-            if (projection is [Wildcard])
-            {
-                return Enumerable.Range(0, table.Schema.Columns.Length)
-                    .Select(n => new ProjectionExpression(table.Schema.Columns[n]))
-                    .Cast<IExpression>()
-                    .ToArray();
-            }
-
-            return projection.OfType<IExpression>().ToArray();
-        }
 
         static List<List<object?>> BuildData(Table source, IExpression[] proj, IExpression? filter)
         {
@@ -71,12 +56,12 @@ public static class DbOperations
             return ApplyProjection(temp, proj);
         }
 
-        static ResultSchema BuildSchema(IEnumerable<IExpression> selectors)
+        static ResultSchema BuildSchema(IR.ResultColumn[] columns, IExpression[] expressions)
         {
-            return new ResultSchema(selectors
+            return new ResultSchema(columns.Zip(expressions)
                 .Select(column => new ColumnDefinition(
-                    column.ResultName,
-                    column.ExpressionType))
+                    column.First.Alias ?? column.Second.ResultName,
+                    column.Second.ExpressionType))
                 .ToArray());
         }
 
