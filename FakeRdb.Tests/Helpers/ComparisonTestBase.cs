@@ -76,7 +76,12 @@ public abstract class ComparisonTestBase : IDisposable
         {
             "SQLite Error 1: 'no such column: (?<t>\\w+)'.",
             "Column (?<t>\\w+) is not found"
-        }
+        },
+        new[]
+        {
+            "SQLite Error 1: 'SELECTs to the left and right of UNION do not have the same number of result columns'.",
+            "SELECTs to the left and right of UNION do not have the same number of result columns"
+        },
     };
     // Makes sure actual error either matches the expected completely,
     // or equivalent to any of it counterparts in the lookup table, using Regex

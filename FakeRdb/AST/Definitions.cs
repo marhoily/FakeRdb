@@ -61,10 +61,9 @@ public interface IR : IResult
 
         static void ValidateSchema(ResultSchema x, ResultSchema y)
         {
-            if (x.Columns.Length != y.Columns.Length ||
-                !x.Columns.Zip(y.Columns, (c1, c2) => c1.FieldType == c2.FieldType).All(b => b))
+            if (x.Columns.Length != y.Columns.Length)
             {
-                throw new ArgumentException("Incompatible schemas");
+                throw new ArgumentException("SELECTs to the left and right of UNION do not have the same number of result columns");
             }
         }
 
@@ -73,7 +72,19 @@ public interface IR : IResult
             if (query is SelectCore core)
                 return Terminal(core, orderingTerms);
             if (query is CompoundSelect compound)
-                return Union(Recursive(compound.Left), Recursive(compound.Right));
+            {
+                var left = Recursive(compound.Left);
+                var right = Recursive(compound.Right);
+                return compound.Operator switch
+                {
+                    CompoundOperator.Union => Union(left, right),
+                    CompoundOperator.UnionAll => UnionAll(left, right),
+                    CompoundOperator.Intersect => Intersect(left, right),
+                    CompoundOperator.Except => Except(left, right),
+                    _ => throw new ArgumentOutOfRangeException()
+                };
+            }
+
             throw new ArgumentOutOfRangeException();
         }
         static QueryResult Terminal(SelectCore query, params OrderingTerm[] stmtOrderingTerms)
