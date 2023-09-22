@@ -4,6 +4,9 @@ namespace FakeRdb;
 
 public static class ExpressionEval
 {
+    public static T Eval<T>(this IExpression exp, Row[] dataSet) => (T)exp.Eval(dataSet);
+    public static T Eval<T>(this IExpression exp, Row dataSet) => (T)exp.Eval(dataSet)!;
+
     public static object? Eval(this IExpression arg)
     {
         return arg switch {

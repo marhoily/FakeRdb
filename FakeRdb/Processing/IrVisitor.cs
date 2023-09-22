@@ -83,7 +83,6 @@ public sealed class IrVisitor : SQLiteParserBaseVisitor<IResult?>
             .Select(r => new IR.ValuesRow(r.expr()
                 .Select(Visit)
                 .Cast<IR.IExpression>()
-              //  .Select(X.Convert)
                 .ToArray()))
             .ToArray());
     }

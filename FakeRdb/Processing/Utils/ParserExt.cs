@@ -3,11 +3,8 @@ using Antlr4.Runtime.Tree;
 
 namespace FakeRdb;
 
-public static class ExpExt
+public static class ParserExt
 {
-    public static T Eval<T>(this IR.IExpression exp, Row[] dataSet) => (T)exp.Eval(dataSet);
-    public static T Eval<T>(this IR.IExpression exp, Row dataSet) => (T)exp.Eval(dataSet)!;
-
     public static string GetOriginalText(this ParserRuleContext context, string original)
     {
         int start = context.Start.StartIndex;

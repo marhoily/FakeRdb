@@ -25,8 +25,4 @@ public static class QueryResultOperations
         }
         return result;
     }
-    public static void Sort(this QueryResult result, OrderByClause orderBy)
-    {
-        result.Data.Sort(orderBy.GetComparer(result.Schema));
-    }
 }
