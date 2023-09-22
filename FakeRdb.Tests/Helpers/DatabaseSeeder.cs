@@ -8,17 +8,21 @@ public static class DatabaseSeeder
                       ?? throw new InvalidOperationException();
         using var createTable = connection.CreateCommand();
         createTable.CommandText =
-            "CREATE TABLE Album (" +
-            "Id INTEGER PRIMARY KEY AUTOINCREMENT, " +
-            "Title TEXT, " +
-            "Artist TEXT, " +
-            "Year INTEGER)";
+            """
+            CREATE TABLE Album (
+                Id INTEGER PRIMARY KEY AUTOINCREMENT, 
+                Title TEXT, 
+                Artist TEXT, 
+                Year INTEGER)
+            """;
         createTable.ExecuteNonQuery();
 
         using var insertRow = connection.CreateCommand();
         insertRow.CommandText =
-            "INSERT INTO Album (Title, Artist, Year) " +
-            "VALUES (@Title, @Artist, @Year)";
+            """
+            INSERT INTO Album (Title, Artist, Year) 
+            VALUES (@Title, @Artist, @Year)
+            """;
 
         InsertTracks(insertRow, "Track 1", "Artist 1", 2021);
         InsertTracks(insertRow, "Track 2", "Artist 2", 2022);
