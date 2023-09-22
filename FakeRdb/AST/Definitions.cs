@@ -18,7 +18,7 @@ public interface IR : IResult
     public sealed record CallExp(string FunctionName, IExpression[] Args) : IExpression;
     public sealed record ColumnExp(Field Value) : IExpression;
     public sealed record LiteralExp(string Value) : IExpression;
-    public sealed record InExp(IExpression Needle, SelectCore Haystack) : IExpression;
+    public sealed record InExp(IExpression Needle, QueryResult Haystack) : IExpression;
 
     public static QueryResult Execute(Database db, SelectStmt stmt)
     {
@@ -54,7 +54,7 @@ public static class X
             IR.BindExp bindExp => new ValueExpression(bindExp.Value, bindExp.Value.GetTypeAffinity(), bindExp.ParameterName),
             IR.CallExp callExp => new FunctionCallExpression(callExp.FunctionName, callExp.Args.Select(Convert).ToArray()),
             IR.ColumnExp columnExp => new ProjectionExpression(columnExp.Value),
-            IR.InExp inExp => new InExpression(inExp.Needle.Convert(), null!),
+            IR.InExp inExp => new InExpression(inExp.Needle.Convert(), inExp.Haystack),
             IR.LiteralExp literalExp => new ValueExpression(literalExp.Value),
             _ => throw new ArgumentOutOfRangeException(nameof(arg))
         };

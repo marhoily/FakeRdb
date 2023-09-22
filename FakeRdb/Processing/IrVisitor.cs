@@ -83,7 +83,7 @@ public sealed class IrVisitor : SQLiteParserBaseVisitor<IResult?>
         if (context.order_by_stmt() is { } orderByStmt)
         {
             var orderBy = (IR.OrderBy)Visit(orderByStmt)!;
-            return new IR.SelectStmt(new[] { select }, orderBy.Terms);
+            return IR.Execute(_db, new IR.SelectStmt(new[] { select }, orderBy.Terms));
         }
 
         return IR.Execute(_db, new IR.SelectStmt(
@@ -142,14 +142,16 @@ public sealed class IrVisitor : SQLiteParserBaseVisitor<IResult?>
         }
 
         // try and filter out binary\unary expression
-        if (context.children[0] is not SQLiteParser.ExprContext) return VisitChildren(context);
-        if (context.children[1] is not ITerminalNode { Symbol.Type: var operand }) return VisitChildren(context);
+        if (context.children[0] is not SQLiteParser.ExprContext) 
+            return VisitChildren(context);
+        if (context.children[1] is not ITerminalNode { Symbol.Type: var operand }) 
+            return VisitChildren(context);
 
         var left = (IR.IExpression)(Visit(context.children.First()) ?? throw new NotImplementedException());
         var right = Visit(context.children.Last()) ?? throw new NotImplementedException();
         if (operand == SQLiteLexer.IN_)
         {
-            return new IR.InExp(left, (IR.SelectCore)right);
+            return new IR.InExp(left, (QueryResult)right);
         }
 
         return new IR.BinaryExp(context.ToBinaryOperator(operand), 
