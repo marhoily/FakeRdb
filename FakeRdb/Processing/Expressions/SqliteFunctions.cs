@@ -2,7 +2,7 @@ namespace FakeRdb;
 
 public static class SqliteFunctions
 {
-    public static AggregateResult Max(Row[] dataSet, IExpression[] args)
+    public static AggregateResult Max(Row[] dataSet, IR.IExpression[] args)
     {
         var expression = args.Single();
         var row = dataSet.MaxBy(r => expression.Eval(r), TypeExt.Comparer) ??
@@ -10,7 +10,7 @@ public static class SqliteFunctions
         return new AggregateResult(row.Data, expression.Eval(row));
     }
 
-    public static AggregateResult Min(Row[] dataSet, IExpression[] args)
+    public static AggregateResult Min(Row[] dataSet, IR.IExpression[] args)
     {
         var expression = args.Single();
         var row = dataSet.MinBy(r => expression.Eval(r), TypeExt.Comparer) ??

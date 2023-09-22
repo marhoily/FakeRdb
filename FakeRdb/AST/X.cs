@@ -44,6 +44,16 @@ public static class X
         };
     }
     
+    public static object? Eval(this IR.IExpression arg, Row[] dataSet)
+    {
+        return arg switch {
+            IR.AggregateExp aggregateExp => aggregateExp.Function(dataSet, aggregateExp.Args),
+            IR.BindExp bindExp => bindExp.Value,
+            IR.LiteralExp literalExp => literalExp.Value.CoerceToLexicalAffinity(),
+            _ => throw new ArgumentOutOfRangeException(nameof(arg))
+        };
+    }
+    
     public static object? Eval(this IR.BinaryExp arg)
     {
         var l = arg.Left.Eval();

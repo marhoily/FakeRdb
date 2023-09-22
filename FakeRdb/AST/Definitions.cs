@@ -1,6 +1,6 @@
 ﻿namespace FakeRdb;
 
-public delegate AggregateResult AggregateFunction(Row[] dataSet, IExpression[] args);
+public delegate AggregateResult AggregateFunction(Row[] dataSet, IR.IExpression[] args);
 public delegate string ScalarFunction(Row row, IR.IExpression[] args);
 
 /// <summary> Intermediate representation </summary>
@@ -18,7 +18,7 @@ public interface IR : IResult
 
     public sealed record BindExp(object? Value) : IExpression;
     public sealed record BinaryExp(Operator Op, IExpression Left, IExpression Right) : IExpression;
-    public sealed record AggregateExp(AggregateFunction Function, IExpression[] Args) : IExpression;
+    public sealed record AggregateExp(AggregateFunction Function, IR.IExpression[] Args) : IExpression;
     public sealed record ScalarExp(ScalarFunction Function, IExpression[] Args) : IExpression;
     public sealed record ColumnExp(Field Value) : IExpression;
     public sealed record LiteralExp(string Value) : IExpression;

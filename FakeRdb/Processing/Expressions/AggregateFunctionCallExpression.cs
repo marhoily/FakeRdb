@@ -13,7 +13,7 @@ public sealed class AggregateFunctionCallExpression : IExpression
 
     public object Eval() => throw new NotSupportedException();
     public object Eval(Row dataSet)  => throw new NotSupportedException();
-    public object Eval(Row[] dataSet) => _function(dataSet, _args);
+    public object Eval(Row[] dataSet) => throw new NotSupportedException();
 
     /*
      * An expression of the form "CAST(expr AS type)" has an affinity that is the same as a column with a declared type of "type".

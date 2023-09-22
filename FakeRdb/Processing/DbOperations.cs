@@ -98,7 +98,7 @@ public static class DbOperations
         var data = new List<object?>();
         foreach (var resultColumn in aggregate)
         {
-            var cell = resultColumn.Exp.Convert()
+            var cell = resultColumn.Exp
                 .Eval<AggregateResult>(rows);
             schema.Add(new ColumnDefinition(resultColumn.Original,
                 cell.Value.GetSimplifyingAffinity()));

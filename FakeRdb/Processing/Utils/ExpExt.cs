@@ -8,7 +8,7 @@ public static class ExpExt
     public static T Eval<T>(this IExpression exp, Row[] dataSet) => (T)exp.Eval(dataSet)!;
     public static T Eval<T>(this IExpression exp, Row dataSet) => (T)exp.Eval(dataSet)!;
     public static T Eval<T>(this IExpression exp) => (T)exp.Eval()!;
-    //public static T Eval<T>(this IR.IExpression exp, Row[] dataSet) => (T)exp.Eval(dataSet)!;
+    public static T Eval<T>(this IR.IExpression exp, Row[] dataSet) => (T)exp.Eval(dataSet)!;
     public static T Eval<T>(this IR.IExpression exp, Row dataSet) => (T)exp.Eval(dataSet)!;
     public static T Eval<T>(this IR.IExpression exp) => (T)exp.Eval()!;
 
