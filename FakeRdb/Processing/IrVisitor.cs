@@ -19,7 +19,7 @@ public sealed class IrVisitor : SQLiteParserBaseVisitor<IResult?>
     private readonly Database _db;
     private readonly FakeDbParameterCollection _parameters;
     private Scoped<Table> _currentTable;
-    private Scoped<Dictionary<string, IR.IExpression>> _alias;
+    private readonly HierarchicalNameStore<IR.IExpression> _alias = new();
 
     public IrVisitor(string originalSql, Database db, FakeDbParameterCollection parameters)
     {
@@ -30,7 +30,8 @@ public sealed class IrVisitor : SQLiteParserBaseVisitor<IResult?>
 
     protected override IResult? AggregateResult(IResult? aggregate, IResult? nextResult)
     {
-        return (nextResult, aggregate) switch{
+        return (nextResult, aggregate) switch
+        {
             (null, null) => null,
             (var x, null) => x,
             (null, var y) => y,
@@ -44,7 +45,6 @@ public sealed class IrVisitor : SQLiteParserBaseVisitor<IResult?>
 
     public override IResult? VisitSql_stmt(SQLiteParser.Sql_stmtContext context)
     {
-        using var _ = _alias.Set(new Dictionary<string, IR.IExpression>());
         return VisitChildren(context);
     }
 
@@ -97,18 +97,19 @@ public sealed class IrVisitor : SQLiteParserBaseVisitor<IResult?>
         }
 
         return IR.Execute(new IR.SelectStmt(
-            new[] { select }, 
+            new[] { select },
             Array.Empty<IR.OrderingTerm>())).PostProcess();
     }
 
     public override IResult VisitSelect_core(SQLiteParser.Select_coreContext context)
     {
+        using var a = _alias.OpenScope();
         var tableName = context.table_or_subquery()
             .Single()
             .table_name()
             .GetText()
             .Unescape();
-        using var _ = _currentTable.Set(_db[tableName]);
+        using var t = _currentTable.Set(_db[tableName]);
         var select = context.result_column()
             .Select(Visit)
             .Cast<IR.ResultColumnList>()
@@ -152,9 +153,9 @@ public sealed class IrVisitor : SQLiteParserBaseVisitor<IResult?>
         }
 
         // try and filter out binary\unary expression
-        if (context.children[0] is not SQLiteParser.ExprContext) 
+        if (context.children[0] is not SQLiteParser.ExprContext)
             return VisitChildren(context);
-        if (context.children[1] is not ITerminalNode { Symbol.Type: var operand }) 
+        if (context.children[1] is not ITerminalNode { Symbol.Type: var operand })
             return VisitChildren(context);
 
         var left = (IR.IExpression)(Visit(context.children.First()) ?? throw new NotImplementedException());
@@ -164,7 +165,7 @@ public sealed class IrVisitor : SQLiteParserBaseVisitor<IResult?>
             return new IR.InExp(left, (QueryResult)right);
         }
 
-        return new IR.BinaryExp(context.ToBinaryOperator(operand), 
+        return new IR.BinaryExp(context.ToBinaryOperator(operand),
             left, (IR.IExpression)right);
     }
 
@@ -187,7 +188,7 @@ public sealed class IrVisitor : SQLiteParserBaseVisitor<IResult?>
         if (context.column_alias() is { } alias)
         {
             var aliasText = alias.GetText().Unquote();
-            _alias.Value.Add(aliasText, result);
+            _alias.Set(result, aliasText);
         }
 
         var als = context.column_alias()?.GetText().Unquote();
@@ -206,7 +207,8 @@ public sealed class IrVisitor : SQLiteParserBaseVisitor<IResult?>
         var column = table.Schema.TryGet(columnRef);
         if (column == null)
         {
-            if (_alias.Value.TryGetValue(columnRef, out var exp))
+            // It's not allowed to access aliases declared in SELECT while still in select
+            if (_alias.TryGet(columnRef, out var exp))
                 return exp;
             throw SchemaOperations.FieldNotFound(columnRef);
         }
@@ -237,7 +239,7 @@ public sealed class IrVisitor : SQLiteParserBaseVisitor<IResult?>
         return new Affected(_db.Delete(tableName, GetPredicate()));
         IR.IExpression? GetPredicate()
         {
-            if (context.expr() is {} where)
+            if (context.expr() is { } where)
                 return (IR.IExpression?)Visit(where);
             return null;
         }
