@@ -11,8 +11,8 @@ public sealed class ValueExpression : IExpression
     }
     public ValueExpression(string value)
     {
-        ExpressionType = value.GetLexicalAffinity();
         _value = value.CoerceToLexicalAffinity();
+        ExpressionType = _value.GetTypeAffinity();
         ResultName = value;
     }
 

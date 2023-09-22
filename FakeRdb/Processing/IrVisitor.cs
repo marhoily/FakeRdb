@@ -91,10 +91,10 @@ public sealed class IrVisitor : SQLiteParserBaseVisitor<IResult?>
         if (context.order_by_stmt() is { } orderByStmt)
         {
             var orderBy = (IR.OrderBy)Visit(orderByStmt)!;
-            return IR.Execute(_db, new IR.SelectStmt(new[] { select }, orderBy.Terms)).PostProcess();
+            return IR.Execute(new IR.SelectStmt(new[] { select }, orderBy.Terms)).PostProcess();
         }
 
-        return IR.Execute(_db, new IR.SelectStmt(
+        return IR.Execute(new IR.SelectStmt(
             new[] { select }, 
             Array.Empty<IR.OrderingTerm>())).PostProcess();
     }

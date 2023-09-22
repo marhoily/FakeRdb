@@ -20,7 +20,7 @@ public interface IR : IResult
     public sealed record LiteralExp(string Value) : IExpression;
     public sealed record InExp(IExpression Needle, QueryResult Haystack) : IExpression;
 
-    public static QueryResult Execute(Database db, SelectStmt stmt)
+    public static QueryResult Execute(SelectStmt stmt)
     {
         return Inner(stmt.Queries.Single(),
             stmt.OrderingTerms.FirstOrDefault());
