@@ -3,11 +3,14 @@ using Antlr4.Runtime.Tree;
 namespace FakeRdb;
 
 /// <summary>
-/// This visitor performs the following actions:
+/// Walks the parse tree end performs the following simplifications:
 /// <list type="bullet">
 ///     <item>Unrolls "*" in SELECT</item>
-///     <item>Dereferences table and column names</item>
-///     <item>Follows aliases</item>
+///     <item>Resolves table and column names</item>
+///     <item>Dereferences aliases</item>
+///     <item>Unquotes and parses literals</item>
+///     <item>Binds SQL parameters</item>
+///     <item>Determines if the query is aggregate</item>
 /// </list>
 /// </summary>
 public sealed class IrVisitor : SQLiteParserBaseVisitor<IResult?>
