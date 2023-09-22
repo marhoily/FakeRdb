@@ -41,7 +41,7 @@ public static class DbOperations
         }
     }
 
-    public static IResult Select(this Database db, string tableName, IProjection[] projection, IExpression? filter)
+    public static QueryResult Select(this Database db, string tableName, IProjection[] projection, IExpression? filter)
     {
         var table = db[tableName];
         var selectors = CompileProjection(table, projection);
@@ -97,7 +97,7 @@ public static class DbOperations
         }
     }
 
-    public static IResult SelectAggregate(this Database db, string tableName,
+    public static QueryResult SelectAggregate(this Database db, string tableName,
         List<FunctionCallExpression> aggregate)
     {
         var dbTable = db[tableName];
