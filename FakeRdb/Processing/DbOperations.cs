@@ -136,7 +136,7 @@ public static class DbOperations
             }
         return counter;
     }
-    public static int Delete(this Database db, string tableName, IExpression? projection)
+    public static int Delete(this Database db, string tableName, IR.IExpression? projection)
     {
         var table = db[tableName];
         if (projection != null) 

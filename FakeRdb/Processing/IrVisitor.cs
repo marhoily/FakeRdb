@@ -236,10 +236,10 @@ public sealed class IrVisitor : SQLiteParserBaseVisitor<IResult?>
         var tableName = context.qualified_table_name().GetText();
         _currentTable.Set(_db[tableName]);
         return new Affected(_db.Delete(tableName, GetPredicate()));
-        IExpression? GetPredicate()
+        IR.IExpression? GetPredicate()
         {
             if (context.expr() is {} where)
-                return ((IR.IExpression)Visit(where)!).Convert();
+                return (IR.IExpression?)Visit(where);
             return null;
         }
     }
