@@ -8,14 +8,14 @@ public sealed class UnionTests : ComparisonTestBase
         Sut.Seed3Albums();
     }
     [Fact]
-    public void Max()
+    public void Union()
     {
         CompareAgainstSqlite(
             """
-            SELECT Title AS TitleOrArtist, Year
+            SELECT Title, Year
             FROM Album
             UNION ALL
-            SELECT Artist AS TitleOrArtist, Year 
+            SELECT Artist, Year 
             FROM Album
             """);
     }

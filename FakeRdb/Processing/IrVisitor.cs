@@ -89,16 +89,38 @@ public sealed class IrVisitor : SQLiteParserBaseVisitor<IResult?>
 
     public override IResult VisitSelect_stmt(SQLiteParser.Select_stmtContext context)
     {
-        var select = (IR.SelectCore)Visit(context.select_core().Single())!;
+        var select = (IR.ICompoundSelect)Visit(context.select_expr())!;
         if (context.order_by_stmt() is { } orderByStmt)
         {
             var orderBy = (IR.OrderBy)Visit(orderByStmt)!;
-            return IR.Execute(new IR.SelectStmt(new[] { select }, orderBy.Terms)).PostProcess();
+            return IR.Execute(new IR.SelectStmt(select, orderBy.Terms)).PostProcess();
         }
 
         return IR.Execute(new IR.SelectStmt(
-            new[] { select },
+            select,
             Array.Empty<IR.OrderingTerm>())).PostProcess();
+    }
+
+    public override IResult VisitSelect_expr(SQLiteParser.Select_exprContext context)
+    {
+        var right = Visit<IR.ICompoundSelect>(context.select_core())!;
+        var left = Visit<IR.ICompoundSelect>(context.select_expr());
+
+        if (left == null) return right;
+
+        // Assuming the operator is always the second child
+        var operatorToken = context.GetChild(1).GetText();  
+
+        var compoundOperator = operatorToken switch
+        {
+            "ALL" => CompoundOperator.UnionAll,
+            "UNION" => CompoundOperator.Union,
+            "EXCEPT" => CompoundOperator.Except,
+            "INTERSECT" => CompoundOperator.Intersect,
+            _ => throw new InvalidOperationException("WTF?")
+        };
+
+        return new IR.CompoundSelect(compoundOperator, left, right);
     }
 
     public override IResult VisitSelect_core(SQLiteParser.Select_coreContext context)
@@ -243,5 +265,11 @@ public sealed class IrVisitor : SQLiteParserBaseVisitor<IResult?>
                 return (IR.IExpression?)Visit(where);
             return null;
         }
+    }
+
+    private T? Visit<T>(IParseTree? tree)
+    {
+        if (tree == null) return default;
+        return (T?)Visit(tree);
     }
 }

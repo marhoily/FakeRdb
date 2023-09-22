@@ -369,9 +369,16 @@ reindex_stmt:
     REINDEX_ (collation_name | (schema_name DOT)? (table_name | index_name))?
 ;
 
-select_stmt:
-    common_table_stmt? select_core (compound_operator select_core)* order_by_stmt? limit_stmt?
-;
+select_stmt
+    : select_expr order_by_stmt? limit_stmt? 
+    ;
+
+select_expr
+    : select_core                  // no compound operator
+    | select_expr UNION_ ALL_? select_core         // left-recursive, for UNION
+    | select_expr EXCEPT select_core        // left-recursive, for EXCEPT
+    | select_expr INTERSECT select_core     // left-recursive, for INTERSECT
+    ;
 
 join_clause:
     table_or_subquery (join_operator table_or_subquery join_constraint?)*

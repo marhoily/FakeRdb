@@ -1,6 +1,10 @@
 namespace FakeRdb;
 
-public enum Operator
+public enum CompoundOperator
+{
+    Union, UnionAll, Intersect, Except
+}
+public enum BinaryOperator
 {
     Multiplication,
     Concatenation,

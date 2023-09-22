@@ -77,17 +77,17 @@ public static class ExpressionEval
                 _ => throw new ArgumentOutOfRangeException(nameof(exp))
             };
 
-        static object? Calc(Operator op, object? x, object? y)
+        static object? Calc(BinaryOperator op, object? x, object? y)
         {
             if (x == null || y == null)
                 return null;
             return (object?)(op switch
             {
-                Operator.Multiplication => (dynamic)x * (dynamic)y,
-                Operator.Equal => Equals(x, y),
-                Operator.Less => x is IComparable c ? c.CompareTo(y) == -1 : throw new NotSupportedException(),
-                Operator.Addition => (dynamic)x + (dynamic)y,
-                Operator.Concatenation => string.Concat(x, y),
+                BinaryOperator.Multiplication => (dynamic)x * (dynamic)y,
+                BinaryOperator.Equal => Equals(x, y),
+                BinaryOperator.Less => x is IComparable c ? c.CompareTo(y) == -1 : throw new NotSupportedException(),
+                BinaryOperator.Addition => (dynamic)x + (dynamic)y,
+                BinaryOperator.Concatenation => string.Concat(x, y),
                 _ => throw new ArgumentOutOfRangeException(op.ToString())
             });
         }
