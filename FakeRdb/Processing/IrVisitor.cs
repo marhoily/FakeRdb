@@ -3,14 +3,14 @@ using Antlr4.Runtime.Tree;
 namespace FakeRdb;
 
 /// <summary>
-/// Walks the parse tree end performs the following simplifications:
+/// Walks the ANTLR parse tree to perform the following simplifications:
 /// <list type="bullet">
-///     <item>Unrolls "*" in SELECT</item>
-///     <item>Resolves table and column names</item>
-///     <item>Dereferences aliases</item>
-///     <item>Unquotes and parses literals</item>
-///     <item>Binds SQL parameters</item>
-///     <item>Determines if the query is aggregate</item>
+///     <item>Unroll "*" in SELECT</item>
+///     <item>Resolve table, column, and function names</item>
+///     <item>Dereference aliases</item>
+///     <item>Unquote and parse literals</item>
+///     <item>Bind SQL parameters</item>
+///     <item>Distinguish between plain and aggregate functions</item>
 /// </list>
 /// </summary>
 public sealed class IrVisitor : SQLiteParserBaseVisitor<IResult?>
@@ -216,12 +216,19 @@ public sealed class IrVisitor : SQLiteParserBaseVisitor<IResult?>
 
     public override IResult VisitFunction_call(SQLiteParser.Function_callContext context)
     {
+        var originalText = context.GetOriginalText(_originalSql);
         var functionName = context.function_name().GetText()!;
         var args = context.expr()
             .Select(Visit)
             .Cast<IR.IExpression>()
             .ToArray();
-        return new IR.CallExp(functionName, args);
+        return functionName.ToUpperInvariant() switch
+        {
+            "MAX" => new IR.AggregateExp(SqliteFunctions.Max, args, originalText),
+            "MIN" => new IR.AggregateExp(SqliteFunctions.Min, args, originalText),
+            "TYPEOF" => new IR.ScalarExp(SqliteFunctions.TypeOf, args, originalText),
+            _ => throw new ArgumentOutOfRangeException(functionName)
+        };
     }
 
     public override IResult VisitDelete_stmt(SQLiteParser.Delete_stmtContext context)

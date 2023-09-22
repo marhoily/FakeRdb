@@ -1,5 +1,8 @@
 ﻿namespace FakeRdb;
 
+public delegate AggregateResult AggregateFunction(Row[] dataSet, IExpression[] args);
+public delegate string ScalarFunction(Row row, IExpression[] args);
+
 /// <summary> Intermediate representation </summary>
 public interface IR : IResult
 {
@@ -15,7 +18,8 @@ public interface IR : IResult
 
     public sealed record BindExp(string ParameterName, object? Value) : IExpression;
     public sealed record BinaryExp(Operator Op, IExpression Left, IExpression Right, string Alias) : IExpression;
-    public sealed record CallExp(string FunctionName, IExpression[] Args) : IExpression;
+    public sealed record AggregateExp(AggregateFunction Function, IExpression[] Args, string OriginalText) : IExpression;
+    public sealed record ScalarExp(ScalarFunction Function, IExpression[] Args, string OriginalText) : IExpression;
     public sealed record ColumnExp(Field Value) : IExpression;
     public sealed record LiteralExp(string Value) : IExpression;
     public sealed record InExp(IExpression Needle, QueryResult Haystack) : IExpression;
@@ -24,12 +28,11 @@ public interface IR : IResult
     {
         return Inner(stmt.Queries.Single(),
             stmt.OrderingTerms.FirstOrDefault());
-        QueryResult Inner(SelectCore query, OrderingTerm? orderingTerm)
+        static QueryResult Inner(SelectCore query, OrderingTerm? orderingTerm)
         {
             var aggregate = query.Columns
                 .Select(c => c.Exp.Convert())
-                .OfType<FunctionCallExpression>()
-                .Where(f => f.IsAggregate)
+                .OfType<AggregateFunctionCallExpression>()
                 .ToList();
             if (aggregate.Count > 0)
             {
@@ -46,22 +49,4 @@ public interface IR : IResult
 
         }
     }
-}
-public static class X
-{
-    public static IExpression Convert(this IR.IExpression arg)
-    {
-        return arg switch
-        {
-            IR.BinaryExp binaryExp => new BinaryExpression(binaryExp.Op, Convert(binaryExp.Left), Convert(binaryExp.Right), binaryExp.Alias),
-            IR.BindExp bindExp => new ValueExpression(bindExp.Value, bindExp.Value.GetTypeAffinity(), bindExp.ParameterName),
-            IR.CallExp callExp => new FunctionCallExpression(callExp.FunctionName, callExp.Args.Select(Convert).ToArray()),
-            IR.ColumnExp columnExp => new ProjectionExpression(columnExp.Value),
-            IR.InExp inExp => new InExpression(inExp.Needle.Convert(), inExp.Haystack),
-            IR.LiteralExp literalExp => new ValueExpression(literalExp.Value),
-            _ => throw new ArgumentOutOfRangeException(nameof(arg))
-        };
-    }
-
-
 }

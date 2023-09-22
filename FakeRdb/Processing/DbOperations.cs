@@ -80,7 +80,7 @@ public static class DbOperations
         }
     }
 
-    public static QueryResult SelectAggregate(this Table from, List<FunctionCallExpression> aggregate)
+    public static QueryResult SelectAggregate(this Table from, List<AggregateFunctionCallExpression> aggregate)
     {
         var rows = from.ToArray();
         var schema = new List<ColumnDefinition>();
