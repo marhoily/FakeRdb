@@ -15,7 +15,7 @@ public sealed class AliasingTests : ComparisonTestBase
     [InlineData("Alias binary expression", 
         """SELECT Title || ' ' || Artist as "Caption" FROM Album""")]
     [InlineData("Alias in ORDER BY clause", 
-        "SELECT title AS alias FROM table ORDER BY alias")]
+        "SELECT title AS alias FROM Album ORDER BY alias")]
     public void F(string d, string sql)
     {
         CompareAgainstSqlite(sql, d);

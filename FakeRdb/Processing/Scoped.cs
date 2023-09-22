@@ -1,16 +1,20 @@
 namespace FakeRdb;
 
 public struct Scoped<T> : IDisposable
+    where T: notnull
 {
-    public T? Value { get; private set; }
-    public Scoped<T> Set(T? value)
+    private T? _value;
+
+    public T Value => _value ?? throw new InvalidOperationException("");
+
+    public Scoped<T> Set(T value)
     {
-        Value = value;
+        _value = value;
         return this;
     }
 
     public void Dispose()
     {
-        Value = default;
+        _value = default;
     }
 }

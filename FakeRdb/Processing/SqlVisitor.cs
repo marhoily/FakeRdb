@@ -8,7 +8,7 @@ public sealed class SqlVisitor : SQLiteParserBaseVisitor<IResult?>
     private readonly Database _db;
     private readonly FakeDbParameterCollection _parameters;
     private Scoped<Table> _currentTable;
-    private Scoped<Dictionary<string, string>> _alias;
+    private Scoped<Dictionary<string, IExpression>> _alias;
 
     public SqlVisitor(string originalSql, Database db, FakeDbParameterCollection parameters)
     {
@@ -33,7 +33,7 @@ public sealed class SqlVisitor : SQLiteParserBaseVisitor<IResult?>
 
     public override IResult? VisitSql_stmt(SQLiteParser.Sql_stmtContext context)
     {
-        using var _ = _alias.Set(new Dictionary<string, string>());
+        using var _ = _alias.Set(new Dictionary<string, IExpression>());
         return VisitChildren(context);
     }
 
@@ -168,8 +168,13 @@ public sealed class SqlVisitor : SQLiteParserBaseVisitor<IResult?>
         if (context.STAR() != null)
             return Wildcard.Instance;
         var result = (IExpression?)Visit(context.expr()) ?? throw new Exception();
-        if (context.column_alias() is {} alias) 
-            result.SetAlias(alias.GetText().Unquote());
+        if (context.column_alias() is { } alias)
+        {
+            var aliasText = alias.GetText().Unquote();
+            _alias.Value.Add(aliasText, result);
+            result.SetAlias(aliasText);
+        }
+
         return result;
     }
 
@@ -177,11 +182,19 @@ public sealed class SqlVisitor : SQLiteParserBaseVisitor<IResult?>
     {
         var table = _db.Try(context.table_name()?.GetText()) ??
                     _currentTable.Value;
-        var column = context.column_name().GetText().Unescape();
-
         if (table == null)
             throw new InvalidOperationException("Couldn't resolve table!");
-        return new ProjectionExpression(table.Schema.Get(column));
+
+        var columnRef = context.column_name().GetText().Unescape();
+        var column = table.Schema.TryGet(columnRef);
+        if (column == null)
+        {
+            if (_alias.Value.TryGetValue(columnRef, out var exp))
+                return exp;
+            throw SchemaOperations.FieldNotFound(columnRef);
+        }
+
+        return new ProjectionExpression(column);
     }
 
     public override IResult VisitFunction_call(SQLiteParser.Function_callContext context)
