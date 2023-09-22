@@ -1,52 +1,54 @@
-﻿namespace FakeRdb;
+﻿using static FakeRdb.IR;
 
-public static class X
+namespace FakeRdb;
+
+public static class ExpressionEval
 {
-    public static object? Eval(this IR.IExpression arg)
+    public static object? Eval(this IExpression arg)
     {
         return arg switch {
-            IR.BinaryExp binaryExp => binaryExp.Eval(),
-            IR.BindExp bindExp => bindExp.Value,
-            IR.LiteralExp literalExp => literalExp.Value.CoerceToLexicalAffinity(),
+            BinaryExp binaryExp => binaryExp.Eval(),
+            BindExp bindExp => bindExp.Value,
+            LiteralExp literalExp => literalExp.Value.CoerceToLexicalAffinity(),
             _ => throw new ArgumentOutOfRangeException(nameof(arg))
         };
     }
     
-    public static object? Eval(this IR.IExpression arg, Row row)
+    public static object? Eval(this IExpression arg, Row row)
     {
         return arg switch {
-            IR.BinaryExp binaryExp => binaryExp.Eval(row),
-            IR.ColumnExp columnExp => row[columnExp.Value],
-            IR.InExp inExp => inExp.Eval(row),
-            IR.LiteralExp literalExp => literalExp.Value.CoerceToLexicalAffinity(),
-            IR.ScalarExp scalarExp => scalarExp.Function(row, scalarExp.Args),
+            BinaryExp binaryExp => binaryExp.Eval(row),
+            ColumnExp columnExp => row[columnExp.Value],
+            InExp inExp => inExp.Eval(row),
+            LiteralExp literalExp => literalExp.Value.CoerceToLexicalAffinity(),
+            ScalarExp scalarExp => scalarExp.Function(row, scalarExp.Args),
             _ => throw new ArgumentOutOfRangeException(nameof(arg))
         };
     }
     
-    public static object Eval(this IR.IExpression arg, Row[] dataSet)
+    public static object Eval(this IExpression arg, Row[] dataSet)
     {
         return arg switch {
-            IR.AggregateExp aggregateExp => aggregateExp.Function(dataSet, aggregateExp.Args),
+            AggregateExp aggregateExp => aggregateExp.Function(dataSet, aggregateExp.Args),
             _ => throw new ArgumentOutOfRangeException(nameof(arg))
         };
     }
-    
-    public static object? Eval(this IR.BinaryExp arg)
+
+    private static object? Eval(this BinaryExp arg)
     {
         var l = arg.Left.Eval();
         var r = arg.Right.Eval();
         return arg.Eval(l, r);
     }
-    
-    public static object? Eval(this IR.BinaryExp arg, Row row)
+
+    private static object? Eval(this BinaryExp arg, Row row)
     {
         var l = arg.Left.Eval(row);
         var r = arg.Right.Eval(row);
         return arg.Eval(l, r);
     }
 
-    private static object? Eval(this IR.BinaryExp arg, object? l, object? r)
+    private static object? Eval(this BinaryExp arg, object? l, object? r)
     {
         var coerceTo = GetPriority(arg.Left) < GetPriority(arg.Right)
             ? arg.Left.GetTypeAffinity()
@@ -63,12 +65,12 @@ public static class X
         result.GetTypeAffinity();
         return result;
 
-        static int GetPriority(IR.IExpression exp) =>
+        static int GetPriority(IExpression exp) =>
             exp switch
             {
-                IR.BinaryExp => 0,
-                IR.ColumnExp => 1,
-                IR.LiteralExp => 0,
+                BinaryExp => 0,
+                ColumnExp => 1,
+                LiteralExp => 0,
                 _ => throw new ArgumentOutOfRangeException(nameof(exp))
             };
 
@@ -88,7 +90,7 @@ public static class X
         }
     }
 
-    public static object Eval(this IR.InExp arg, Row dataSet)
+    private static object Eval(this InExp arg, Row dataSet)
     {
         var n = arg.Needle.Eval(dataSet);
         var nn = n.Coerce(arg.Haystack.Schema.Columns.Single().FieldType);
