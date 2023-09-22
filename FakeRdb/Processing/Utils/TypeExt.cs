@@ -6,24 +6,9 @@ namespace FakeRdb;
 
 public static partial class TypeExt
 {
-    public static readonly IComparer<object?> Comparer = new SqliteComparer();
-    private sealed class SqliteComparer : IComparer<object?>
-    {
-        public int Compare(object? x, object? y)
-        {
-            return (x, y) switch
-            {
-                (null, null) => 0,
-                (null, _) => -1,
-                (_, null) => -1,
-                (long a, double b) => ((double)a).CompareTo(b),
-                (IComparable a, _) => a.CompareTo(y),
-                //(long a, long b) => a.CompareTo(b),
-                _ => throw new NotImplementedException(
-                    $"Comparer of: {x.GetType().Name}; {y.GetType().Name}")
-            };
-        }
-    }
+    public static readonly IComparer<object?> Comparer = new ObjectComparer();
+
+
     [GeneratedRegex(@"^[-+]?((0(?![0-9])|[1-9]\d*)(\.\d*)?|\.\d+)([eE][-+]?\d+)?$")]
     private static partial Regex IsNumericRegex();
 

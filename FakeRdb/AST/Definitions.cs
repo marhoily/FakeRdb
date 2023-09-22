@@ -34,9 +34,16 @@ public interface IR : IResult
         static QueryResult Union(QueryResult x, QueryResult y)
         {
             ValidateSchema(x.Schema, y.Schema);
-            var resultData = x.Data.Concat(y.Data).Distinct().ToList();
+    
+            // Use Distinct to remove duplicates. This assumes that List<object?> implements appropriate equality semantics.
+            var resultData = x.Data.Concat(y.Data)
+                .Distinct(new RowEqualityComparer<object?>())
+                .Order(new SelectiveComparer(0))
+                .ToList();
+    
             return new QueryResult(x.Schema, resultData);
         }
+
 
         static QueryResult Intersect(QueryResult x, QueryResult y)
         {
