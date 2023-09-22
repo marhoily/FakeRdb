@@ -128,7 +128,7 @@ public sealed class IrVisitor : SQLiteParserBaseVisitor<IResult?>
         var assignments = context.update_assignment()
             .Select(a => (
                 ColumnName: a.column_name().GetText(),
-                Value: ((IR.IExpression)Visit(a.expr())!).Convert()))
+                Value: ((IR.IExpression)Visit(a.expr())!)))
             .ToArray();
         var where = context.where_clause()?.expr();
         var filter = where == null ? null : ((IR.IExpression)Visit(where)!).Convert();

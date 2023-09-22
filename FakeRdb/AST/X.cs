@@ -30,10 +30,31 @@ public static class X
         };
     }
     
+    public static object? Eval(this IR.IExpression arg, Row row)
+    {
+        return arg switch {
+            IR.AggregateExp aggregateExp => throw new NotImplementedException(),
+            IR.BinaryExp binaryExp => binaryExp.Eval(row),
+            IR.BindExp bindExp => bindExp.Value,
+            IR.ColumnExp columnExp => row[columnExp.Value],
+            IR.InExp inExp => throw new NotImplementedException(),
+            IR.LiteralExp literalExp => literalExp.Value.CoerceToLexicalAffinity(),
+            IR.ScalarExp scalarExp => throw new NotImplementedException(),
+            _ => throw new ArgumentOutOfRangeException(nameof(arg))
+        };
+    }
+    
     public static object? Eval(this IR.BinaryExp arg)
     {
         var l = arg.Left.Eval();
         var r = arg.Right.Eval();
+        return arg.Eval(l, r);
+    }
+    
+    public static object? Eval(this IR.BinaryExp arg, Row row)
+    {
+        var l = arg.Left.Eval(row);
+        var r = arg.Right.Eval(row);
         return arg.Eval(l, r);
     }
 
