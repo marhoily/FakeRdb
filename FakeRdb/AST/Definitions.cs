@@ -26,21 +26,18 @@ public interface IR : IResult
             stmt.OrderingTerms.FirstOrDefault());
         QueryResult Inner(SelectCore query, OrderingTerm? orderingTerm)
         {
-            var expressions = query.Columns
+            var aggregate = query.Columns
                 .Select(c => c.Exp.Convert())
-                .ToArray();
-            var aggregate = expressions
                 .OfType<FunctionCallExpression>()
                 .Where(f => f.IsAggregate)
                 .ToList();
             if (aggregate.Count > 0)
                 return db.SelectAggregate(query.TableName, aggregate);
-            var projection = expressions.Cast<IProjection>().ToArray();
-            var result = db.Select2(query.TableName, projection, query.Where?.Convert());
+            var result = db.Select2(query.TableName, query.Columns, query.Where?.Convert());
             if (orderingTerm != null)
             {
-                result.Data.Sort(new OrderByClause(orderingTerm.Column)
-                    .GetComparer(result.Schema));
+                var clause = new OrderByClause(orderingTerm.Column);
+                result.Data.Sort(clause.GetComparer(result.Schema));
             }
             return result;
 
@@ -63,12 +60,13 @@ public static class X
         };
     }
 
-    public static QueryResult Select2(this Database db, string tableName, IProjection[] projection, IExpression? filter)
+    public static QueryResult Select2(this Database db, 
+        string tableName, IR.ResultColumn[] projection, IExpression? filter)
     {
         var table = db[tableName];
-        var selectors = projection.OfType<IExpression>().ToArray();
+        var selectors = projection.Select(c => c.Exp.Convert()).ToArray();
         var data = BuildData(table, selectors, filter);
-        var schema = BuildSchema(selectors);
+        var schema = BuildSchema(projection, selectors);
         return new QueryResult(schema, data);
 
         static List<List<object?>> BuildData(Table source, IExpression[] proj, IExpression? filter)
@@ -77,12 +75,12 @@ public static class X
             return ApplyProjection(temp, proj);
         }
 
-        static ResultSchema BuildSchema(IEnumerable<IExpression> selectors)
+        static ResultSchema BuildSchema(IR.ResultColumn[] columns, IExpression[] expressions)
         {
-            return new ResultSchema(selectors
+            return new ResultSchema(columns.Zip(expressions)
                 .Select(column => new ColumnDefinition(
-                    column.ResultName,
-                    column.ExpressionType))
+                    column.First.Alias ?? column.Second.ResultName,
+                    column.Second.ExpressionType))
                 .ToArray());
         }
 
