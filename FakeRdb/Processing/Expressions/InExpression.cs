@@ -23,6 +23,5 @@ public sealed class InExpression : IExpression
     }
 
     public TypeAffinity ExpressionType => TypeAffinity.Integer;
-    public void SetAlias(string value) => ResultName = value;
     public string ResultName { get; private set; } = "???";
 }

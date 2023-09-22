@@ -18,7 +18,6 @@ public sealed class ValueExpression : IExpression
 
     public TypeAffinity ExpressionType { get; }
     public string ResultName { get; private set; }
-    public void SetAlias(string value) => ResultName = value;
 
     public object? Eval() => _value;
     public object? Eval(Row dataSet) => _value;
