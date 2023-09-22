@@ -41,12 +41,10 @@ public static class DbOperations
         }
     }
 
-    public static QueryResult Select(this Database db, 
-        string tableName, IR.ResultColumn[] projection, IExpression? filter)
+    public static QueryResult Select(this Table from, IR.ResultColumn[] projection, IExpression? filter)
     {
-        var table = db[tableName];
         var selectors = projection.Select(c => c.Exp.Convert()).ToArray();
-        var data = BuildData(table, selectors, filter);
+        var data = BuildData(from, selectors, filter);
         var schema = BuildSchema(projection, selectors);
         return new QueryResult(schema, data);
 
@@ -82,11 +80,9 @@ public static class DbOperations
         }
     }
 
-    public static QueryResult SelectAggregate(this Database db, string tableName,
-        List<FunctionCallExpression> aggregate)
+    public static QueryResult SelectAggregate(this Table from, List<FunctionCallExpression> aggregate)
     {
-        var dbTable = db[tableName];
-        var rows = dbTable.ToArray();
+        var rows = from.ToArray();
         var schema = new List<ColumnDefinition>();
         var data = new List<object?>();
         foreach (var func in aggregate)

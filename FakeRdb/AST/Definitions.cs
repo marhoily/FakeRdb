@@ -6,7 +6,7 @@ public interface IR : IResult
     public interface IExpression : IR { }
 
     public sealed record SelectStmt(SelectCore[] Queries, OrderingTerm[] OrderingTerms) : IR;
-    public sealed record SelectCore(string TableName, ResultColumn[] Columns, IExpression? Where) : IR;
+    public sealed record SelectCore(Table From, ResultColumn[] Columns, IExpression? Where) : IR;
     public sealed record OrderBy(OrderingTerm[] Terms) : IR;
     public sealed record OrderingTerm(Field Column) : IR;
 
@@ -32,8 +32,11 @@ public interface IR : IResult
                 .Where(f => f.IsAggregate)
                 .ToList();
             if (aggregate.Count > 0)
-                return db.SelectAggregate(query.TableName, aggregate);
-            var result = db.Select(query.TableName, query.Columns, query.Where?.Convert());
+            {
+                return query.From.SelectAggregate(aggregate);
+            }
+
+            var result = query.From.Select(query.Columns, query.Where?.Convert());
             if (orderingTerm != null)
             {
                 var clause = new OrderByClause(orderingTerm.Column);

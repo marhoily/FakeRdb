@@ -113,7 +113,7 @@ public sealed class IrVisitor : SQLiteParserBaseVisitor<IResult?>
             .SelectMany(l => l.List)
             .ToArray();
         var filter = context.whereExpr == null ? null : Visit(context.whereExpr);
-        return new IR.SelectCore(tableName, select, (IR.IExpression?)filter);
+        return new IR.SelectCore(_db[tableName], select, (IR.IExpression?)filter);
 
     }
 
