@@ -18,7 +18,6 @@ public sealed class AggregateFunctionCallExpression : IExpression
     /*
      * An expression of the form "CAST(expr AS type)" has an affinity that is the same as a column with a declared type of "type".
      */
-    public TypeAffinity ExpressionType => _args[0].ExpressionType;
     //"typeof" => TypeAffinity.Text,
 
 }

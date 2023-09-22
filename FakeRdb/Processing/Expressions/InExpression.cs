@@ -21,6 +21,4 @@ public sealed class InExpression : IExpression
         var nn = n.Coerce(_set.Schema.Columns.Single().FieldType);
         return _set.Data.Any(r => Equals(nn, r[0]));
     }
-
-    public TypeAffinity ExpressionType => TypeAffinity.Integer;
 }

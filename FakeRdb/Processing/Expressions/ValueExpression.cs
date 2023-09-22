@@ -6,15 +6,12 @@ public sealed class ValueExpression : IExpression
     public ValueExpression(object? value, TypeAffinity type)
     {
         _value = value.Coerce(type);
-        ExpressionType = type;
     }
     public ValueExpression(string value)
     {
         _value = value.CoerceToLexicalAffinity();
-        ExpressionType = _value.GetTypeAffinity();
+        _value.GetTypeAffinity();
     }
-
-    public TypeAffinity ExpressionType { get; }
 
     public object? Eval() => _value;
     public object? Eval(Row dataSet) => _value;

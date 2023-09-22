@@ -14,7 +14,6 @@ public sealed class ProjectionExpression : IExpression
      * table (not a VIEW or subquery) then the expression has the same
      * affinity as the table column.
      */
-    public TypeAffinity ExpressionType => SelectColumn.FieldType;
 
     public object Eval() => throw new NotSupportedException();
     public object Eval(Row[] dataSet) => throw new NotSupportedException();

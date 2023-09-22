@@ -60,13 +60,17 @@ public static class DbOperations
                 .Select(column => new ColumnDefinition(
                     column.First.Alias ??
                     ExtractColumnName(column.First.Exp) ??
-                    column.First.Original ,
-                    column.Second.ExpressionType))
+                    column.First.Original,
+                    ExtractColumnType(column.First.Exp) ?? 
+                    TypeAffinity.NotSet))
                 .ToArray());
             static string? ExtractColumnName(IR.IExpression exp)
             {
-                if (exp is IR.ColumnExp col) return col.Value.Name;
-                return null;
+                return exp is IR.ColumnExp col ? col.Value.Name : null;
+            }
+            static TypeAffinity? ExtractColumnType(IR.IExpression exp)
+            {
+                return exp is IR.ColumnExp col ? col.Value.FieldType : null;
             }
         }
 

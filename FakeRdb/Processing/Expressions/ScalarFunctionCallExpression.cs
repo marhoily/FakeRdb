@@ -18,6 +18,4 @@ public sealed class ScalarFunctionCallExpression : IExpression
     /*
      * An expression of the form "CAST(expr AS type)" has an affinity that is the same as a column with a declared type of "type".
      */
-    public TypeAffinity ExpressionType => TypeAffinity.Text;
-
 }

@@ -5,7 +5,6 @@ public sealed class BinaryExpression : IExpression
     private readonly IExpression _left;
     private readonly Operator _op;
     private readonly IExpression _right;
-    private TypeAffinity? _expressionType;
 
     public BinaryExpression(Operator op,
         IExpression left, IExpression right)
@@ -14,11 +13,6 @@ public sealed class BinaryExpression : IExpression
         _op = op;
         _right = right;
     }
-
-    public TypeAffinity ExpressionType =>
-        _expressionType ??
-        throw new InvalidOperationException(
-            "Cannot determine ExpressionType of a binary operation before it was resolved");
 
     public object? Eval()
     {
@@ -40,8 +34,8 @@ public sealed class BinaryExpression : IExpression
     private object? Eval(object? l, object? r)
     {
         var coerceTo = GetPriority(_left) < GetPriority(_right)
-            ? _right.ExpressionType
-            : _left.ExpressionType;
+            ? _right.GetTypeAffinity()
+            : _left.GetTypeAffinity();
 
         var result = Calc(_op, l.Coerce(coerceTo), r.Coerce(coerceTo));
         
@@ -51,7 +45,7 @@ public sealed class BinaryExpression : IExpression
          * Hence even if X and Y.Z are column names, the expressions +X
          * and +Y.Z are not column names and have no affinity.
          */
-        _expressionType = result.GetTypeAffinity();
+        result.GetTypeAffinity();
         return result;
 
         static int GetPriority(IExpression exp) =>
