@@ -131,7 +131,7 @@ public sealed class IrVisitor : SQLiteParserBaseVisitor<IResult?>
                 Value: ((IR.IExpression)Visit(a.expr())!)))
             .ToArray();
         var where = context.where_clause()?.expr();
-        var filter = where == null ? null : ((IR.IExpression)Visit(where)!).Convert();
+        var filter = where == null ? null : ((IR.IExpression)Visit(where)!);
         var recordsAffected = _db.Update(tableName, assignments, filter);
         return new Affected(recordsAffected);
     }

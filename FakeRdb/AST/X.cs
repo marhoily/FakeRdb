@@ -37,7 +37,7 @@ public static class X
             IR.BinaryExp binaryExp => binaryExp.Eval(row),
             IR.BindExp bindExp => bindExp.Value,
             IR.ColumnExp columnExp => row[columnExp.Value],
-            IR.InExp inExp => throw new NotImplementedException(),
+            IR.InExp inExp => inExp.Eval(row),
             IR.LiteralExp literalExp => literalExp.Value.CoerceToLexicalAffinity(),
             IR.ScalarExp scalarExp => throw new NotImplementedException(),
             _ => throw new ArgumentOutOfRangeException(nameof(arg))
@@ -98,5 +98,12 @@ public static class X
                 _ => throw new ArgumentOutOfRangeException(op.ToString())
             });
         }
+    }
+
+    public static object Eval(this IR.InExp arg, Row dataSet)
+    {
+        var n = arg.Needle.Eval(dataSet);
+        var nn = n.Coerce(arg.Haystack.Schema.Columns.Single().FieldType);
+        return arg.Haystack.Data.Any(r => Equals(nn, r[0]));
     }
 }

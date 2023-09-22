@@ -116,7 +116,7 @@ public static class DbOperations
     public static int Update(this Database db, 
         string tableName,
         (string column, IR.IExpression value)[] assignments,
-        IExpression? filter)
+        IR.IExpression? filter)
     {
         var table = db[tableName] ?? throw new ArgumentOutOfRangeException(nameof(tableName));
         var schema = table.Schema;
