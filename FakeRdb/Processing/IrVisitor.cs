@@ -83,12 +83,12 @@ public sealed class IrVisitor : SQLiteParserBaseVisitor<IResult?>
         if (context.order_by_stmt() is { } orderByStmt)
         {
             var orderBy = (IR.OrderBy)Visit(orderByStmt)!;
-            return IR.Execute(_db, new IR.SelectStmt(new[] { select }, orderBy.Terms));
+            return IR.Execute(_db, new IR.SelectStmt(new[] { select }, orderBy.Terms)).PostProcess();
         }
 
         return IR.Execute(_db, new IR.SelectStmt(
             new[] { select }, 
-            Array.Empty<IR.OrderingTerm>()));
+            Array.Empty<IR.OrderingTerm>())).PostProcess();
     }
 
     public override IResult VisitSelect_core(SQLiteParser.Select_coreContext context)
@@ -156,13 +156,10 @@ public sealed class IrVisitor : SQLiteParserBaseVisitor<IResult?>
 
         return new IR.BinaryExp(context.ToBinaryOperator(operand), 
             left, (IR.IExpression)right, context.GetOriginalText(_originalSql));
-        //return context.ToBinaryExpression(operand, left,
-        //    (IExpression)right, context.GetOriginalText(_originalSql));
     }
 
     public override IResult VisitLiteral_value(SQLiteParser.Literal_valueContext context)
     {
-        //return new ValueExpression(context.GetText());
         return new IR.LiteralExp(context.GetText());
     }
 
@@ -180,7 +177,6 @@ public sealed class IrVisitor : SQLiteParserBaseVisitor<IResult?>
         {
             var aliasText = alias.GetText().Unquote();
             _alias.Value.Add(aliasText, result);
-           // result.SetAlias(aliasText);
         }
 
         return new IR.ResultColumnList(
