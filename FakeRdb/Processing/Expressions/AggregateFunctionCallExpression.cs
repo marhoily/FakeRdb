@@ -4,13 +4,11 @@ public sealed class AggregateFunctionCallExpression : IExpression
 {
     private readonly AggregateFunction _function;
     private readonly IExpression[] _args;
-    public string ResultName { get; }
 
-    public AggregateFunctionCallExpression(AggregateFunction function, IExpression[] args, string originalText)
+    public AggregateFunctionCallExpression(AggregateFunction function, IExpression[] args)
     {
         _function = function;
         _args = args;
-        ResultName = originalText;
     }
 
     public object Eval() => throw new NotSupportedException();

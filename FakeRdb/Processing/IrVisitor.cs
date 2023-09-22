@@ -149,7 +149,7 @@ public sealed class IrVisitor : SQLiteParserBaseVisitor<IResult?>
         {
             var exp = bind.GetText();
             var value = _parameters[exp].Value;
-            return new IR.BindExp(exp, value);
+            return new IR.BindExp(value);
         }
 
         // try and filter out binary\unary expression
@@ -166,7 +166,7 @@ public sealed class IrVisitor : SQLiteParserBaseVisitor<IResult?>
         }
 
         return new IR.BinaryExp(context.ToBinaryOperator(operand), 
-            left, (IR.IExpression)right, context.GetOriginalText(_originalSql));
+            left, (IR.IExpression)right);
     }
 
     public override IResult VisitLiteral_value(SQLiteParser.Literal_valueContext context)
@@ -180,19 +180,20 @@ public sealed class IrVisitor : SQLiteParserBaseVisitor<IResult?>
         {
             return new IR.ResultColumnList(
                 _currentTable.Value.Schema.Columns.Select(field =>
-                        new IR.ResultColumn(new IR.ColumnExp(field)))
+                        new IR.ResultColumn(new IR.ColumnExp(field), "*"))
                     .ToArray());
         }
         var result = (IR.IExpression?)Visit(context.expr()) ?? throw new Exception();
+        var originalText = context.expr().GetOriginalText(_originalSql);
         if (context.column_alias() is { } alias)
         {
             var aliasText = alias.GetText().Unquote();
             _alias.Value.Add(aliasText, result);
         }
 
+        var als = context.column_alias()?.GetText().Unquote();
         return new IR.ResultColumnList(
-            new IR.ResultColumn(result, 
-                context.column_alias()?.GetText().Unquote()));
+            new IR.ResultColumn(result, originalText, als));
     }
 
     public override IResult VisitColumn_access(SQLiteParser.Column_accessContext context)
@@ -216,7 +217,6 @@ public sealed class IrVisitor : SQLiteParserBaseVisitor<IResult?>
 
     public override IResult VisitFunction_call(SQLiteParser.Function_callContext context)
     {
-        var originalText = context.GetOriginalText(_originalSql);
         var functionName = context.function_name().GetText()!;
         var args = context.expr()
             .Select(Visit)
@@ -224,9 +224,9 @@ public sealed class IrVisitor : SQLiteParserBaseVisitor<IResult?>
             .ToArray();
         return functionName.ToUpperInvariant() switch
         {
-            "MAX" => new IR.AggregateExp(SqliteFunctions.Max, args, originalText),
-            "MIN" => new IR.AggregateExp(SqliteFunctions.Min, args, originalText),
-            "TYPEOF" => new IR.ScalarExp(SqliteFunctions.TypeOf, args, originalText),
+            "MAX" => new IR.AggregateExp(SqliteFunctions.Max, args),
+            "MIN" => new IR.AggregateExp(SqliteFunctions.Min, args),
+            "TYPEOF" => new IR.ScalarExp(SqliteFunctions.TypeOf, args),
             _ => throw new ArgumentOutOfRangeException(functionName)
         };
     }

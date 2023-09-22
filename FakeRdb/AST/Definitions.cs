@@ -14,12 +14,12 @@ public interface IR : IResult
     public sealed record OrderingTerm(Field Column) : IR;
 
     public sealed record ResultColumnList(params ResultColumn[] List) : IR;
-    public sealed record ResultColumn(IExpression Exp, string? Alias = null) : IR;
+    public sealed record ResultColumn(IExpression Exp, string Original, string? Alias = null) : IR;
 
-    public sealed record BindExp(string ParameterName, object? Value) : IExpression;
-    public sealed record BinaryExp(Operator Op, IExpression Left, IExpression Right, string Alias) : IExpression;
-    public sealed record AggregateExp(AggregateFunction Function, IExpression[] Args, string OriginalText) : IExpression;
-    public sealed record ScalarExp(ScalarFunction Function, IExpression[] Args, string OriginalText) : IExpression;
+    public sealed record BindExp(object? Value) : IExpression;
+    public sealed record BinaryExp(Operator Op, IExpression Left, IExpression Right) : IExpression;
+    public sealed record AggregateExp(AggregateFunction Function, IExpression[] Args) : IExpression;
+    public sealed record ScalarExp(ScalarFunction Function, IExpression[] Args) : IExpression;
     public sealed record ColumnExp(Field Value) : IExpression;
     public sealed record LiteralExp(string Value) : IExpression;
     public sealed record InExp(IExpression Needle, QueryResult Haystack) : IExpression;
@@ -31,8 +31,7 @@ public interface IR : IResult
         static QueryResult Inner(SelectCore query, OrderingTerm? orderingTerm)
         {
             var aggregate = query.Columns
-                .Select(c => c.Exp.Convert())
-                .OfType<AggregateFunctionCallExpression>()
+                .Where(c => c.Exp is AggregateExp)
                 .ToList();
             if (aggregate.Count > 0)
             {

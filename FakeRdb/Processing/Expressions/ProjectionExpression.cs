@@ -7,7 +7,6 @@ public sealed class ProjectionExpression : IExpression
     public ProjectionExpression(Field selectColumn)
     {
         SelectColumn = selectColumn;
-        ResultName = SelectColumn.Name;
     }
 
     /*
@@ -16,7 +15,6 @@ public sealed class ProjectionExpression : IExpression
      * affinity as the table column.
      */
     public TypeAffinity ExpressionType => SelectColumn.FieldType;
-    public string ResultName { get; private set; }
 
     public object Eval() => throw new NotSupportedException();
     public object Eval(Row[] dataSet) => throw new NotSupportedException();

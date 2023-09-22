@@ -8,21 +8,17 @@ public sealed class BinaryExpression : IExpression
     private TypeAffinity? _expressionType;
 
     public BinaryExpression(Operator op,
-        IExpression left, IExpression right,
-        string originalExpression)
+        IExpression left, IExpression right)
     {
         _left = left;
         _op = op;
         _right = right;
-        ResultName = originalExpression;
     }
 
     public TypeAffinity ExpressionType =>
         _expressionType ??
         throw new InvalidOperationException(
             "Cannot determine ExpressionType of a binary operation before it was resolved");
-
-    public string ResultName { get; }
 
     public object? Eval()
     {

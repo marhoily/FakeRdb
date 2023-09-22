@@ -58,9 +58,16 @@ public static class DbOperations
         {
             return new ResultSchema(columns.Zip(expressions)
                 .Select(column => new ColumnDefinition(
-                    column.First.Alias ?? column.Second.ResultName,
+                    column.First.Alias ??
+                    ExtractColumnName(column.First.Exp) ??
+                    column.First.Original ,
                     column.Second.ExpressionType))
                 .ToArray());
+            static string? ExtractColumnName(IR.IExpression exp)
+            {
+                if (exp is IR.ColumnExp col) return col.Value.Name;
+                return null;
+            }
         }
 
         static IEnumerable<Row> ApplyFilter(Table source, IExpression? expression)
@@ -80,15 +87,16 @@ public static class DbOperations
         }
     }
 
-    public static QueryResult SelectAggregate(this Table from, List<AggregateFunctionCallExpression> aggregate)
+    public static QueryResult SelectAggregate(this Table from, List<IR.ResultColumn> aggregate)
     {
         var rows = from.ToArray();
         var schema = new List<ColumnDefinition>();
         var data = new List<object?>();
-        foreach (var func in aggregate)
+        foreach (var resultColumn in aggregate)
         {
-            var cell = func.Eval<AggregateResult>(rows);
-            schema.Add(new ColumnDefinition(func.ResultName,
+            var cell = resultColumn.Exp.Convert()
+                .Eval<AggregateResult>(rows);
+            schema.Add(new ColumnDefinition(resultColumn.Original,
                 cell.Value.GetSimplifyingAffinity()));
             data.Add(cell.Value);
         }

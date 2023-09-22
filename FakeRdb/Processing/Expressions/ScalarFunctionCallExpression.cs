@@ -4,13 +4,11 @@ public sealed class ScalarFunctionCallExpression : IExpression
 {
     private readonly ScalarFunction _function;
     private readonly IExpression[] _args;
-    public string ResultName { get; }
 
-    public ScalarFunctionCallExpression(ScalarFunction function, IExpression[] args, string originalText)
+    public ScalarFunctionCallExpression(ScalarFunction function, IExpression[] args)
     {
         _function = function;
         _args = args;
-        ResultName = originalText;
     }
 
     public object Eval() => throw new NotSupportedException();
