@@ -2,30 +2,12 @@
 
 public static class X
 {
-    public static IExpression Convert(this IR.IExpression arg)
-    {
-        return arg switch
-        {
-            IR.BinaryExp binaryExp => new BinaryExpression(binaryExp.Op, Convert(binaryExp.Left), Convert(binaryExp.Right)),
-            IR.BindExp bindExp => new ValueExpression(bindExp.Value, bindExp.Value.GetTypeAffinity()),
-            IR.AggregateExp callExp => new AggregateFunctionCallExpression(callExp.Function, callExp.Args.Select(Convert).ToArray()),
-            IR.ScalarExp callExp => new ScalarFunctionCallExpression(callExp.Function, callExp.Args.Select(Convert).ToArray()),
-            IR.ColumnExp columnExp => new ProjectionExpression(columnExp.Value),
-            IR.InExp inExp => new InExpression(inExp.Needle.Convert(), inExp.Haystack),
-            IR.LiteralExp literalExp => new ValueExpression(literalExp.Value),
-            _ => throw new ArgumentOutOfRangeException(nameof(arg))
-        };
-    }
     public static object? Eval(this IR.IExpression arg)
     {
         return arg switch {
-            IR.AggregateExp aggregateExp => throw new NotImplementedException(),
             IR.BinaryExp binaryExp => binaryExp.Eval(),
             IR.BindExp bindExp => bindExp.Value,
-            IR.ColumnExp columnExp => throw new NotImplementedException(),
-            IR.InExp inExp => throw new NotImplementedException(),
             IR.LiteralExp literalExp => literalExp.Value.CoerceToLexicalAffinity(),
-            IR.ScalarExp scalarExp => throw new NotImplementedException(),
             _ => throw new ArgumentOutOfRangeException(nameof(arg))
         };
     }
@@ -33,9 +15,7 @@ public static class X
     public static object? Eval(this IR.IExpression arg, Row row)
     {
         return arg switch {
-            IR.AggregateExp aggregateExp => throw new NotImplementedException(),
             IR.BinaryExp binaryExp => binaryExp.Eval(row),
-            IR.BindExp bindExp => bindExp.Value,
             IR.ColumnExp columnExp => row[columnExp.Value],
             IR.InExp inExp => inExp.Eval(row),
             IR.LiteralExp literalExp => literalExp.Value.CoerceToLexicalAffinity(),
@@ -44,12 +24,10 @@ public static class X
         };
     }
     
-    public static object? Eval(this IR.IExpression arg, Row[] dataSet)
+    public static object Eval(this IR.IExpression arg, Row[] dataSet)
     {
         return arg switch {
             IR.AggregateExp aggregateExp => aggregateExp.Function(dataSet, aggregateExp.Args),
-            IR.BindExp bindExp => bindExp.Value,
-            IR.LiteralExp literalExp => literalExp.Value.CoerceToLexicalAffinity(),
             _ => throw new ArgumentOutOfRangeException(nameof(arg))
         };
     }

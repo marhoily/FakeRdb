@@ -18,7 +18,7 @@ public interface IR : IResult
 
     public sealed record BindExp(object? Value) : IExpression;
     public sealed record BinaryExp(Operator Op, IExpression Left, IExpression Right) : IExpression;
-    public sealed record AggregateExp(AggregateFunction Function, IR.IExpression[] Args) : IExpression;
+    public sealed record AggregateExp(AggregateFunction Function, IExpression[] Args) : IExpression;
     public sealed record ScalarExp(ScalarFunction Function, IExpression[] Args) : IExpression;
     public sealed record ColumnExp(Field Value) : IExpression;
     public sealed record LiteralExp(string Value) : IExpression;
@@ -40,7 +40,7 @@ public interface IR : IResult
                 return query.From.SelectAggregate(aggregate);
             }
 
-            var result = query.From.Select(query.Columns, query.Where?.Convert());
+            var result = query.From.Select(query.Columns, query.Where);
             if (orderingTerm != null)
             {
                 var clause = new OrderByClause(orderingTerm.Column);

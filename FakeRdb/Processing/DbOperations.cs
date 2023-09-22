@@ -41,14 +41,14 @@ public static class DbOperations
         }
     }
 
-    public static QueryResult Select(this Table from, IR.ResultColumn[] projection, IExpression? filter)
+    public static QueryResult Select(this Table from, IR.ResultColumn[] projection, IR.IExpression? filter)
     {
         var selectors = projection.Select(c => c.Exp).ToArray();
         var data = BuildData(from, selectors, filter);
         var schema = BuildSchema(projection, selectors);
         return new QueryResult(schema, data);
 
-        static List<List<object?>> BuildData(Table source, IR.IExpression[] proj, IExpression? filter)
+        static List<List<object?>> BuildData(Table source, IR.IExpression[] proj, IR.IExpression? filter)
         {
             var temp = ApplyFilter(source, filter);
             return ApplyProjection(temp, proj);
@@ -74,7 +74,7 @@ public static class DbOperations
             }
         }
 
-        static IEnumerable<Row> ApplyFilter(Table source, IExpression? expression)
+        static IEnumerable<Row> ApplyFilter(Table source, IR.IExpression? expression)
         {
             return expression == null
                 ? source
