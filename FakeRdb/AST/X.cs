@@ -39,7 +39,7 @@ public static class X
             IR.ColumnExp columnExp => row[columnExp.Value],
             IR.InExp inExp => inExp.Eval(row),
             IR.LiteralExp literalExp => literalExp.Value.CoerceToLexicalAffinity(),
-            IR.ScalarExp scalarExp => throw new NotImplementedException(),
+            IR.ScalarExp scalarExp => scalarExp.Function(row, scalarExp.Args),
             _ => throw new ArgumentOutOfRangeException(nameof(arg))
         };
     }

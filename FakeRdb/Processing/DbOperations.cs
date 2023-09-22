@@ -43,18 +43,18 @@ public static class DbOperations
 
     public static QueryResult Select(this Table from, IR.ResultColumn[] projection, IExpression? filter)
     {
-        var selectors = projection.Select(c => c.Exp.Convert()).ToArray();
+        var selectors = projection.Select(c => c.Exp).ToArray();
         var data = BuildData(from, selectors, filter);
         var schema = BuildSchema(projection, selectors);
         return new QueryResult(schema, data);
 
-        static List<List<object?>> BuildData(Table source, IExpression[] proj, IExpression? filter)
+        static List<List<object?>> BuildData(Table source, IR.IExpression[] proj, IExpression? filter)
         {
             var temp = ApplyFilter(source, filter);
             return ApplyProjection(temp, proj);
         }
 
-        static ResultSchema BuildSchema(IR.ResultColumn[] columns, IExpression[] expressions)
+        static ResultSchema BuildSchema(IR.ResultColumn[] columns, IR.IExpression[] expressions)
         {
             return new ResultSchema(columns.Zip(expressions)
                 .Select(column => new ColumnDefinition(
@@ -81,7 +81,7 @@ public static class DbOperations
                 : source.Where(expression.Eval<bool>);
         }
 
-        static List<List<object?>> ApplyProjection(IEnumerable<Row> rows, IExpression[] selectors)
+        static List<List<object?>> ApplyProjection(IEnumerable<Row> rows, IR.IExpression[] selectors)
         {
             return rows
                 .Select(row => selectors
