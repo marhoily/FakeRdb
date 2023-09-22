@@ -2,6 +2,14 @@ using Antlr4.Runtime.Tree;
 
 namespace FakeRdb;
 
+/// <summary>
+/// This visitor performs the following actions:
+/// <list type="bullet">
+///     <item>Unrolls "*" in SELECT</item>
+///     <item>Dereferences table and column names</item>
+///     <item>Follows aliases</item>
+/// </list>
+/// </summary>
 public sealed class IrVisitor : SQLiteParserBaseVisitor<IResult?>
 {
     private readonly string _originalSql;
