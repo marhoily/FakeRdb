@@ -30,10 +30,55 @@ public interface IR : IResult
     public sealed record ValuesRow(IExpression[] Cells);
     public static QueryResult Execute(SelectStmt stmt)
     {
-        return Inner((SelectCore)stmt.Query,
-            stmt.OrderingTerms.FirstOrDefault());
-        static QueryResult Inner(SelectCore query, OrderingTerm? orderingTerm)
+        return Recursive(stmt.Query, stmt.OrderingTerms);
+        static QueryResult Union(QueryResult x, QueryResult y)
         {
+            ValidateSchema(x.Schema, y.Schema);
+            var resultData = x.Data.Concat(y.Data).Distinct().ToList();
+            return new QueryResult(x.Schema, resultData);
+        }
+
+        static QueryResult Intersect(QueryResult x, QueryResult y)
+        {
+            ValidateSchema(x.Schema, y.Schema);
+            var resultData = x.Data.Intersect(y.Data).ToList();
+            return new QueryResult(x.Schema, resultData);
+        }
+
+        static QueryResult Except(QueryResult x, QueryResult y)
+        {
+            ValidateSchema(x.Schema, y.Schema);
+            var resultData = x.Data.Except(y.Data).ToList();
+            return new QueryResult(x.Schema, resultData);
+        }
+        static QueryResult UnionAll(QueryResult x, QueryResult y)
+        {
+            ValidateSchema(x.Schema, y.Schema);
+            var resultData = new List<List<object?>>(x.Data);
+            resultData.AddRange(y.Data);
+            return new QueryResult(x.Schema, resultData);
+        }
+
+        static void ValidateSchema(ResultSchema x, ResultSchema y)
+        {
+            if (x.Columns.Length != y.Columns.Length ||
+                !x.Columns.Zip(y.Columns, (c1, c2) => c1.FieldType == c2.FieldType).All(b => b))
+            {
+                throw new ArgumentException("Incompatible schemas");
+            }
+        }
+
+        static QueryResult Recursive(ICompoundSelect query, params OrderingTerm[] orderingTerms)
+        {
+            if (query is SelectCore core)
+                return Terminal(core, orderingTerms);
+            if (query is CompoundSelect compound)
+                return Union(Recursive(compound.Left), Recursive(compound.Right));
+            throw new ArgumentOutOfRangeException();
+        }
+        static QueryResult Terminal(SelectCore query, params OrderingTerm[] stmtOrderingTerms)
+        {
+            var orderingTerm = stmtOrderingTerms.FirstOrDefault();
             var aggregate = query.Columns
                 .Where(c => c.Exp is AggregateExp)
                 .ToList();
