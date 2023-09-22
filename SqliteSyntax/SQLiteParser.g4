@@ -376,8 +376,8 @@ select_stmt
 select_expr
     : select_core                  // no compound operator
     | select_expr UNION_ ALL_? select_core         // left-recursive, for UNION
-    | select_expr EXCEPT select_core        // left-recursive, for EXCEPT
-    | select_expr INTERSECT select_core     // left-recursive, for INTERSECT
+    | select_expr EXCEPT_ select_core        // left-recursive, for EXCEPT
+    | select_expr INTERSECT_ select_core     // left-recursive, for INTERSECT
     ;
 
 join_clause:
