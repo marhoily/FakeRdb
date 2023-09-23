@@ -6,8 +6,8 @@ public static class IrExecutor
 {
     public static QueryResult Execute(this SelectStmt stmt)
     {
-        // If it's just a core query, we can directly
-        // execute it with the ordering terms 
+        // If it's just a core query, we must directly
+        // execute it with the ordering terms
         if (stmt.Query is SelectCore core)
             return ExecuteCore(core, stmt.OrderingTerms);
 

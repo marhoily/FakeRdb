@@ -15,15 +15,20 @@ public sealed class Table : List<Row>
     public QueryResult Select(ResultColumn[] projection, IExpression? where, OrderingTerm[] ordering)
     {
         var proj = projection.Select(c => c.Exp).ToArray();
-        var data = BuildData(this, proj, where);
+        var data = BuildData(this, proj, where, ordering);
         var schema = BuildSchema(projection, proj);
-        ApplyOrdering(data, schema, ordering);
         return new QueryResult(schema, data);
 
         List<List<object?>> BuildData(Table source,
-            IExpression[] selectors, IExpression? filter)
+            IExpression[] selectors, IExpression? filter, 
+            OrderingTerm[] orderingTerms)
         {
-            var temp = ApplyFilter(source, filter);
+            var temp = ApplyFilter(source, filter).ToList();
+
+            // We cannot take sorting out of here to the later stages
+            // because the projection can get the sorted columns a away
+            ApplyOrdering(temp, orderingTerms);
+
             return ApplyProjection(temp, selectors);
         }
 
@@ -63,11 +68,11 @@ public sealed class Table : List<Row>
                 .ToList();
         }
 
-        static void ApplyOrdering(List<List<object?>> list, ResultSchema resultSchema, OrderingTerm[] orderingTerms)
+        static void ApplyOrdering(List<Row> temp, OrderingTerm[] orderingTerms)
         {
             foreach (var orderingTerm in orderingTerms)
-                list.Sort(new RowByColumnComparer(
-                    resultSchema.IndexOf(orderingTerm.Column)));
+                temp.Sort(new RowByColumnComparer(
+                    orderingTerm.Column.ColumnIndex));
         }
     }
 
