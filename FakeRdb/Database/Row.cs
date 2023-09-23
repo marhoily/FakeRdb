@@ -83,13 +83,20 @@ public sealed record Row(object?[] Data)
     /// <summary>
     /// Represents a composite key based on the values from one or more columns.
     /// </summary>
-    public sealed class CompositeKey : IEquatable<CompositeKey>
+    public sealed class CompositeKey : IEquatable<CompositeKey>, IComparable<CompositeKey> 
     {
         private readonly object?[] _keyComponents;
 
         public CompositeKey(params object?[] keyComponents)
         {
             _keyComponents = keyComponents ?? throw new ArgumentNullException(nameof(keyComponents));
+        }
+
+        public int CompareTo(CompositeKey? other)
+        {
+            if (other == null) return 0;
+            return ObjectComparer.Compare(
+                _keyComponents[0], other._keyComponents[0]);
         }
 
         public override bool Equals(object? obj)

@@ -77,6 +77,7 @@ public sealed class Table : List<Row>
 
         var data = this
             .GroupBy(row => row.GetKey(keyIndices))
+            .OrderBy(g => g.Key)
             .Select(group => aggregate
                 .Select(col => col.Exp.Eval<AggregateResult>(group.ToArray()))
                // .Select(r => r.Row.Append(r.Value))

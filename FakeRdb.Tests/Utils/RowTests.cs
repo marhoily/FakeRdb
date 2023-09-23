@@ -23,7 +23,7 @@ public class RowTests
         var key1 = Row1.GetKey(new[] { 0, 1, 2 });
         var key2 = Row2.GetKey(new[] { 0, 1, 2 });
 
-        key1.Should().NotBeEquivalentTo(key2);
+        key1.Should().NotBe(key2);
         key1.GetHashCode().Should().NotBe(key2.GetHashCode());
     }
 
@@ -53,7 +53,7 @@ public class RowTests
         var key1 = Row1.GetKey(new[] { 0, 1 });
         var key2 = RowMixed.GetKey(new[] { 0, 1 });
 
-        key1.Should().NotBeEquivalentTo(key2);
+        key1.Should().NotBe(key2);
         key1.GetHashCode().Should().NotBe(key2.GetHashCode());
     }
 }
