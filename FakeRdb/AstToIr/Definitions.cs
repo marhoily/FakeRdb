@@ -1,11 +1,11 @@
 ﻿namespace FakeRdb;
 
-public delegate AggregateResult AggregateFunction(Row[] dataSet, IR.IExpression[] args);
-public delegate string ScalarFunction(Row row, IR.IExpression[] args);
-
 /// <summary> Intermediate representation </summary>
 public interface IR : IResult
 {
+    public delegate AggregateResult AggregateFunction(Row[] dataSet, IExpression[] args);
+    public delegate string ScalarFunction(Row row, IExpression[] args);
+
     public interface IExpression : IR { }
     public interface ICompoundSelect : IR { }
 

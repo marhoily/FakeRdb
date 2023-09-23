@@ -92,8 +92,8 @@ public static class IrExecutor
             var result = query.From.Select(query.Columns, query.Where);
             if (orderingTerm != null)
             {
-                var clause = new OrderByClause(orderingTerm.Column);
-                result.Data.Sort(clause.GetComparer(result.Schema));
+                result.Data.Sort(new SelectiveComparer(
+                    result.Schema.IndexOf(orderingTerm.Column)));
             }
             return result;
 

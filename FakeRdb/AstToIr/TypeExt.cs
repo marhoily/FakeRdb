@@ -6,9 +6,6 @@ namespace FakeRdb;
 
 public static partial class TypeExt
 {
-    public static readonly IComparer<object?> Comparer = new ObjectComparer();
-
-
     [GeneratedRegex(@"^[-+]?((0(?![0-9])|[1-9]\d*)(\.\d*)?|\.\d+)([eE][-+]?\d+)?$")]
     private static partial Regex IsNumericRegex();
 
@@ -17,31 +14,31 @@ public static partial class TypeExt
         return IsNumericRegex().IsMatch(value);
     }
 
-    public static SqliteStorageType GetStorageType(
+    public static StorageType GetStorageType(
         this object? obj, TypeAffinity columnAffinity = TypeAffinity.None)
     {
         var dataAffinity = obj switch
         {
-            null => SqliteStorageType.Null,
+            null => StorageType.Null,
             string s => s.IsNumeric() ? s.IsInteger()
-                ? SqliteStorageType.Integer
-                : SqliteStorageType.Real
-                : SqliteStorageType.Text,
+                ? StorageType.Integer
+                : StorageType.Real
+                : StorageType.Text,
             int or
                 long or
                 byte or
                 char or
-                byte => SqliteStorageType.Integer,
+                byte => StorageType.Integer,
             decimal m => m.IsInteger()
-                ? SqliteStorageType.Integer
-                : SqliteStorageType.Real,
+                ? StorageType.Integer
+                : StorageType.Real,
             double d => d.IsInteger()
-                ? SqliteStorageType.Integer
-                : SqliteStorageType.Real,
+                ? StorageType.Integer
+                : StorageType.Real,
             float f => f.IsInteger()
-                ? SqliteStorageType.Integer
-                : SqliteStorageType.Real,
-            _ => SqliteStorageType.Blob
+                ? StorageType.Integer
+                : StorageType.Real,
+            _ => StorageType.Blob
         };
         return (dataAffinity, columnAffinity) switch
         {
@@ -49,12 +46,12 @@ public static partial class TypeExt
              * storage classes NULL, TEXT or BLOB. If numerical 
              * data is inserted into a column with TEXT affinity 
              * it is converted into text form before being stored.*/
-            (SqliteStorageType.Null, TypeAffinity.Text)
-                => SqliteStorageType.Null,
-            (SqliteStorageType.Blob, TypeAffinity.Text)
-                => SqliteStorageType.Blob,
+            (StorageType.Null, TypeAffinity.Text)
+                => StorageType.Null,
+            (StorageType.Blob, TypeAffinity.Text)
+                => StorageType.Blob,
             (_, TypeAffinity.Text)
-                => SqliteStorageType.Text,
+                => StorageType.Text,
 
             /* A column with NUMERIC affinity may contain values
              * using all five storage classes. 
@@ -65,8 +62,8 @@ public static partial class TypeExt
             (var n, TypeAffinity.Numeric or TypeAffinity.Integer)
                 => n,
 
-            (SqliteStorageType.Integer, TypeAffinity.Real)
-                => SqliteStorageType.Real,
+            (StorageType.Integer, TypeAffinity.Real)
+                => StorageType.Real,
             (var r, TypeAffinity.Real)
                 => r,
             /*
@@ -76,17 +73,17 @@ public static partial class TypeExt
              */
             (_, TypeAffinity.Blob) => obj switch
             {
-                null => SqliteStorageType.Null,
-                string => SqliteStorageType.Text,
+                null => StorageType.Null,
+                string => StorageType.Text,
                 int or
                     long or
                     byte or
                     char or
-                    byte => SqliteStorageType.Integer,
-                decimal => SqliteStorageType.Real,
-                double => SqliteStorageType.Real,
-                float => SqliteStorageType.Real,
-                _ => SqliteStorageType.Blob
+                    byte => StorageType.Integer,
+                decimal => StorageType.Real,
+                double => StorageType.Real,
+                float => StorageType.Real,
+                _ => StorageType.Blob
             },
 
             var (i, _) => i
@@ -157,12 +154,12 @@ public static partial class TypeExt
         return (obj, obj.GetStorageType(affinity)) switch
         {
             (null, _) => null,
-            (string s, SqliteStorageType.Integer) =>
+            (string s, StorageType.Integer) =>
                 (long)BigInteger.Parse(s, NumberStyles.Float, CultureInfo.InvariantCulture),
-            (_, SqliteStorageType.Integer) => Convert.ChangeType(obj, typeof(long)),
-            (_, SqliteStorageType.Real) => Convert.ChangeType(obj, typeof(double)),
-            (_, SqliteStorageType.Text) => Convert.ChangeType(obj, typeof(string)),
-            (_, SqliteStorageType.Blob) => obj,
+            (_, StorageType.Integer) => Convert.ChangeType(obj, typeof(long)),
+            (_, StorageType.Real) => Convert.ChangeType(obj, typeof(double)),
+            (_, StorageType.Text) => Convert.ChangeType(obj, typeof(string)),
+            (_, StorageType.Blob) => obj,
             _ => throw new ArgumentOutOfRangeException()
         };
     }

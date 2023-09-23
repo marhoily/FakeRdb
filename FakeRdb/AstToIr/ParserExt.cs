@@ -1,23 +1,9 @@
-using Antlr4.Runtime;
 using Antlr4.Runtime.Tree;
 
 namespace FakeRdb;
 
 public static class ParserExt
 {
-    public static string GetOriginalText(this ParserRuleContext context, string original)
-    {
-        int start = context.Start.StartIndex;
-        int stop = context.Stop.StopIndex;
-
-        if (start >= 0 && stop >= 0)
-        {
-            return original.Substring(start, stop - start + 1);
-        }
-
-        return "";
-    }
-
     public static BinaryOperator ToBinaryOperator(this SQLiteParser.ExprContext context, int tokenType)
     {
         return tokenType switch
