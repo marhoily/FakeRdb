@@ -128,7 +128,10 @@ public sealed class AstToIrVisitor : SQLiteParserBaseVisitor<IResult?>
             .SelectMany(c => Visit<ResultColumnList>(c).List)
             .ToArray();
         var filter = TryVisit<IExpression>(context.whereExpr);
-        return new SelectCore(_db[tableName], select, filter);
+        var groupBy = context._groupByExpr
+            .Select(c => Visit<ColumnExp>(c).Value)
+            .ToArray();
+        return new SelectCore(_db[tableName], select, groupBy, filter);
     }
 
     public override IResult VisitUpdate_stmt(SQLiteParser.Update_stmtContext context)

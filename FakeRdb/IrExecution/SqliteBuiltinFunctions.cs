@@ -20,6 +20,17 @@ public static class SqliteBuiltinFunctions
         return new AggregateResult(row.Data, expression.Eval(row));
     }
 
+    public static AggregateResult Sum(Row[] dataSet, IR.IExpression[] args)
+    {
+        var first = dataSet.FirstOrDefault();
+        if (first == null) throw new NotImplementedException();
+        var expression = args.Single();
+        var sum = dataSet.Select(expression.Eval)
+                      .OfType<double>()
+                      .Sum();
+        return new AggregateResult(first.Data, sum);
+    }
+
     public static string TypeOf(Row dataSet, IR.IExpression[] args)
     {
         var exp = (IR.ColumnExp)args.Single();
