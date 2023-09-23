@@ -9,7 +9,7 @@ public interface IR : IResult
     public interface IExpression : IR { }
     public interface ICompoundSelect : IR { }
 
-    public sealed record SelectStmt(ICompoundSelect Query, OrderingTerm[] OrderingTerms) : IR;
+    public sealed record SelectStmt(ICompoundSelect Query, params OrderingTerm[] OrderingTerms) : IR;
     public sealed record CompoundSelect(CompoundOperator Operator, ICompoundSelect Left, ICompoundSelect Right) : ICompoundSelect;
     public sealed record SelectCore(Table From, ResultColumn[] Columns, IExpression? Where) : ICompoundSelect;
     public sealed record OrderBy(OrderingTerm[] Terms) : IR;

@@ -1,4 +1,5 @@
 using Antlr4.Runtime.Tree;
+using static FakeRdb.IR;
 
 namespace FakeRdb;
 
@@ -22,7 +23,7 @@ public sealed class AstToIrVisitor : SQLiteParserBaseVisitor<IResult?>
     private readonly Database _db;
     private readonly FakeDbParameterCollection _parameters;
     private ScopedValue<Table> _currentTable;
-    private readonly HierarchicalAliasStore<IR.IExpression> _alias = new();
+    private readonly HierarchicalAliasStore<IExpression> _alias = new();
 
     public AstToIrVisitor(string originalSql, Database db, FakeDbParameterCollection parameters)
     {
@@ -72,42 +73,38 @@ public sealed class AstToIrVisitor : SQLiteParserBaseVisitor<IResult?>
          * as the affinity of the result set expression if the operand
          * is a SELECT. 
          */
-        var valuesTable = Visit(context.values_clause()) ?? throw new InvalidOperationException();
+        var valuesTable = Visit<ValuesTable>(context.values_clause()) ?? 
+                          throw new InvalidOperationException();
         var tableName = context.table_name().GetText();
         var columns = context.column_name().Select(col => col.GetText()).ToArray();
-        var values = (IR.ValuesTable)valuesTable;
-        _db.Insert(tableName, columns, values);
-        return new Affected(values.Rows.Length);
+        _db.Insert(tableName, columns, valuesTable);
+        return new Affected(valuesTable.Rows.Length);
     }
 
     public override IResult VisitValues_clause(SQLiteParser.Values_clauseContext context)
     {
-        return new IR.ValuesTable(context.value_row()
-            .Select(r => new IR.ValuesRow(r.expr()
+        return new ValuesTable(context.value_row()
+            .Select(r => new ValuesRow(r.expr()
                 .Select(Visit)
-                .Cast<IR.IExpression>()
+                .Cast<IExpression>()
                 .ToArray()))
             .ToArray());
     }
 
     public override IResult VisitSelect_stmt(SQLiteParser.Select_stmtContext context)
     {
-        var select = (IR.ICompoundSelect)Visit(context.select_expr())!;
-        if (context.order_by_stmt() is { } orderByStmt)
-        {
-            var orderBy = (IR.OrderBy)Visit(orderByStmt)!;
-            return new IR.SelectStmt(select, orderBy.Terms).Execute().PostProcess();
-        }
-
-        return new IR.SelectStmt(
-            select,
-            Array.Empty<IR.OrderingTerm>()).Execute().PostProcess();
+        var select = Visit<ICompoundSelect>(context.select_expr())!;
+        var orderBy = Visit<OrderBy>(context.order_by_stmt());
+        var stmt = orderBy != null
+            ? new SelectStmt(select, orderBy.Terms)
+            : new SelectStmt(select);
+        return stmt.Execute().PostProcess();
     }
 
     public override IResult VisitSelect_expr(SQLiteParser.Select_exprContext context)
     {
-        var right = Visit<IR.ICompoundSelect>(context.select_core())!;
-        var left = Visit<IR.ICompoundSelect>(context.select_expr());
+        var right = Visit<ICompoundSelect>(context.select_core())!;
+        var left = Visit<ICompoundSelect>(context.select_expr());
 
         if (left == null) return right;
 
@@ -125,7 +122,7 @@ public sealed class AstToIrVisitor : SQLiteParserBaseVisitor<IResult?>
             _ => throw new InvalidOperationException("WTF?")
         };
 
-        return new IR.CompoundSelect(compoundOperator, left, right);
+        return new CompoundSelect(compoundOperator, left, right);
     }
 
     public override IResult VisitSelect_core(SQLiteParser.Select_coreContext context)
@@ -139,11 +136,11 @@ public sealed class AstToIrVisitor : SQLiteParserBaseVisitor<IResult?>
         using var t = _currentTable.Set(_db[tableName]);
         var select = context.result_column()
             .Select(Visit)
-            .Cast<IR.ResultColumnList>()
+            .Cast<ResultColumnList>()
             .SelectMany(l => l.List)
             .ToArray();
-        var filter = context.whereExpr == null ? null : Visit(context.whereExpr);
-        return new IR.SelectCore(_db[tableName], select, (IR.IExpression?)filter);
+        var filter =Visit<IExpression>(context.whereExpr);
+        return new SelectCore(_db[tableName], select, filter);
 
     }
 
@@ -155,19 +152,18 @@ public sealed class AstToIrVisitor : SQLiteParserBaseVisitor<IResult?>
         var assignments = context.update_assignment()
             .Select(a => (
                 ColumnName: a.column_name().GetText(),
-                Value: ((IR.IExpression)Visit(a.expr())!)))
+                Value: Visit<IExpression>(a.expr())!))
             .ToArray();
         var where = context.where_clause()?.expr();
-        var filter = where == null ? null : ((IR.IExpression)Visit(where)!);
+        var filter = Visit<IExpression>(where);
         var recordsAffected = _db.Update(tableName, assignments, filter);
         return new Affected(recordsAffected);
     }
 
     public override IResult VisitOrder_by_stmt(SQLiteParser.Order_by_stmtContext context)
     {
-        var orderingTerm = Visit(context.ordering_term().Single())!;
-        var columnExp = (IR.ColumnExp)orderingTerm;
-        return new IR.OrderBy(new[] { new IR.OrderingTerm(columnExp.Value) });
+        var columnExp = Visit<ColumnExp>(context.ordering_term().Single())!;
+        return new OrderBy(new[] { new OrderingTerm(columnExp.Value) });
     }
 
     public override IResult? VisitExpr(SQLiteParser.ExprContext context)
@@ -176,7 +172,7 @@ public sealed class AstToIrVisitor : SQLiteParserBaseVisitor<IResult?>
         {
             var exp = bind.GetText();
             var value = _parameters[exp].Value;
-            return new IR.BindExp(value);
+            return new BindExp(value);
         }
 
         // try and filter out binary\unary expression
@@ -185,32 +181,32 @@ public sealed class AstToIrVisitor : SQLiteParserBaseVisitor<IResult?>
         if (context.children[1] is not ITerminalNode { Symbol.Type: var operand })
             return VisitChildren(context);
 
-        var left = (IR.IExpression)(Visit(context.children.First()) ?? throw new NotImplementedException());
+        var left = Visit<IExpression>(context.children.First()) ?? throw new NotImplementedException();
         var right = Visit(context.children.Last()) ?? throw new NotImplementedException();
         if (operand == SQLiteLexer.IN_)
         {
-            return new IR.InExp(left, (QueryResult)right);
+            return new InExp(left, (QueryResult)right);
         }
 
-        return new IR.BinaryExp(context.ToBinaryOperator(operand),
-            left, (IR.IExpression)right);
+        return new BinaryExp(context.ToBinaryOperator(operand),
+            left, (IExpression)right);
     }
 
     public override IResult VisitLiteral_value(SQLiteParser.Literal_valueContext context)
     {
-        return new IR.LiteralExp(context.GetText());
+        return new LiteralExp(context.GetText());
     }
 
     public override IResult VisitResult_column(SQLiteParser.Result_columnContext context)
     {
         if (context.STAR() != null)
         {
-            return new IR.ResultColumnList(
+            return new ResultColumnList(
                 _currentTable.Value.Schema.Columns.Select(col =>
-                        new IR.ResultColumn(new IR.ColumnExp(col), "*"))
+                        new ResultColumn(new ColumnExp(col), "*"))
                     .ToArray());
         }
-        var result = (IR.IExpression?)Visit(context.expr()) ?? throw new Exception();
+        var result = Visit<IExpression>(context.expr()) ?? throw new Exception();
         var originalText = context.expr().GetOriginalText(_originalSql);
         if (context.column_alias() is { } alias)
         {
@@ -219,8 +215,8 @@ public sealed class AstToIrVisitor : SQLiteParserBaseVisitor<IResult?>
         }
 
         var als = context.column_alias()?.GetText().Unquote();
-        return new IR.ResultColumnList(
-            new IR.ResultColumn(result, originalText, als));
+        return new ResultColumnList(
+            new ResultColumn(result, originalText, als));
     }
 
     public override IResult VisitColumn_access(SQLiteParser.Column_accessContext context)
@@ -240,7 +236,7 @@ public sealed class AstToIrVisitor : SQLiteParserBaseVisitor<IResult?>
             throw Exceptions.ColumnNotFound(columnRef);
         }
 
-        return new IR.ColumnExp(column);
+        return new ColumnExp(column);
     }
 
     public override IResult VisitFunction_call(SQLiteParser.Function_callContext context)
@@ -248,13 +244,13 @@ public sealed class AstToIrVisitor : SQLiteParserBaseVisitor<IResult?>
         var functionName = context.function_name().GetText()!;
         var args = context.expr()
             .Select(Visit)
-            .Cast<IR.IExpression>()
+            .Cast<IExpression>()
             .ToArray();
         return functionName.ToUpperInvariant() switch
         {
-            "MAX" => new IR.AggregateExp(SqliteBuiltinFunctions.Max, args),
-            "MIN" => new IR.AggregateExp(SqliteBuiltinFunctions.Min, args),
-            "TYPEOF" => new IR.ScalarExp(SqliteBuiltinFunctions.TypeOf, args),
+            "MAX" => new AggregateExp(SqliteBuiltinFunctions.Max, args),
+            "MIN" => new AggregateExp(SqliteBuiltinFunctions.Min, args),
+            "TYPEOF" => new ScalarExp(SqliteBuiltinFunctions.TypeOf, args),
             _ => throw new ArgumentOutOfRangeException(functionName)
         };
     }
@@ -263,13 +259,8 @@ public sealed class AstToIrVisitor : SQLiteParserBaseVisitor<IResult?>
     {
         var tableName = context.qualified_table_name().GetText();
         _currentTable.Set(_db[tableName]);
-        return new Affected(_db.Delete(tableName, GetPredicate()));
-        IR.IExpression? GetPredicate()
-        {
-            if (context.expr() is { } where)
-                return (IR.IExpression?)Visit(where);
-            return null;
-        }
+        return new Affected(_db.Delete(tableName, 
+            Visit<IExpression>(context.expr())));
     }
 
     private T? Visit<T>(IParseTree? tree)
