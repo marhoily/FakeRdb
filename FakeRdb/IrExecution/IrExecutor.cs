@@ -29,7 +29,7 @@ public static class IrExecutor
             .ToList();
         if (aggregate.Count > 0)
         {
-            return query.From.SelectAggregate(aggregate);
+            return query.From.SelectAggregate(aggregate, query.GroupBy);
         }
 
         return query.From.Select(

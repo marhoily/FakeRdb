@@ -6,6 +6,27 @@ public sealed record Row(object?[] Data)
 
     public static RowByColumnComparer Comparer(int columnIndex) => new(columnIndex);
     public static readonly RowEqualityComparer<object?> EqualityComparer = new();
+    
+    /// <summary>
+    /// Generates a CompositeKey based on the values of the specified columns.
+    /// </summary>
+    /// <param name="columns">An IEnumerable{int} representing the indices of the columns to include in the CompositeKey.</param>
+    /// <returns>A CompositeKey object.</returns>
+    public CompositeKey GetKey(IEnumerable<int> columns)
+    {
+        var keyComponents = new List<object?>();
+        foreach (var columnIndex in columns)
+        {
+            if (columnIndex < 0 || columnIndex >= Data.Length)
+            {
+                throw new IndexOutOfRangeException($"Column index {columnIndex} is out of range.");
+            }
+
+            keyComponents.Add(Data[columnIndex]);
+        }
+
+        return new CompositeKey(keyComponents.ToArray());
+    }
 
     public sealed class RowByColumnComparer : 
         IComparer<List<object?>>, 
@@ -56,4 +77,39 @@ public sealed record Row(object?[] Data)
             return hash;
         }
     }
+
+    /// <summary>
+    /// Represents a composite key based on the values from one or more columns.
+    /// </summary>
+    public sealed class CompositeKey : IEquatable<CompositeKey>
+    {
+        private readonly object?[] _keyComponents;
+
+        public CompositeKey(params object?[] keyComponents)
+        {
+            _keyComponents = keyComponents ?? throw new ArgumentNullException(nameof(keyComponents));
+        }
+
+        public override bool Equals(object? obj)
+        {
+            return Equals(obj as CompositeKey);
+        }
+
+        public bool Equals(CompositeKey? other)
+        {
+            if (ReferenceEquals(other, null)) return false;
+            if (ReferenceEquals(this, other)) return true;
+
+            return _keyComponents.SequenceEqual(other._keyComponents);
+        }
+
+        public override int GetHashCode()
+        {
+            var hash = new HashCode();
+            foreach (var component in _keyComponents) 
+                hash.Add(component);
+            return hash.ToHashCode();
+        }
+    }
+
 }

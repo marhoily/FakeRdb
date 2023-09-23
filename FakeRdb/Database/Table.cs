@@ -71,9 +71,10 @@ public sealed class Table : List<Row>
         }
     }
 
-    public QueryResult SelectAggregate(List<ResultColumn> aggregate)
+    public QueryResult SelectAggregate(List<ResultColumn> aggregate, Column[] queryGroupBy)
     {
         var rows = ToArray();
+      //  rows.GroupBy()
         var schema = new List<ColumnDefinition>();
         var data = new List<object?>();
         foreach (var resultColumn in aggregate)
