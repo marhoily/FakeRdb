@@ -114,7 +114,9 @@ public sealed class IrVisitor : SQLiteParserBaseVisitor<IResult?>
         var compoundOperator = operatorToken switch
         {
             "ALL" => CompoundOperator.UnionAll,
-            "UNION" => CompoundOperator.Union,
+            "UNION" => context.ALL_() == null 
+                ? CompoundOperator.Union
+                : CompoundOperator.UnionAll,
             "EXCEPT" => CompoundOperator.Except,
             "INTERSECT" => CompoundOperator.Intersect,
             _ => throw new InvalidOperationException("WTF?")
