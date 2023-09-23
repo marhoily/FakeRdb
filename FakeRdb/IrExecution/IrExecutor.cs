@@ -1,109 +1,114 @@
-﻿namespace FakeRdb;
+﻿using static FakeRdb.IR;
+
+namespace FakeRdb;
 
 public static class IrExecutor
 {
-    public static QueryResult Execute(this IR.SelectStmt stmt)
+    public static QueryResult Execute(this SelectStmt stmt)
     {
-        return Recursive(stmt.Query, stmt.OrderingTerms);
-        static QueryResult Union(QueryResult x, QueryResult y)
+        // If it's just a core query, we can directly
+        // execute it with the ordering terms 
+        if (stmt.Query is SelectCore core)
+            return ExecuteCore(core, stmt.OrderingTerms);
+
+        // If there are multiple cores connected by "UNION" or "EXCEPT"
+        // execute all of them without ordering terms first...
+        var result = ExecuteCompound(stmt.Query);
+        // ...and then do the ordering.
+        foreach (var orderingTerm in stmt.OrderingTerms)
+            result.Data.Sort(new RowByColumnComparer(
+                result.Schema.IndexOf(orderingTerm.Column)));
+        return result;
+
+    }
+
+    private static QueryResult ExecuteCore(SelectCore query, params OrderingTerm[] orderingTerms)
+    {
+        var aggregate = query.Columns
+            .Where(c => c.Exp is AggregateExp)
+            .ToList();
+        if (aggregate.Count > 0)
         {
-            ValidateSchema(x.Schema, y.Schema);
-    
-            // Use Distinct to remove duplicates. This assumes that List<object?> implements appropriate equality semantics.
-            var resultData = x.Data.Concat(y.Data)
-                .Distinct(new RowEqualityComparer<object?>())
-                .Order(new RowByColumnComparer(0))
-                .ToList();
-    
-            return new QueryResult(x.Schema, resultData);
+            return query.From.SelectAggregate(aggregate);
         }
 
-
-        static QueryResult Intersect(QueryResult x, QueryResult y)
+        return query.From.Select(
+            query.Columns, query.Where, orderingTerms);
+    }
+    private static QueryResult ExecuteCompound(ICompoundSelect query)
+    {
+        if (query is SelectCore core)
+            return ExecuteCore(core);
+        if (query is CompoundSelect compound)
         {
-            ValidateSchema(x.Schema, y.Schema);
-            var customComparer = new RowEqualityComparer<object?>();
-            var resultData = x.Data
-                .Intersect(y.Data, customComparer)
-                .Order(new RowByColumnComparer(0))
-                .ToList();
-            return new QueryResult(x.Schema, resultData);
-        }
-
-        static QueryResult Except(QueryResult x, QueryResult y)
-        {
-            ValidateSchema(x.Schema, y.Schema);
-    
-            var customComparer = new RowEqualityComparer<object?>();
-            var resultData = x.Data
-                .Except(y.Data, customComparer)
-                .Order(new RowByColumnComparer(0))
-                .ToList();
-    
-            return new QueryResult(x.Schema, resultData);
-        }
-        static QueryResult UnionAll(QueryResult x, QueryResult y)
-        {
-            ValidateSchema(x.Schema, y.Schema);
-            var resultData = new List<List<object?>>(x.Data);
-            resultData.AddRange(y.Data);
-            return new QueryResult(x.Schema, resultData);
-        }
-
-        static void ValidateSchema(ResultSchema x, ResultSchema y)
-        {
-            if (x.Columns.Length != y.Columns.Length)
+            var left = ExecuteCompound(compound.Left);
+            var right = ExecuteCompound(compound.Right);
+            return compound.Operator switch
             {
-                throw new ArgumentException("SELECTs to the left and right of UNION do not have the same number of result columns");
-            }
+                CompoundOperator.Union => Union(left, right),
+                CompoundOperator.UnionAll => UnionAll(left, right),
+                CompoundOperator.Intersect => Intersect(left, right),
+                CompoundOperator.Except => Except(left, right),
+                _ => throw new ArgumentOutOfRangeException()
+            };
         }
 
-        static QueryResult Recursive(IR.ICompoundSelect query, params IR.OrderingTerm[] orderingTerms)
+        throw new ArgumentOutOfRangeException();
+    }
+
+    private static void ValidateSchema(ResultSchema x, ResultSchema y)
+    {
+        if (x.Columns.Length != y.Columns.Length)
         {
-            if (query is IR.SelectCore core)
-                return Terminal(core, orderingTerms);
-            if (query is IR.CompoundSelect compound)
-            {
-                var left = Recursive(compound.Left);
-                var right = Recursive(compound.Right);
-                return compound.Operator switch
-                {
-                    CompoundOperator.Union => Union(left, right),
-                    CompoundOperator.UnionAll => UnionAll(left, right),
-                    CompoundOperator.Intersect => Intersect(left, right),
-                    CompoundOperator.Except => Except(left, right),
-                    _ => throw new ArgumentOutOfRangeException()
-                };
-            }
-
-            throw new ArgumentOutOfRangeException();
+            throw new ArgumentException("SELECTs to the left and right of UNION do not have the same number of result columns");
         }
-        static QueryResult Terminal(IR.SelectCore query, params IR.OrderingTerm[] stmtOrderingTerms)
-        {
-            var orderingTerm = stmtOrderingTerms.FirstOrDefault();
-            var aggregate = query.Columns
-                .Where(c => c.Exp is IR.AggregateExp)
-                .ToList();
-            if (aggregate.Count > 0)
-            {
-                return query.From.SelectAggregate(aggregate);
-            }
+    }
+    private static QueryResult Union(QueryResult x, QueryResult y)
+    {
+        ValidateSchema(x.Schema, y.Schema);
 
-            var result = query.From.Select(query.Columns, query.Where);
-            if (orderingTerm != null)
-            {
-                result.Data.Sort(new RowByColumnComparer(
-                    result.Schema.IndexOf(orderingTerm.Column)));
-            }
-            return result;
+        // Use Distinct to remove duplicates. This assumes that List<object?> implements appropriate equality semantics.
+        var resultData = x.Data.Concat(y.Data)
+            .Distinct(new RowEqualityComparer<object?>())
+            .Order(new RowByColumnComparer(0))
+            .ToList();
 
-        }
+        return new QueryResult(x.Schema, resultData);
+    }
+    private static QueryResult Intersect(QueryResult x, QueryResult y)
+    {
+        ValidateSchema(x.Schema, y.Schema);
+        var customComparer = new RowEqualityComparer<object?>();
+        var resultData = x.Data
+            .Intersect(y.Data, customComparer)
+            .Order(new RowByColumnComparer(0))
+            .ToList();
+        return new QueryResult(x.Schema, resultData);
+    }
+    private static QueryResult Except(QueryResult x, QueryResult y)
+    {
+        ValidateSchema(x.Schema, y.Schema);
+
+        var customComparer = new RowEqualityComparer<object?>();
+        var resultData = x.Data
+            .Except(y.Data, customComparer)
+            .Order(new RowByColumnComparer(0))
+            .ToList();
+
+        return new QueryResult(x.Schema, resultData);
+    }
+    private static QueryResult UnionAll(QueryResult x, QueryResult y)
+    {
+        ValidateSchema(x.Schema, y.Schema);
+        var resultData = new List<List<object?>>(x.Data);
+        resultData.AddRange(y.Data);
+        return new QueryResult(x.Schema, resultData);
     }
 
     public static IResult PostProcess(this IResult result)
     {
         if (result is not QueryResult q) return result;
-        
+
         var columns = q.Schema.Columns;
         var firstRow = q.Data.FirstOrDefault();
         for (var i = 0; i < columns.Length; i++)

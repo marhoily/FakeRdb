@@ -4,9 +4,6 @@
       <NamedTestSelector>
         <TestName>FakeRdb.Tests.MultiTableSelectTests.Should_Fill_In_The_Tables</TestName>
       </NamedTestSelector>
-      <NamedTestSelector>
-        <TestName>FakeRdb.Tests.AliasingTests.F("Alias in ORDER BY clause", "SELECT title AS alias FROM Album ORDER BY alias")</TestName>
-      </NamedTestSelector>
     </IgnoredTests>
   </Settings>
 </ProjectConfiguration>
