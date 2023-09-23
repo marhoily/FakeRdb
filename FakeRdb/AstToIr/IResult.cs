@@ -14,3 +14,13 @@ public sealed record QueryResult(
 public sealed record ResultSchema(ColumnDefinition[] Columns);
 public sealed record ColumnDefinition(string Name, TypeAffinity FieldType);
 
+public sealed class OrderByClause : IResult
+{
+    private readonly Field _field;
+
+    public OrderByClause(Field field) => _field = field;
+
+    public IComparer<List<object?>> GetComparer(ResultSchema schema) =>
+        new SelectiveComparer(schema.IndexOf(_field));
+
+}

@@ -23,14 +23,3 @@ public sealed class SelectiveComparer : IComparer<List<object?>>
     }
 
 }
-
-public sealed class OrderByClause : IResult
-{
-    private readonly Field _field;
-
-    public OrderByClause(Field field) => _field = field;
-
-    public IComparer<List<object?>> GetComparer(ResultSchema schema) =>
-        new SelectiveComparer(schema.IndexOf(_field));
-
-}

@@ -1,11 +1,11 @@
 namespace FakeRdb;
 
-public sealed class FakeDbReader : DbDataReader
+public sealed class DataSetDbReader : DbDataReader
 {
     private readonly QueryResult _queryResult;
     private int _currentRow = -1;
 
-    public FakeDbReader(QueryResult queryResult)
+    public DataSetDbReader(QueryResult queryResult)
     {
         _queryResult = queryResult ?? throw new ArgumentNullException(nameof(queryResult));
     }

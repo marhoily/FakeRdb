@@ -1,9 +1,5 @@
 namespace FakeRdb;
 
-public enum CompoundOperator
-{
-    Union, UnionAll, Intersect, Except
-}
 public enum BinaryOperator
 {
     Multiplication,

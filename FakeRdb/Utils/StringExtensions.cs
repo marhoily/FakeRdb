@@ -1,6 +1,6 @@
 namespace FakeRdb;
 
-public static class ColumnExt
+public static class StringExtensions
 {
     public static string Unescape(this string r)
     {

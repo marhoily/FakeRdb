@@ -1,8 +1,8 @@
 ﻿namespace FakeRdb;
 
-public sealed class RecordsAffectedDataReader : DbDataReader
+public sealed class NoResultDataReader : DbDataReader
 {
-    public RecordsAffectedDataReader(int recordsAffected)
+    public NoResultDataReader(int recordsAffected)
     {
         RecordsAffected = recordsAffected;
     }

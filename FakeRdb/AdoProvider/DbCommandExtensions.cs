@@ -1,6 +1,6 @@
 namespace FakeRdb;
 
-public static class CmdExt
+public static class DbCommandExtensions
 {
     public static void SetParameter(this DbCommand cmd,
         DbProviderFactory factory, string parameterName, object? value)

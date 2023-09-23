@@ -23,8 +23,8 @@ public static class FakeDbExt
      
         return db.Execute(sql, parameters) switch
         {
-            Affected affected => new RecordsAffectedDataReader(affected.RecordsCount),
-            QueryResult queryResult => new FakeDbReader(queryResult),
+            Affected affected => new NoResultDataReader(affected.RecordsCount),
+            QueryResult queryResult => new DataSetDbReader(queryResult),
             var x => throw new ArgumentOutOfRangeException(x?.ToString())
         };
     }
