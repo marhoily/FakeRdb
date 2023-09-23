@@ -1,8 +1,8 @@
 ﻿namespace FakeRdb.Tests;
 
-public sealed class UnionTests : ComparisonTestBase
+public sealed class CompositeQueriesTests : ComparisonTestBase
 {
-    public UnionTests(ITestOutputHelper output) : base(output)
+    public CompositeQueriesTests(ITestOutputHelper output) : base(output)
     {
         Execute("""
                 -- Create tables
@@ -70,6 +70,4 @@ public sealed class UnionTests : ComparisonTestBase
 
         // Optionally, add more handpicked test cases here...
     }
-
-
 }
