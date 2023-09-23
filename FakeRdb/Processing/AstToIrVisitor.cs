@@ -11,9 +11,12 @@ namespace FakeRdb;
 ///     <item>Unquote and parse literals</item>
 ///     <item>Bind SQL parameters</item>
 ///     <item>Distinguish between plain and aggregate functions</item>
+/// TODO:
+///     <item>Check function call argument types</item>
+/// 
 /// </list>
 /// </summary>
-public sealed class IrVisitor : SQLiteParserBaseVisitor<IResult?>
+public sealed class AstToIrVisitor : SQLiteParserBaseVisitor<IResult?>
 {
     private readonly string _originalSql;
     private readonly Database _db;
@@ -21,7 +24,7 @@ public sealed class IrVisitor : SQLiteParserBaseVisitor<IResult?>
     private Scoped<Table> _currentTable;
     private readonly HierarchicalNameStore<IR.IExpression> _alias = new();
 
-    public IrVisitor(string originalSql, Database db, FakeDbParameterCollection parameters)
+    public AstToIrVisitor(string originalSql, Database db, FakeDbParameterCollection parameters)
     {
         _originalSql = originalSql;
         _db = db;
@@ -93,12 +96,12 @@ public sealed class IrVisitor : SQLiteParserBaseVisitor<IResult?>
         if (context.order_by_stmt() is { } orderByStmt)
         {
             var orderBy = (IR.OrderBy)Visit(orderByStmt)!;
-            return IR.Execute(new IR.SelectStmt(select, orderBy.Terms)).PostProcess();
+            return new IR.SelectStmt(select, orderBy.Terms).Execute().PostProcess();
         }
 
-        return IR.Execute(new IR.SelectStmt(
+        return new IR.SelectStmt(
             select,
-            Array.Empty<IR.OrderingTerm>())).PostProcess();
+            Array.Empty<IR.OrderingTerm>()).Execute().PostProcess();
     }
 
     public override IResult VisitSelect_expr(SQLiteParser.Select_exprContext context)
