@@ -2,6 +2,8 @@ namespace FakeRdb;
 
 public sealed record Row(object?[] Data)
 {
+    public override string ToString() => string.Join(", ", Data);
+
     public object? this[Column column] => Data[column.ColumnIndex];
 
     public static RowByColumnComparer Comparer(int columnIndex) => new(columnIndex);
@@ -110,6 +112,8 @@ public sealed record Row(object?[] Data)
                 hash.Add(component);
             return hash.ToHashCode();
         }
+
+        public override string ToString() => string.Join(", ", _keyComponents);
     }
 
 }
