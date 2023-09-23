@@ -28,8 +28,8 @@ public static class ExpressionEval
             _ => throw new ArgumentOutOfRangeException(nameof(arg))
         };
     }
-    
-    public static object Eval(this IExpression arg, Row[] dataSet)
+
+    private static object Eval(this IExpression arg, Row[] dataSet)
     {
         return arg switch {
             AggregateExp aggregateExp => aggregateExp.Function(dataSet, aggregateExp.Args),

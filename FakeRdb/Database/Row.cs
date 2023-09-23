@@ -5,6 +5,8 @@ public sealed record Row(object?[] Data)
     public object? this[Column column] => Data[column.ColumnIndex];
 
     public static RowByColumnComparer Comparer(int columnIndex) => new(columnIndex);
+    public static readonly RowEqualityComparer<object?> EqualityComparer = new();
+
     public sealed class RowByColumnComparer : 
         IComparer<List<object?>>, 
         IComparer<object?[]>, 
@@ -33,6 +35,25 @@ public sealed record Row(object?[] Data)
             if (ReferenceEquals(a, b)) return 0;
             return ObjectComparer.Compare(a, b);
         }
+    }
 
+    public class RowEqualityComparer<T> : IEqualityComparer<List<T>>
+    {
+        public bool Equals(List<T>? x, List<T>? y)
+        {
+            ArgumentNullException.ThrowIfNull(x);
+            ArgumentNullException.ThrowIfNull(y);
+            return x.SequenceEqual(y);
+        }
+
+        public int GetHashCode(List<T> obj)
+        {
+            int hash = 17;
+            foreach (var item in obj)
+            {
+                hash = hash * 31 + (item == null ? 0 : item.GetHashCode());
+            }
+            return hash;
+        }
     }
 }
