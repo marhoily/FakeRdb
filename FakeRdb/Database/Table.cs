@@ -26,7 +26,7 @@ public sealed class Table : List<Row>
             var temp = ApplyFilter(source, filter).ToList();
 
             // We cannot take sorting out of here to the later stages
-            // because the projection can get the sorted columns a away
+            // because the projection can throw the sorted columns a away
             ApplyOrdering(temp, orderingTerms);
 
             return ApplyProjection(temp, selectors);
@@ -37,19 +37,14 @@ public sealed class Table : List<Row>
             return new ResultSchema(columns.Zip(expressions)
                 .Select(column => new ColumnDefinition(
                     column.First.Alias ??
-                    ExtractColumnName(column.First.Exp) ??
+                    AsColumn(column.First.Exp)?.Name ??
                     column.First.Original,
-                    ExtractColumnType(column.First.Exp) ??
+                    AsColumn(column.First.Exp)?.ColumnType ??
                     TypeAffinity.NotSet))
                 .ToArray());
-            string? ExtractColumnName(IExpression exp)
-            {
-                return exp is ColumnExp col ? col.Value.Name : null;
-            }
-            TypeAffinity? ExtractColumnType(IExpression exp)
-            {
-                return exp is ColumnExp col ? col.Value.ColumnType : null;
-            }
+
+            Column? AsColumn(IExpression exp) => 
+                exp is ColumnExp col ? col.Value : null;
         }
 
         IEnumerable<Row> ApplyFilter(Table source, IExpression? expression)
