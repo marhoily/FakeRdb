@@ -2,7 +2,7 @@ using Antlr4.Runtime.Tree;
 
 namespace FakeRdb;
 
-public static class ParserExt
+public static class TokenToEnum
 {
     public static BinaryOperator ToBinaryOperator(this SQLiteParser.ExprContext context, int tokenType)
     {

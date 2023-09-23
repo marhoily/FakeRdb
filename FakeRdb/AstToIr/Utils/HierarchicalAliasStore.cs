@@ -6,7 +6,7 @@ namespace FakeRdb;
 /// Scopes must be closed in the same order they are opened to maintain data integrity.
 /// </summary>
 /// <typeparam name="T">The type of value to store.</typeparam>
-public sealed class HierarchicalNameStore<T>
+public sealed class HierarchicalAliasStore<T>
 {
     private readonly Dictionary<string, T> _permanent = new();
     private readonly Stack<Dictionary<string, T>> _temp = new();
@@ -26,7 +26,7 @@ public sealed class HierarchicalNameStore<T>
     {
         if (_temp.Pop() != temp)
             throw new InvalidOperationException(
-                "A scope was attempted to be closed out of order in HierarchicalNameStore. " +
+                "A scope was attempted to be closed out of order in HierarchicalAliasStore. " +
                 "Scopes must be closed in the same order they are opened to maintain data integrity. " +
                 "Please review the scope management to ensure proper nesting and closing of scopes."
             );
@@ -36,11 +36,11 @@ public sealed class HierarchicalNameStore<T>
 
     private readonly struct Scope : IDisposable
     {
-        private readonly HierarchicalNameStore<T> _owner;
+        private readonly HierarchicalAliasStore<T> _owner;
         private readonly Dictionary<string, T> _temp;
 
         public Scope(
-            HierarchicalNameStore<T> owner,
+            HierarchicalAliasStore<T> owner,
             Dictionary<string, T> temp)
         {
             _owner = owner;
@@ -48,7 +48,7 @@ public sealed class HierarchicalNameStore<T>
         }
 
         /// <summary>
-        /// Closes the current scope and makes its names available in the <see cref="HierarchicalNameStore{T}"/>.
+        /// Closes the current scope and makes its names available in the <see cref="HierarchicalAliasStore{T}"/>.
         /// </summary>
         public void Dispose()
         {
@@ -71,7 +71,7 @@ public sealed class HierarchicalNameStore<T>
     /// </summary>
     /// <param name="name">The name whose value to get.</param>
     /// <param name="value">When this method returns, contains the value associated with the specified name, if the name is found; otherwise, the default value for the type of the value parameter.</param>
-    /// <returns>true if the <see cref="HierarchicalNameStore{T}"/> contains an element with the specified name; otherwise, false.</returns>
+    /// <returns>true if the <see cref="HierarchicalAliasStore{T}"/> contains an element with the specified name; otherwise, false.</returns>
     public bool TryGet(string name, out T value)
     {
         return _permanent.TryGetValue(name, out value!);

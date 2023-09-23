@@ -21,8 +21,8 @@ public sealed class AstToIrVisitor : SQLiteParserBaseVisitor<IResult?>
     private readonly string _originalSql;
     private readonly Database _db;
     private readonly FakeDbParameterCollection _parameters;
-    private Scoped<Table> _currentTable;
-    private readonly HierarchicalNameStore<IR.IExpression> _alias = new();
+    private ScopedValue<Table> _currentTable;
+    private readonly HierarchicalAliasStore<IR.IExpression> _alias = new();
 
     public AstToIrVisitor(string originalSql, Database db, FakeDbParameterCollection parameters)
     {

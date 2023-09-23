@@ -1,12 +1,12 @@
 ﻿namespace FakeRdb.Tests;
 
-public sealed class HierarchicalNameStoreTests
+public sealed class HierarchicalAliasStoreTests
 {
     [Fact]
     public void OpenScope_ShouldCreateNewScope()
     {
         // Arrange
-        var store = new HierarchicalNameStore<string>();
+        var store = new HierarchicalAliasStore<string>();
 
         // Act
         using (store.OpenScope())
@@ -27,7 +27,7 @@ public sealed class HierarchicalNameStoreTests
     public void CloseScope_OutOfOrder_ShouldThrowException()
     {
         // Arrange
-        var store = new HierarchicalNameStore<string>();
+        var store = new HierarchicalAliasStore<string>();
         var scope1 = store.OpenScope();
         store.OpenScope();
 
@@ -40,7 +40,7 @@ public sealed class HierarchicalNameStoreTests
     public void Set_ShouldSetValueInCurrentScope()
     {
         // Arrange
-        var store = new HierarchicalNameStore<string>();
+        var store = new HierarchicalAliasStore<string>();
         
         // Act
         using (store.OpenScope())
@@ -57,7 +57,7 @@ public sealed class HierarchicalNameStoreTests
     public void TryGet_ShouldRetrieveSetValue()
     {
         // Arrange
-        var store = new HierarchicalNameStore<string>();
+        var store = new HierarchicalAliasStore<string>();
         using (store.OpenScope())
         {
             store.Set("value", "name");
@@ -75,7 +75,7 @@ public sealed class HierarchicalNameStoreTests
     public void TryGet_WithoutSet_ShouldReturnFalse()
     {
         // Arrange
-        var store = new HierarchicalNameStore<string>();
+        var store = new HierarchicalAliasStore<string>();
 
         // Act
         var retrieved = store.TryGet("name", out var value);
