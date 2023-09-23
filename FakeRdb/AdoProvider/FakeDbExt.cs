@@ -12,7 +12,7 @@ public static class FakeDbExt
         var tokens = new CommonTokenStream(lexer);
         var parser = new SQLiteParser(tokens);
         parser.RemoveErrorListeners();
-        parser.AddErrorListener(new PanicErrorListener());
+        parser.AddErrorListener(new AntlrExceptionThrowingErrorListener());
         var chatContext = parser.sql_stmt_list();
         var visitor = new AstToIrVisitor(sql, db,parameters);
         return visitor.Visit(chatContext);
