@@ -3,7 +3,7 @@ using static FakeRdb.IR;
 
 namespace FakeRdb;
 
-public static class TokenToEnum
+public static class EnumConversions
 {
     public static BinaryOperator ToBinaryOperator(this SQLiteParser.ExprContext context, int tokenType)
     {
