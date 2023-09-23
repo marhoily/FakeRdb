@@ -37,4 +37,17 @@ public sealed class GroupByTests : ComparisonTestBase
         CompareAgainstSqlite(
             "SELECT Sum(Area) FROM City GROUP BY Country");
     }
+    [Fact]
+    public void Multiple_Aggregate_Functions()
+    {
+        CompareAgainstSqlite(
+            """
+            SELECT Country, 
+                Sum(Population) as TotalPopulation, 
+                AVG(Area) as AvgArea, 
+                MAX(Population) as MaxPopulation 
+            FROM City 
+            GROUP BY Country
+            """);
+    }
 }

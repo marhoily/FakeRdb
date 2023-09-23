@@ -30,6 +30,16 @@ public static class SqliteBuiltinFunctions
                       .Sum();
         return new AggregateResult(first.Data, sum);
     }
+    public static AggregateResult Avg(Row[] dataSet, IR.IExpression[] args)
+    {
+        var first = dataSet.FirstOrDefault();
+        if (first == null) throw new NotImplementedException();
+        var expression = args.Single();
+        var sum = dataSet.Select(expression.Eval)
+                      .Select(x => x.CoerceToRealOrZero())
+                      .Average();
+        return new AggregateResult(first.Data, sum);
+    }
 
     public static string TypeOf(Row dataSet, IR.IExpression[] args)
     {

@@ -4,6 +4,12 @@
       <NamedTestSelector>
         <TestName>FakeRdb.Tests.MultiTableSelectTests.Should_Fill_In_The_Tables</TestName>
       </NamedTestSelector>
+      <NamedTestSelector>
+        <TestName>FakeRdb.Tests.GroupByTests.Multiple_Aggregate_Funcitons</TestName>
+      </NamedTestSelector>
+      <NamedTestSelector>
+        <TestName>FakeRdb.Tests.GroupByTests.Multiple_Aggregate_Functions</TestName>
+      </NamedTestSelector>
     </IgnoredTests>
   </Settings>
 </ProjectConfiguration>

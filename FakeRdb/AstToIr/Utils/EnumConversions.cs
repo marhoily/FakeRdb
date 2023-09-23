@@ -63,6 +63,7 @@ public static class EnumConversions
             "MAX" => new AggregateExp(SqliteBuiltinFunctions.Max, args),
             "MIN" => new AggregateExp(SqliteBuiltinFunctions.Min, args),
             "SUM" => new AggregateExp(SqliteBuiltinFunctions.Sum, args),
+            "AVG" => new AggregateExp(SqliteBuiltinFunctions.Avg, args),
             "TYPEOF" => new ScalarExp(SqliteBuiltinFunctions.TypeOf, args),
             _ => throw new ArgumentOutOfRangeException(functionName)
         };
