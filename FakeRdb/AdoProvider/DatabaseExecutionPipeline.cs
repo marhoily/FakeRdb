@@ -2,7 +2,7 @@ using Antlr4.Runtime;
 
 namespace FakeRdb;
 
-public static class FakeDbExt
+public static class DatabaseExecutionPipeline
 {
     public static IResult? Execute(this Database db, string sql,
         FakeDbParameterCollection parameters)

@@ -252,9 +252,9 @@ public sealed class AstToIrVisitor : SQLiteParserBaseVisitor<IResult?>
             .ToArray();
         return functionName.ToUpperInvariant() switch
         {
-            "MAX" => new IR.AggregateExp(BuiltinFunctions.Max, args),
-            "MIN" => new IR.AggregateExp(BuiltinFunctions.Min, args),
-            "TYPEOF" => new IR.ScalarExp(BuiltinFunctions.TypeOf, args),
+            "MAX" => new IR.AggregateExp(SqliteBuiltinFunctions.Max, args),
+            "MIN" => new IR.AggregateExp(SqliteBuiltinFunctions.Min, args),
+            "TYPEOF" => new IR.ScalarExp(SqliteBuiltinFunctions.TypeOf, args),
             _ => throw new ArgumentOutOfRangeException(functionName)
         };
     }

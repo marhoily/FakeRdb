@@ -1,6 +1,6 @@
 namespace FakeRdb;
 
-public static class BuiltinFunctions
+public static class SqliteBuiltinFunctions
 {
     public static readonly IComparer<object?> Comparer = new ObjectComparer();
 
