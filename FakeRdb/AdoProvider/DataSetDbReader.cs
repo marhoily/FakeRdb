@@ -75,7 +75,7 @@ public sealed class DataSetDbReader : DbDataReader
     public override string GetDataTypeName(int ordinal)
     {
         return _queryResult.Schema.Columns[ordinal]
-            .FieldType
+            .ColumnType
             .ToString().ToUpperInvariant();
     }
 

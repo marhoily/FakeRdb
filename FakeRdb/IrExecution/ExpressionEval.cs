@@ -96,7 +96,7 @@ public static class ExpressionEval
     private static object Eval(this InExp arg, Row dataSet)
     {
         var n = arg.Needle.Eval(dataSet);
-        var nn = n.Coerce(arg.Haystack.Schema.Columns.Single().FieldType);
+        var nn = n.Coerce(arg.Haystack.Schema.Columns.Single().ColumnType);
         return arg.Haystack.Data.Any(r => Equals(nn, r[0]));
     }
 }

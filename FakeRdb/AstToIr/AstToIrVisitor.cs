@@ -54,13 +54,13 @@ public sealed class AstToIrVisitor : SQLiteParserBaseVisitor<IResult?>
     public override IResult? VisitCreate_table_stmt(SQLiteParser.Create_table_stmtContext context)
     {
         var tableName = context.table_name().GetText();
-        var fields = context.column_def().Select((col, n) =>
-                new Field(n,
+        var columns = context.column_def().Select((col, n) =>
+                new Column(n,
                     col.column_name().GetText(),
                     col.type_name().ToRuntimeType(),
                     col.column_constraint().Any(c => c.AUTOINCREMENT_() != null)))
             .ToArray();
-        _db.Add(tableName, new Table(new TableSchema(fields)));
+        _db.Add(tableName, new Table(new TableSchema(columns)));
         return null;
     }
 
@@ -206,8 +206,8 @@ public sealed class AstToIrVisitor : SQLiteParserBaseVisitor<IResult?>
         if (context.STAR() != null)
         {
             return new IR.ResultColumnList(
-                _currentTable.Value.Schema.Columns.Select(field =>
-                        new IR.ResultColumn(new IR.ColumnExp(field), "*"))
+                _currentTable.Value.Schema.Columns.Select(col =>
+                        new IR.ResultColumn(new IR.ColumnExp(col), "*"))
                     .ToArray());
         }
         var result = (IR.IExpression?)Visit(context.expr()) ?? throw new Exception();
@@ -237,7 +237,7 @@ public sealed class AstToIrVisitor : SQLiteParserBaseVisitor<IResult?>
             // It's not allowed to access aliases declared in SELECT while still in select
             if (_alias.TryGet(columnRef, out var exp))
                 return exp;
-            throw SchemaOperations.FieldNotFound(columnRef);
+            throw SchemaOperations.ColumnNotFound(columnRef);
         }
 
         return new IR.ColumnExp(column);

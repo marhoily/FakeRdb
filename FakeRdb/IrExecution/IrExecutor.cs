@@ -12,7 +12,7 @@ public static class IrExecutor
             // Use Distinct to remove duplicates. This assumes that List<object?> implements appropriate equality semantics.
             var resultData = x.Data.Concat(y.Data)
                 .Distinct(new RowEqualityComparer<object?>())
-                .Order(new SelectiveComparer(0))
+                .Order(new RowByColumnComparer(0))
                 .ToList();
     
             return new QueryResult(x.Schema, resultData);
@@ -25,7 +25,7 @@ public static class IrExecutor
             var customComparer = new RowEqualityComparer<object?>();
             var resultData = x.Data
                 .Intersect(y.Data, customComparer)
-                .Order(new SelectiveComparer(0))
+                .Order(new RowByColumnComparer(0))
                 .ToList();
             return new QueryResult(x.Schema, resultData);
         }
@@ -37,7 +37,7 @@ public static class IrExecutor
             var customComparer = new RowEqualityComparer<object?>();
             var resultData = x.Data
                 .Except(y.Data, customComparer)
-                .Order(new SelectiveComparer(0))
+                .Order(new RowByColumnComparer(0))
                 .ToList();
     
             return new QueryResult(x.Schema, resultData);
@@ -92,7 +92,7 @@ public static class IrExecutor
             var result = query.From.Select(query.Columns, query.Where);
             if (orderingTerm != null)
             {
-                result.Data.Sort(new SelectiveComparer(
+                result.Data.Sort(new RowByColumnComparer(
                     result.Schema.IndexOf(orderingTerm.Column)));
             }
             return result;

@@ -17,19 +17,19 @@ public static class DbOperations
 
         return;
 
-        Func<int, object?> PrepareColumnValueGenerator(Field field)
+        Func<int, object?> PrepareColumnValueGenerator(Column column)
         {
-            var col = Array.IndexOf(columns, field.Name);
+            var col = Array.IndexOf(columns, column.Name);
             if (col != -1)
                 return row =>
                     values.Rows[row].Cells[col]
                         .Eval()
-                        .ConvertToSqliteType(field.FieldType);
+                        .ConvertToSqliteType(column.ColumnType);
 
-            if (field.IsAutoincrement)
+            if (column.IsAutoincrement)
                 return _ => table.Autoincrement();
 
-            return _ => field.FieldType switch
+            return _ => column.ColumnType switch
             {
                 TypeAffinity.Numeric => 0,
                 TypeAffinity.Integer => 0,
@@ -70,7 +70,7 @@ public static class DbOperations
             }
             static TypeAffinity? ExtractColumnType(IR.IExpression exp)
             {
-                return exp is IR.ColumnExp col ? col.Value.FieldType : null;
+                return exp is IR.ColumnExp col ? col.Value.ColumnType : null;
             }
         }
 
@@ -131,7 +131,7 @@ public static class DbOperations
                 foreach (var (column, value) in compiled)
                 {
                     row.Data[column] = value.Eval(row)
-                        .Coerce(schema.Columns[column].FieldType);
+                        .Coerce(schema.Columns[column].ColumnType);
                 }
             }
         return counter;

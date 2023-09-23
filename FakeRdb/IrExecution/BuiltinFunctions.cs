@@ -24,7 +24,7 @@ public static class BuiltinFunctions
     {
         var exp = (IR.ColumnExp)args.Single();
         var resolve = exp.Eval(dataSet);
-        var affinity = exp.Value.FieldType;
+        var affinity = exp.Value.ColumnType;
         var result = resolve.GetStorageType(affinity);
         return result.ToString().ToLowerInvariant();
     }

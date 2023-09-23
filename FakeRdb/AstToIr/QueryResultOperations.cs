@@ -15,10 +15,10 @@ public static class QueryResultOperations
         var firstRow = q.Data.FirstOrDefault();
         for (var i = 0; i < columns.Length; i++)
         {
-            if (columns[i].FieldType != TypeAffinity.NotSet) continue;
+            if (columns[i].ColumnType != TypeAffinity.NotSet) continue;
             columns[i] = columns[i] with
             {
-                FieldType = firstRow != null
+                ColumnType = firstRow != null
                     ? firstRow[i].GetTypeAffinity()
                     : TypeAffinity.Blob
             };

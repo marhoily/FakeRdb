@@ -12,4 +12,4 @@ public sealed record QueryResult(
     int RecordsCount = -1) : IResult;
 
 public sealed record ResultSchema(ColumnDefinition[] Columns);
-public sealed record ColumnDefinition(string Name, TypeAffinity FieldType);
+public sealed record ColumnDefinition(string Name, TypeAffinity ColumnType);

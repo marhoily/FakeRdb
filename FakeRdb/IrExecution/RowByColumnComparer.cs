@@ -1,10 +1,10 @@
 namespace FakeRdb;
 
-public sealed class SelectiveComparer : IComparer<List<object?>>
+public sealed class RowByColumnComparer : IComparer<List<object?>>
 {
     private readonly int _columnIndex;
 
-    public SelectiveComparer(int columnIndex)
+    public RowByColumnComparer(int columnIndex)
     {
         if (columnIndex < 0) throw new ArgumentOutOfRangeException(nameof(columnIndex));
         _columnIndex = columnIndex;
