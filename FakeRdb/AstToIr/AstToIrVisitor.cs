@@ -179,8 +179,8 @@ public sealed class AstToIrVisitor : SQLiteParserBaseVisitor<IResult?>
             return new InExp(left, (QueryResult)right);
         }
 
-        return new BinaryExp(context.ToBinaryOperator(operand),
-            left, (IExpression)right);
+        var op = context.ToBinaryOperator(operand);
+        return new BinaryExp(op, left, (IExpression)right);
     }
 
     public override IResult VisitLiteral_value(SQLiteParser.Literal_valueContext context)
@@ -233,17 +233,10 @@ public sealed class AstToIrVisitor : SQLiteParserBaseVisitor<IResult?>
     public override IResult VisitFunction_call(SQLiteParser.Function_callContext context)
     {
         var functionName = context.function_name().GetText()!;
-        var args = context.expr()
+        return functionName.ToFunctionCall(context.expr()
             .Select(Visit)
             .Cast<IExpression>()
-            .ToArray();
-        return functionName.ToUpperInvariant() switch
-        {
-            "MAX" => new AggregateExp(SqliteBuiltinFunctions.Max, args),
-            "MIN" => new AggregateExp(SqliteBuiltinFunctions.Min, args),
-            "TYPEOF" => new ScalarExp(SqliteBuiltinFunctions.TypeOf, args),
-            _ => throw new ArgumentOutOfRangeException(functionName)
-        };
+            .ToArray());
     }
 
     public override IResult VisitDelete_stmt(SQLiteParser.Delete_stmtContext context)

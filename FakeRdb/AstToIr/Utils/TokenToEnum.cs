@@ -1,4 +1,5 @@
 using Antlr4.Runtime.Tree;
+using static FakeRdb.IR;
 
 namespace FakeRdb;
 
@@ -53,5 +54,16 @@ public static class TokenToEnum
             _ => throw new InvalidOperationException("WTF?")
         };
         return compoundOperator;
+    }
+
+    public static IResult ToFunctionCall(this string functionName, IExpression[] args)
+    {
+        return functionName.ToUpperInvariant() switch
+        {
+            "MAX" => new AggregateExp(SqliteBuiltinFunctions.Max, args),
+            "MIN" => new AggregateExp(SqliteBuiltinFunctions.Min, args),
+            "TYPEOF" => new ScalarExp(SqliteBuiltinFunctions.TypeOf, args),
+            _ => throw new ArgumentOutOfRangeException(functionName)
+        };
     }
 }
