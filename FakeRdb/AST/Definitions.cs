@@ -48,14 +48,24 @@ public interface IR : IResult
         static QueryResult Intersect(QueryResult x, QueryResult y)
         {
             ValidateSchema(x.Schema, y.Schema);
-            var resultData = x.Data.Intersect(y.Data).ToList();
+            var customComparer = new RowEqualityComparer<object?>();
+            var resultData = x.Data
+                .Intersect(y.Data, customComparer)
+                .Order(new SelectiveComparer(0))
+                .ToList();
             return new QueryResult(x.Schema, resultData);
         }
 
         static QueryResult Except(QueryResult x, QueryResult y)
         {
             ValidateSchema(x.Schema, y.Schema);
-            var resultData = x.Data.Except(y.Data).ToList();
+    
+            var customComparer = new RowEqualityComparer<object?>();
+            var resultData = x.Data
+                .Except(y.Data, customComparer)
+                .Order(new SelectiveComparer(0))
+                .ToList();
+    
             return new QueryResult(x.Schema, resultData);
         }
         static QueryResult UnionAll(QueryResult x, QueryResult y)

@@ -56,6 +56,7 @@ public sealed class UnionTests : ComparisonTestBase
         yield return new object[] { "UNION", new[] { "Name" }, new[] { "Name" } };
         yield return new object[] { "UNION ALL", new[] { "Name", "Population" }, new[] { "Name", "Population" } };
         yield return new object[] { "INTERSECT", new[] { "Name" }, new[] { "Name" } };
+        yield return new object[] { "INTERSECT", new[] { "Country" }, new[] { "Name" } };
         yield return new object[] { "EXCEPT", new[] { "Name" }, new[] { "Name" } };
 
         // Test column mismatch
