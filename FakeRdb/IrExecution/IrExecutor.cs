@@ -100,4 +100,22 @@ public static class IrExecutor
         }
     }
 
+    public static IResult PostProcess(this IResult result)
+    {
+        if (result is not QueryResult q) return result;
+        
+        var columns = q.Schema.Columns;
+        var firstRow = q.Data.FirstOrDefault();
+        for (var i = 0; i < columns.Length; i++)
+        {
+            if (columns[i].ColumnType != TypeAffinity.NotSet) continue;
+            columns[i] = columns[i] with
+            {
+                ColumnType = firstRow != null
+                    ? firstRow[i].GetTypeAffinity()
+                    : TypeAffinity.Blob
+            };
+        }
+        return result;
+    }
 }

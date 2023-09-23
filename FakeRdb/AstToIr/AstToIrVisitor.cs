@@ -237,7 +237,7 @@ public sealed class AstToIrVisitor : SQLiteParserBaseVisitor<IResult?>
             // It's not allowed to access aliases declared in SELECT while still in select
             if (_alias.TryGet(columnRef, out var exp))
                 return exp;
-            throw SchemaOperations.ColumnNotFound(columnRef);
+            throw Exceptions.ColumnNotFound(columnRef);
         }
 
         return new IR.ColumnExp(column);
