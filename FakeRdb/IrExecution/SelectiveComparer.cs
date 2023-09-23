@@ -19,7 +19,7 @@ public sealed class SelectiveComparer : IComparer<List<object?>>
         var a = x[_columnIndex];
         var b = y[_columnIndex];
         if (ReferenceEquals(a, b)) return 0;
-        return ComparisonRules.CompareSqliteObjects(a, b);
+        return ObjectComparer.Compare(a, b);
     }
 
 }
