@@ -26,7 +26,7 @@ public static class SqliteBuiltinFunctions
         if (first == null) throw new NotImplementedException();
         var expression = args.Single();
         var sum = dataSet.Select(expression.Eval)
-                      .OfType<double>()
+                      .Select(x => x.CoerceToRealOrZero())
                       .Sum();
         return new AggregateResult(first.Data, sum);
     }

@@ -89,6 +89,16 @@ public static partial class TypeExt
             var (i, _) => i
         };
     }
+    public static double CoerceToRealOrZero(this object? obj)
+    {
+        return obj switch
+        {
+            string s => double.TryParse(s, out var d) ? d : 0.0,
+            long l => l,
+            double d => d,
+            _ => 0.0
+        };
+    }
     public static TypeAffinity GetTypeAffinity(this object? obj)
     {
         return obj switch
@@ -100,7 +110,7 @@ public static partial class TypeExt
                 byte or
                 char or
                 byte => TypeAffinity.Integer,
-            double or 
+            double or
                 float => TypeAffinity.Real,
             _ => TypeAffinity.Blob
         };

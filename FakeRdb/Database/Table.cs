@@ -1,5 +1,3 @@
-using Antlr4.Runtime.Atn;
-using System.Linq;
 using static FakeRdb.IR;
 
 namespace FakeRdb;
