@@ -18,4 +18,9 @@ public sealed class AggregateFunctionsTests : ComparisonTestBase
     {
         CompareAgainstSqlite("SELECT Min(order_date) FROM orders");
     }
+    [Fact]
+    public void Alias()
+    {
+        CompareAgainstSqlite("SELECT Min(order_date) as min FROM orders");
+    }
 }
