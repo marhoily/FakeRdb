@@ -76,7 +76,9 @@ public sealed class AstToIrVisitor : SQLiteParserBaseVisitor<IResult?>
         var valuesTable = Visit<ValuesTable>(context.values_clause()) ?? 
                           throw new InvalidOperationException();
         var tableName = context.table_name().GetText();
-        var columns = context.column_name().Select(col => col.GetText()).ToArray();
+        var columns = context.column_name()
+            .Select(col => col.GetText())
+            .ToArray();
         _db.Insert(tableName, columns, valuesTable);
         return new Affected(valuesTable.Rows.Length);
     }
@@ -109,20 +111,9 @@ public sealed class AstToIrVisitor : SQLiteParserBaseVisitor<IResult?>
         if (left == null) return right;
 
         // Assuming the operator is always the second child
-        var operatorToken = context.GetChild(1).GetText();  
-
-        var compoundOperator = operatorToken switch
-        {
-            "ALL" => CompoundOperator.UnionAll,
-            "UNION" => context.ALL_() == null 
-                ? CompoundOperator.Union
-                : CompoundOperator.UnionAll,
-            "EXCEPT" => CompoundOperator.Except,
-            "INTERSECT" => CompoundOperator.Intersect,
-            _ => throw new InvalidOperationException("WTF?")
-        };
-
-        return new CompoundSelect(compoundOperator, left, right);
+        var op = context.ToCompoundOperator(
+            context.GetChild(1).GetText());
+        return new CompoundSelect(op, left, right);
     }
 
     public override IResult VisitSelect_core(SQLiteParser.Select_coreContext context)

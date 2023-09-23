@@ -39,4 +39,19 @@ public static class TokenToEnum
             _ => throw new ArgumentOutOfRangeException(nameof(tokenType))
         };
     }
+
+    public static CompoundOperator ToCompoundOperator(this SQLiteParser.Select_exprContext context, string operatorToken)
+    {
+        var compoundOperator = operatorToken switch
+        {
+            "ALL" => CompoundOperator.UnionAll,
+            "UNION" => context.ALL_() == null
+                ? CompoundOperator.Union
+                : CompoundOperator.UnionAll,
+            "EXCEPT" => CompoundOperator.Except,
+            "INTERSECT" => CompoundOperator.Intersect,
+            _ => throw new InvalidOperationException("WTF?")
+        };
+        return compoundOperator;
+    }
 }
