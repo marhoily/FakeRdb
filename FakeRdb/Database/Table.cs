@@ -66,7 +66,7 @@ public sealed class Table : List<Row>
         static void ApplyOrdering(List<Row> temp, OrderingTerm[] orderingTerms)
         {
             foreach (var orderingTerm in orderingTerms)
-                temp.Sort(new RowByColumnComparer(
+                temp.Sort(Row.Comparer(
                     orderingTerm.Column.ColumnIndex));
         }
     }
