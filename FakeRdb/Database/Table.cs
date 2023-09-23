@@ -1,3 +1,5 @@
+using Antlr4.Runtime.Atn;
+using System.Linq;
 using static FakeRdb.IR;
 
 namespace FakeRdb;
@@ -20,7 +22,7 @@ public sealed class Table : List<Row>
         return new QueryResult(schema, data);
 
         List<List<object?>> BuildData(Table source,
-            IExpression[] selectors, IExpression? filter, 
+            IExpression[] selectors, IExpression? filter,
             OrderingTerm[] orderingTerms)
         {
             var temp = ApplyFilter(source, filter).ToList();
@@ -43,7 +45,7 @@ public sealed class Table : List<Row>
                     TypeAffinity.NotSet))
                 .ToArray());
 
-            Column? AsColumn(IExpression exp) => 
+            Column? AsColumn(IExpression exp) =>
                 exp is ColumnExp col ? col.Value : null;
         }
 
@@ -71,27 +73,27 @@ public sealed class Table : List<Row>
         }
     }
 
-    public QueryResult SelectAggregate(List<ResultColumn> aggregate, Column[] queryGroupBy)
+    public QueryResult SelectAggregate(List<ResultColumn> aggregate, Column[] groupBy)
     {
-        var rows = ToArray();
-      //  rows.GroupBy()
-        var schema = new List<ColumnDefinition>();
-        var data = new List<object?>();
-        foreach (var resultColumn in aggregate)
-        {
-            var cell = resultColumn.Exp
-                .Eval<AggregateResult>(rows);
-            schema.Add(new ColumnDefinition(resultColumn.Original,
-                cell.Value.GetSimplifyingAffinity()));
-            data.Add(cell.Value);
-        }
+        var keyIndices = groupBy.Select(g => g.ColumnIndex).ToList();
 
-        return new QueryResult(
-            new ResultSchema(schema.ToArray()),
-            new List<List<object?>>
-            {
-                data
-            });
+        var data = this
+            .GroupBy(row => row.GetKey(keyIndices))
+            .Select(group => aggregate
+                .Select(col => col.Exp.Eval<AggregateResult>(group.ToArray()))
+               // .Select(r => r.Row.Append(r.Value))
+                .Select(r => (IEnumerable<object?>)new[]{r.Value})
+                .Aggregate((x, y) => x.Append(y))
+                .ToList())
+            .ToList();
+
+        var schema =/*Schema.Columns.Select(col =>
+                new ColumnDefinition(col.Name, col.ColumnType))
+            .Concat(*/aggregate.Zip(data.First()/*.Skip(Schema.Columns.Length)*/)
+                .Select(col => new ColumnDefinition(col.First.Original,
+                    col.Second.GetSimplifyingAffinity()))/*)*/
+            .ToArray();
+
+        return new QueryResult(new ResultSchema(schema), data);
     }
-
 }
