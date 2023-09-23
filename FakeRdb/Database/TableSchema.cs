@@ -6,18 +6,18 @@ public sealed record TableSchema(Column[] Columns)
 
     public Column Get(string columnName)
     {
-        return Array.Find(this.Columns, f => string.Equals(f.Name, columnName, IgnoreCase)) ??
+        return Array.Find(Columns, f => string.Equals(f.Name, columnName, IgnoreCase)) ??
                throw Exceptions.ColumnNotFound(columnName);
     }
     public Column? TryGet(string columnName)
     {
-        return Array.Find(this.Columns, f => string.Equals(f.Name, columnName, IgnoreCase));
+        return Array.Find(Columns, f => string.Equals(f.Name, columnName, IgnoreCase));
     }
 
 
     public int IndexOf(string columnName)
     {
-        var result = Array.FindIndex(this.Columns, 
+        var result = Array.FindIndex(Columns, 
             column => string.Equals(column.Name, columnName, IgnoreCase));
         if (result == -1)
             throw Exceptions.ColumnNotFound(columnName);
