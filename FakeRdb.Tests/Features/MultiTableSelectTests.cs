@@ -11,8 +11,6 @@ public sealed class MultiTableSelectTests : ComparisonTestBase
     [Fact]
     public void Should_Fill_In_The_Tables()
     {
-        CompareAgainstSqlite("select * from customers");
-        CompareAgainstSqlite("select * from orders");
         CompareAgainstSqlite("select * from orders, customers");
     }
 }

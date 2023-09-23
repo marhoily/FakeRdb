@@ -23,7 +23,7 @@ public abstract class ComparisonTestBase : IDisposable
         GC.SuppressFinalize(this);
     }
 
-    protected void Execute(string sql)
+    protected void ExecuteOnBoth(string sql)
     {
         var cmd1 = Sqlite.CreateCommand();
         cmd1.CommandText = sql;

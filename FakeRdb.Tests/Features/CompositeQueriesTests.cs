@@ -4,7 +4,7 @@ public sealed class CompositeQueriesTests : ComparisonTestBase
 {
     public CompositeQueriesTests(ITestOutputHelper output) : base(output)
     {
-        Execute("""
+        ExecuteOnBoth("""
                 -- Create tables
                 CREATE TABLE City (
                     Name TEXT,
