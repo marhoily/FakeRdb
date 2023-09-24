@@ -71,29 +71,62 @@ public sealed class Table : List<Row>
         }
     }
 
-    public QueryResult SelectAggregate(List<ResultColumn> aggregate, Column[] groupBy)
+    public QueryResult SelectAggregate(ResultColumn[] projection, Column[] groupBy)
     {
+        var prefix = Schema.Columns.Length;
+        var aggregate = projection
+            .Where(col => col.Exp is AggregateExp)
+            .ToArray();
         var keyIndices = groupBy.Select(g => g.ColumnIndex).ToList();
+
+        // ------ retrieve --------
+        static IEnumerable<object?> Combine(AggregateResult[] src)
+        {
+            var plainColumns = src.First().Row;
+            var aggregatedColumns = src.Select(x => x.Value).ToArray();
+            return plainColumns.Concat(aggregatedColumns);
+        }
 
         var data = this
             .GroupBy(row => row.GetKey(keyIndices))
             .OrderBy(g => g.Key)
-            .Select(group => aggregate
+            .Select(group => Combine(aggregate
                 .Select(col => col.Exp.Eval<AggregateResult>(group.ToArray()))
-               // .Select(r => r.Row.Append(r.Value))
-                .Select(r => (IEnumerable<object?>)new[]{r.Value})
-                .Aggregate((x, y) => x.Append(y))
+                .ToArray())
                 .ToList())
             .ToList();
 
-        var schema =/*Schema.Columns.Select(col =>
-                new ColumnDefinition(col.Name, col.ColumnType))
-            .Concat(*/aggregate.Zip(data.First()/*.Skip(Schema.Columns.Length)*/)
-                .Select(col => new ColumnDefinition(
-                    col.First.Alias ?? col.First.Original,
-                    col.Second.GetSimplifyingAffinity()))/*)*/
+        // ---------- project -----------
+        var aggregateCount = 0;
+        int GetIndex(ResultColumn column) =>
+            column.Exp switch
+            {
+                AggregateExp => prefix + (aggregateCount++),
+                ColumnExp n => n.Value.ColumnIndex,
+                _ => throw new ArgumentOutOfRangeException()
+            };
+
+        var projectionKeys = projection.Select(GetIndex).ToArray();
+        var result = data.Select(record => 
+            projectionKeys.Select(k => record[k]).ToList())
+            .ToList();
+
+        // ---------- build schema -----------
+        ColumnDefinition OneColumn(ResultColumn resultColumn, object? firstValue) =>
+            resultColumn.Exp switch
+            {
+                AggregateExp  =>  new ColumnDefinition(
+                    resultColumn.Alias ??resultColumn.Original,
+                    firstValue.GetSimplifyingAffinity()),
+                ColumnExp n => new ColumnDefinition(n.Value.Name, n.Value.ColumnType),
+                _ => throw new ArgumentOutOfRangeException()
+            };
+
+        var schema = projection
+            .Zip(result.First())
+            .Select(pair => OneColumn(pair.First, pair.Second))
             .ToArray();
 
-        return new QueryResult(new ResultSchema(schema), data);
+        return new QueryResult(new ResultSchema(schema), result);
     }
 }

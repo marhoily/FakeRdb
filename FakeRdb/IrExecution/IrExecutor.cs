@@ -24,16 +24,9 @@ public static class IrExecutor
 
     private static QueryResult ExecuteCore(SelectCore query, params OrderingTerm[] orderingTerms)
     {
-        var aggregate = query.Columns
-            .Where(c => c.Exp is AggregateExp)
-            .ToList();
-        if (aggregate.Count > 0)
-        {
-            return query.From.SelectAggregate(aggregate, query.GroupBy);
-        }
-
-        return query.From.Select(
-            query.Columns, query.Where, orderingTerms);
+        return query.Columns.Any(c => c.Exp is AggregateExp)
+            ? query.From.SelectAggregate(query.Columns, query.GroupBy)
+            : query.From.Select(query.Columns, query.Where, orderingTerms);
     }
     private static QueryResult ExecuteCompound(ICompoundSelect query)
     {
