@@ -115,7 +115,7 @@ public static partial class TypeExt
             _ => TypeAffinity.Blob
         };
     }
-    public static TypeAffinity GetSimplifyingAffinity(this object? obj)
+    public static TypeAffinity CalculateEffectiveAffinity(this object? obj)
     {
         return obj switch
         {

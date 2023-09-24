@@ -73,11 +73,12 @@ public sealed class Table : List<Row>
 
     public QueryResult SelectAggregate(ResultColumn[] projection, Column[] groupBy)
     {
-        var prefix = Schema.Columns.Length;
         var aggregate = projection
             .Where(col => col.Exp is AggregateExp)
             .ToArray();
-        var keyIndices = groupBy.Select(g => g.ColumnIndex).ToList();
+        // Flat list of indices of columns that are used for grouping
+        var groupByColumnIndices = groupBy
+            .Select(g => g.ColumnIndex).ToList();
 
         // ------ retrieve --------
         static IEnumerable<object?> Combine(AggregateResult[] src)
@@ -87,9 +88,14 @@ public sealed class Table : List<Row>
             return plainColumns.Concat(aggregatedColumns);
         }
 
+        // The 'data' variable holds a 2D table with two distinct sections:
+        // 1. The original columns from the source table (left side).
+        // 2. One column per aggregate function (right side).
+        // For min/max aggregate functions, the rows in the original columns correspond
+        // to the row containing the min/max value. For other aggregates, it's from a random row.
         var data = this
-            .GroupBy(row => row.GetKey(keyIndices))
-            .OrderBy(g => g.Key)
+            .GroupBy(row => row.GetKey(groupByColumnIndices))
+            .OrderBy(g => g.Key) // Required to mimic SQLite's grouping behavior
             .Select(group => Combine(aggregate
                 .Select(col => col.Exp.Eval<AggregateResult>(group.ToArray()))
                 .ToArray())
@@ -97,17 +103,19 @@ public sealed class Table : List<Row>
             .ToList();
 
         // ---------- project -----------
-        var aggregateCount = 0;
+        // Calculate starting index for aggregate columns.
+        // They are placed after all non-aggregate columns.
+        var aggregateColumnIndex = Schema.Columns.Length;
         int GetIndex(ResultColumn column) =>
             column.Exp switch
             {
-                AggregateExp => prefix + (aggregateCount++),
+                AggregateExp => aggregateColumnIndex++,
                 ColumnExp n => n.Value.ColumnIndex,
-                _ => throw new ArgumentOutOfRangeException()
+                _ => throw new NotImplementedException()
             };
-
+        // contains indices into the 'data' table
         var projectionKeys = projection.Select(GetIndex).ToArray();
-        var result = data.Select(record => 
+        var resultRows = data.Select(record =>
             projectionKeys.Select(k => record[k]).ToList())
             .ToList();
 
@@ -115,18 +123,21 @@ public sealed class Table : List<Row>
         ColumnDefinition OneColumn(ResultColumn resultColumn, object? firstValue) =>
             resultColumn.Exp switch
             {
-                AggregateExp  =>  new ColumnDefinition(
-                    resultColumn.Alias ??resultColumn.Original,
-                    firstValue.GetSimplifyingAffinity()),
+                AggregateExp => new ColumnDefinition(
+                    resultColumn.Alias ?? resultColumn.Original,
+                    firstValue.CalculateEffectiveAffinity()),
                 ColumnExp n => new ColumnDefinition(n.Value.Name, n.Value.ColumnType),
                 _ => throw new ArgumentOutOfRangeException()
             };
 
+        // Most operations make sqlite loose the affinity of the original column.
+        // In that case, to determine the type of the result column
+        // effective affinity of the first-row value is used.
         var schema = projection
-            .Zip(result.First())
+            .Zip(resultRows.First()) 
             .Select(pair => OneColumn(pair.First, pair.Second))
             .ToArray();
 
-        return new QueryResult(new ResultSchema(schema), result);
+        return new QueryResult(new ResultSchema(schema), resultRows);
     }
 }
