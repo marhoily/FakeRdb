@@ -9,7 +9,7 @@ public static class IrExecutor
         // If it's just a core query, we must directly
         // execute it with the ordering terms
         if (stmt.Query is SelectCore core)
-            return db.ExecuteCore(core, stmt.OrderingTerms);
+            return core.Execute(stmt.OrderingTerms);
 
         // If there are multiple cores connected by "UNION" or "EXCEPT"
         // execute all of them without ordering terms first...
@@ -22,17 +22,16 @@ public static class IrExecutor
 
     }
 
-    private static QueryResult ExecuteCore(this Database db, SelectCore query, params OrderingTerm[] orderingTerms)
+    private static QueryResult Execute(this SelectCore query, params OrderingTerm[] orderingTerms)
     {
-        var single = query.From.Single();
         return query.Columns.Any(c => c.Exp is AggregateExp)
-            ? db.SelectAggregate(single, query.Columns, query.GroupBy)
-            : db.Select(single, query.Columns, query.Where, orderingTerms);
+            ? AggregateSelectExecutor.SelectAggregate(query.From.Single(), query.Columns, query.GroupBy)
+            : SelectExecutor.Select(query.From, query.Columns, query.Where, orderingTerms);
     }
     private static QueryResult ExecuteCompound(this Database db, ICompoundSelect query)
     {
         if (query is SelectCore core)
-            return db.ExecuteCore(core);
+            return core.Execute();
         if (query is CompoundSelect compound)
         {
             var left = db.ExecuteCompound(compound.Left);
