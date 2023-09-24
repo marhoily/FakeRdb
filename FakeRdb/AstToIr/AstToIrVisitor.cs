@@ -22,7 +22,7 @@ public sealed class AstToIrVisitor : SQLiteParserBaseVisitor<IResult?>
     private readonly string _originalSql;
     private readonly Database _db;
     private readonly FakeDbParameterCollection _parameters;
-    private ScopedValue<Table> _currentTable;
+    private ScopedValue<Table[]> _currentTables;
     private readonly HierarchicalAliasStore<IExpression> _alias = new();
 
     public AstToIrVisitor(string originalSql, Database db, FakeDbParameterCollection parameters)
@@ -118,12 +118,10 @@ public sealed class AstToIrVisitor : SQLiteParserBaseVisitor<IResult?>
     public override IResult VisitSelect_core(SQLiteParser.Select_coreContext context)
     {
         using var a = _alias.OpenScope();
-        var tableName = context.table_or_subquery()
-            .Single()
-            .table_name()
-            .GetText()
-            .Unescape();
-        using var t = _currentTable.Set(_db[tableName]);
+        var tableNames = context.table_or_subquery()
+            .Select(exp => exp.table_name().GetText().Unescape());
+        var tables = tableNames.Select(name => _db[name]).ToArray();
+        using var t = _currentTables.Set(tables);
         var select = context.result_column()
             .SelectMany(c => Visit<ResultColumnList>(c).List)
             .ToArray();
@@ -131,14 +129,14 @@ public sealed class AstToIrVisitor : SQLiteParserBaseVisitor<IResult?>
         var groupBy = context._groupByExpr
             .Select(c => Visit<ColumnExp>(c).Value)
             .ToArray();
-        return new SelectCore(_db[tableName], select, groupBy, filter);
+        return new SelectCore(tables, select, groupBy, filter);
     }
 
     public override IResult VisitUpdate_stmt(SQLiteParser.Update_stmtContext context)
     {
         var tableName = context.qualified_table_name().GetText();
         var table = _db[tableName];
-        using var _ = _currentTable.Set(table);
+        using var _ = _currentTables.Set(new [] {table});
         var assignments = context.update_assignment()
             .Select(a => (
                 ColumnName: a.column_name().GetText(),
@@ -191,8 +189,8 @@ public sealed class AstToIrVisitor : SQLiteParserBaseVisitor<IResult?>
         if (context.STAR() != null)
         {
             return new ResultColumnList(
-                _currentTable.Value.Schema.Columns.Select(col =>
-                        new ResultColumn(new ColumnExp(col), "*"))
+                _currentTables.Value.SelectMany(t => t.Schema.Columns)
+                    .Select(col => new ResultColumn(new ColumnExp(col), "*"))
                     .ToArray());
         }
         var result = TryVisit<IExpression>(context.expr()) ?? throw new Exception();
@@ -211,21 +209,23 @@ public sealed class AstToIrVisitor : SQLiteParserBaseVisitor<IResult?>
     public override IResult VisitColumn_access(SQLiteParser.Column_accessContext context)
     {
         var tableName = context.table_name()?.GetText();
-        var table = _db.Try(tableName) ?? _currentTable.Value;
-        if (table == null)
+        var tables = _db.TrySet(tableName) ?? _currentTables.Value;
+        if (tables == null)
             throw new InvalidOperationException("Couldn't resolve table!");
 
-        var columnRef = context.column_name().GetText().Unescape();
-        var column = table.Schema.TryGet(columnRef);
-        if (column == null)
+        var columnName = context.column_name().GetText().Unescape();
+        var candidates = tables
+            .Select(t => t.Schema.TryGet(columnName))
+            .OfType<Column>()
+            .ToArray();
+        return candidates switch
         {
             // It's not allowed to access aliases declared in SELECT while still in select
-            if (_alias.TryGet(columnRef, out var exp))
-                return exp;
-            throw Exceptions.ColumnNotFound(columnRef);
-        }
-
-        return new ColumnExp(column);
+            [] when _alias.TryGet(columnName, out var exp) => exp,
+            [] => throw Resources.ColumnNotFound(columnName),
+            [var c] => new ColumnExp(c),
+            _ => throw Resources.AmbiguousColumnReference(columnName)
+        };
     }
 
     public override IResult VisitFunction_call(SQLiteParser.Function_callContext context)
@@ -239,7 +239,7 @@ public sealed class AstToIrVisitor : SQLiteParserBaseVisitor<IResult?>
     public override IResult VisitDelete_stmt(SQLiteParser.Delete_stmtContext context)
     {
         var tableName = context.qualified_table_name().GetText();
-        _currentTable.Set(_db[tableName]);
+        _currentTables.Set(new []{_db[tableName]});
         return new Affected(_db.Delete(tableName,
             TryVisit<IExpression>(context.expr())));
     }

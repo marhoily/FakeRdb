@@ -78,4 +78,8 @@ public sealed class Database : Dictionary<string, Table>
     {
         return tableName == null ? null : this[tableName];
     }
+    public Table[]? TrySet(string? tableName)
+    {
+        return tableName == null ? null : new[]{this[tableName]};
+    }
 }

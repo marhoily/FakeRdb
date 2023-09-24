@@ -16,8 +16,4 @@
     <ProjectReference Include="..\SqliteSyntax\SqliteSyntax.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="Resources\" />
-  </ItemGroup>
-
 </Project>

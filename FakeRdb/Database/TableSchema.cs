@@ -7,7 +7,7 @@ public sealed record TableSchema(Column[] Columns)
     public Column Get(string columnName)
     {
         return Array.Find(Columns, f => string.Equals(f.Name, columnName, IgnoreCase)) ??
-               throw Exceptions.ColumnNotFound(columnName);
+               throw Resources.ColumnNotFound(columnName);
     }
     public Column? TryGet(string columnName)
     {
@@ -20,7 +20,7 @@ public sealed record TableSchema(Column[] Columns)
         var result = Array.FindIndex(Columns, 
             column => string.Equals(column.Name, columnName, IgnoreCase));
         if (result == -1)
-            throw Exceptions.ColumnNotFound(columnName);
+            throw Resources.ColumnNotFound(columnName);
         return result;
     }
 

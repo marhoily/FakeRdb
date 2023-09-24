@@ -11,7 +11,7 @@ public static class ResultSchemaExtensions
         var result = Array.FindIndex(schema.Columns, 
             col => string.Equals(col.Name, columnName, IgnoreCase));
         if (result == -1)
-            throw Exceptions.ColumnNotFound(columnName);
+            throw Resources.ColumnNotFound(columnName);
         return result;
     }
 }
