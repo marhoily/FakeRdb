@@ -9,7 +9,7 @@
 
 ## Expressions and Operators
 
--Arithmetic Operators (+, -, *, /)
+- Arithmetic Operators (+, -, *, /)
 - Comparison Operators (=, <> or !=, <, >, <=, >=)
 - Logical Operators (AND, OR, NOT)
 - Concatenation Operators (|| in SQLite, + in SQL Server, etc.)
