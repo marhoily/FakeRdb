@@ -99,7 +99,7 @@ public sealed class AstToIrVisitor : SQLiteParserBaseVisitor<IResult?>
         var stmt = orderBy != null
             ? new SelectStmt(select, orderBy.Terms)
             : new SelectStmt(select);
-        return stmt.Execute().PostProcess();
+        return _db.Execute(stmt).PostProcess();
     }
 
     public override IResult VisitSelect_expr(SQLiteParser.Select_exprContext context)

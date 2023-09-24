@@ -4,16 +4,16 @@ namespace FakeRdb;
 
 public static class IrExecutor
 {
-    public static QueryResult Execute(this SelectStmt stmt)
+    public static QueryResult Execute(this Database db, SelectStmt stmt)
     {
         // If it's just a core query, we must directly
         // execute it with the ordering terms
         if (stmt.Query is SelectCore core)
-            return ExecuteCore(core, stmt.OrderingTerms);
+            return db.ExecuteCore(core, stmt.OrderingTerms);
 
         // If there are multiple cores connected by "UNION" or "EXCEPT"
         // execute all of them without ordering terms first...
-        var result = ExecuteCompound(stmt.Query);
+        var result = db.ExecuteCompound(stmt.Query);
         // ...and then do the ordering.
         foreach (var orderingTerm in stmt.OrderingTerms)
             result.Data.Sort(Row.Comparer(
@@ -22,21 +22,21 @@ public static class IrExecutor
 
     }
 
-    private static QueryResult ExecuteCore(SelectCore query, params OrderingTerm[] orderingTerms)
+    private static QueryResult ExecuteCore(this Database db, SelectCore query, params OrderingTerm[] orderingTerms)
     {
         var single = query.From.Single();
         return query.Columns.Any(c => c.Exp is AggregateExp)
-            ? single.SelectAggregate(query.Columns, query.GroupBy)
-            : single.Select(query.Columns, query.Where, orderingTerms);
+            ? db.SelectAggregate(single, query.Columns, query.GroupBy)
+            : db.Select(single, query.Columns, query.Where, orderingTerms);
     }
-    private static QueryResult ExecuteCompound(ICompoundSelect query)
+    private static QueryResult ExecuteCompound(this Database db, ICompoundSelect query)
     {
         if (query is SelectCore core)
-            return ExecuteCore(core);
+            return db.ExecuteCore(core);
         if (query is CompoundSelect compound)
         {
-            var left = ExecuteCompound(compound.Left);
-            var right = ExecuteCompound(compound.Right);
+            var left = db.ExecuteCompound(compound.Left);
+            var right = db.ExecuteCompound(compound.Right);
             return compound.Operator switch
             {
                 CompoundOperator.Union => Union(left, right),
