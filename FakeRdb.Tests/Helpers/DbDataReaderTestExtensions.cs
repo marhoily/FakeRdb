@@ -53,9 +53,9 @@ public static class DbDataReaderTestExtensions
             return;
         }
         var widths = Enumerable.Range(0, headers.Count)
-            .Select(i => Math.Max(
-                headers[i].Length,
-                rows.Select(row => row[i]?.ToString()?.Length ?? 0).Max()))
+        .Select(i => Math.Max(
+        headers[i].Length,
+                rows.Select(row => PrintObj(row[i]).Length).Max()))
             .ToArray();
 
         var h = headers.Select((header, i) => header.PadRight(widths[i]));
@@ -72,8 +72,17 @@ public static class DbDataReaderTestExtensions
 
         string Border(string map) => map[0] + string.Join(map[2], widths.Select(width => new string(map[1], width + 2))) + map[3];
         IEnumerable<string> RowData(IEnumerable<object?> row) =>
-            row.Select((data, i) =>
-                (data?.ToString() ?? "").PadRight(widths[i]));
+            row.Select((data, i) => PrintObj(data).PadRight(widths[i]));
+
+        static string PrintObj(object? data)
+        {
+            return data switch
+            {
+                null => "<NULL>",
+                double d=> d.ToString("F"),
+                _ => data.ToString()!
+            };
+        }
     }
 
     private static IEnumerable<(string ColumnType, string ColumnName)> GetSchema(this DbDataReader reader)

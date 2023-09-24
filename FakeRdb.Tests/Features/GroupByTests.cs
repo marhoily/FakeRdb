@@ -43,9 +43,9 @@ public sealed class GroupByTests : ComparisonTestBase
         CompareAgainstSqlite(
             """
             SELECT Country, 
-                Sum(Population) as TotalPopulation, 
-                AVG(Area) as AvgArea, 
-                MAX(Population) as MaxPopulation 
+                Sum(Population) as X, 
+                AVG(Area) as Y, 
+                MAX(Population) as Z
             FROM City 
             GROUP BY Country
             """);
