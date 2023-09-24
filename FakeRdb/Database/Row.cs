@@ -8,6 +8,10 @@ public sealed record Row(object?[] Data)
 
     public static RowByColumnComparer Comparer(int columnIndex) => new(columnIndex);
     public static readonly RowEqualityComparer<object?> EqualityComparer = new();
+    public Row Concat(Row second)
+    {
+        return new Row(Data.Concat(second.Data).ToArray());
+    }
     
     /// <summary>
     /// Generates a CompositeKey based on the values of the specified columns.

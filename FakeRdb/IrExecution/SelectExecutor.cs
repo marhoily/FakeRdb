@@ -7,24 +7,40 @@ public static class SelectExecutor
     public static QueryResult Select(Table[] tables, ResultColumn[] columns, IExpression? where,
         OrderingTerm[] ordering)
     {
-        var table = tables.Single();
         var projection = columns.Select(c => c.Exp).ToArray();
-        var data = BuildData(table, projection, where, ordering);
+        var data = BuildData(tables, projection, where, ordering);
         var schema = BuildSchema(columns, projection);
         return new QueryResult(schema, data);
     }
 
-    private static List<List<object?>> BuildData(Table source,
+    private static List<List<object?>> BuildData(Table[] source,
             IExpression[] selectors, IExpression? filter,
             OrderingTerm[] orderingTerms)
     {
-        var temp = ApplyFilter(source, filter).ToList();
+        var product = BuildCartesianProduct(source).ToArray();
+        var temp = ApplyFilter(product, filter).ToList();
 
         // We cannot take sorting out of here to the later stages
         // because the projection can throw the sorted columns a away
         ApplyOrdering(temp, orderingTerms);
 
         return ApplyProjection(temp, selectors);
+    }
+
+    private static IEnumerable<Row> BuildCartesianProduct(Table[] sources)
+    {
+        return sources.Length == 0 
+            ? Enumerable.Empty<Row>()
+            : Recurse(sources[0], sources.Skip(1).ToArray());
+
+        static IEnumerable<Row> Recurse(Table head, Table[] tail)
+        {
+            if (tail.Length == 0) return head;
+            return 
+                from headRow in head 
+                from tailRow in Recurse(tail[0], tail.Skip(1).ToArray()) 
+                select headRow.Concat(tailRow);
+        }
     }
 
     private static ResultSchema BuildSchema(ResultColumn[] columns, IExpression[] projection)
@@ -42,11 +58,11 @@ public static class SelectExecutor
             exp is ColumnExp col ? col.Value : null;
     }
 
-    private static IEnumerable<Row> ApplyFilter(Table source, IExpression? expression)
+    private static IEnumerable<Row> ApplyFilter(Row[] table, IExpression? expression)
     {
         return expression == null
-            ? source
-            : source.Where(expression.Eval<bool>);
+            ? table
+            : table.Where(expression.Eval<bool>);
     }
 
     private static List<List<object?>> ApplyProjection(IEnumerable<Row> rows, IExpression[] selectors)
