@@ -89,7 +89,8 @@ public sealed class Table : List<Row>
         var schema =/*Schema.Columns.Select(col =>
                 new ColumnDefinition(col.Name, col.ColumnType))
             .Concat(*/aggregate.Zip(data.First()/*.Skip(Schema.Columns.Length)*/)
-                .Select(col => new ColumnDefinition(col.First.Original,
+                .Select(col => new ColumnDefinition(
+                    col.First.Alias ?? col.First.Original,
                     col.Second.GetSimplifyingAffinity()))/*)*/
             .ToArray();
 

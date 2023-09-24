@@ -21,6 +21,6 @@ public sealed class AggregateFunctionsTests : ComparisonTestBase
     [Fact]
     public void Alias()
     {
-        CompareAgainstSqlite("SELECT Avg(order_date) as A FROM orders");
+        CompareAgainstSqlite("SELECT Avg(total_amount) as A FROM orders");
     }
 }
