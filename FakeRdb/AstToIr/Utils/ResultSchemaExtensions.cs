@@ -4,7 +4,7 @@ public static class ResultSchemaExtensions
 {
     private const StringComparison IgnoreCase = StringComparison.InvariantCultureIgnoreCase;
 
-    public static int IndexOf(this ResultSchema schema, Column column) =>
+    public static int IndexOf(this ResultSchema schema, ColumnHeader column) =>
         schema.IndexOf(column.Name);
     public static int IndexOf(this ResultSchema schema, string columnName)
     {

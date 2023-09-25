@@ -56,7 +56,7 @@ public sealed class AstToIrVisitor : SQLiteParserBaseVisitor<IResult?>
     {
         var tableName = context.table_name().GetText();
         var columns = context.column_def().Select((col, n) =>
-                new Column(n,
+                new ColumnHeader(n,
                     col.column_name().GetText(),
                     col.type_name().ToRuntimeType(),
                     col.column_constraint().Any(c => c.AUTOINCREMENT_() != null)))
@@ -216,7 +216,7 @@ public sealed class AstToIrVisitor : SQLiteParserBaseVisitor<IResult?>
         var columnName = context.column_name().GetText().Unescape();
         var candidates = tables
             .Select(t => t.Schema.TryGet(columnName))
-            .OfType<Column>()
+            .OfType<ColumnHeader>()
             .ToArray();
         return candidates switch
         {

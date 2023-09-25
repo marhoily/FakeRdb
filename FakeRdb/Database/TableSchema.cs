@@ -1,15 +1,15 @@
 namespace FakeRdb;
 
-public sealed record TableSchema(Column[] Columns)
+public sealed record TableSchema(ColumnHeader[] Columns)
 {
     private const StringComparison IgnoreCase = StringComparison.InvariantCultureIgnoreCase;
 
-    public Column Get(string columnName)
+    public ColumnHeader Get(string columnName)
     {
         return Array.Find(Columns, f => string.Equals(f.Name, columnName, IgnoreCase)) ??
                throw Resources.ColumnNotFound(columnName);
     }
-    public Column? TryGet(string columnName)
+    public ColumnHeader? TryGet(string columnName)
     {
         return Array.Find(Columns, f => string.Equals(f.Name, columnName, IgnoreCase));
     }

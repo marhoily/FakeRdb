@@ -4,7 +4,7 @@ public sealed record Row(object?[] Data)
 {
     public override string ToString() => string.Join(", ", Data);
 
-    public object? this[Column column] => Data[column.ColumnIndex];
+    public object? this[ColumnHeader column] => Data[column.ColumnIndex];
 
     public static RowByColumnComparer Comparer(int columnIndex) => new(columnIndex);
     public static readonly RowEqualityComparer<object?> EqualityComparer = new();

@@ -2,7 +2,7 @@
 
 public static class AggregateSelectExecutor
 {
-    public static QueryResult SelectAggregate(Table table, IR.ResultColumn[] projection, Column[] groupBy)
+    public static QueryResult SelectAggregate(Table table, IR.ResultColumn[] projection, ColumnHeader[] groupBy)
     {
         var aggregate = projection
             .Where(col => col.Exp is IR.AggregateExp)

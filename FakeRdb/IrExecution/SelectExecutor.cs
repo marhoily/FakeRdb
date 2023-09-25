@@ -17,7 +17,7 @@ public static class SelectExecutor
             IExpression[] selectors, IExpression? filter,
             OrderingTerm[] orderingTerms)
     {
-        var product = BuildCartesianProduct(source).ToArray();
+        var product = CartesianProduct(source).ToArray();
         var temp = ApplyFilter(product, filter).ToList();
 
         // We cannot take sorting out of here to the later stages
@@ -27,11 +27,11 @@ public static class SelectExecutor
         return ApplyProjection(temp, selectors);
     }
 
-    private static IEnumerable<Row> BuildCartesianProduct(Table[] sources)
+    private static IEnumerable<Row> CartesianProduct(Table[] tables)
     {
-        return sources.Length == 0 
+        return tables.Length == 0 
             ? Enumerable.Empty<Row>()
-            : Recurse(sources[0], sources.Skip(1).ToArray());
+            : Recurse(tables[0], tables.Skip(1).ToArray());
 
         static IEnumerable<Row> Recurse(Table head, Table[] tail)
         {
@@ -54,7 +54,7 @@ public static class SelectExecutor
                 TypeAffinity.NotSet))
             .ToArray());
 
-        Column? AsColumn(IExpression exp) =>
+        ColumnHeader? AsColumn(IExpression exp) =>
             exp is ColumnExp col ? col.Value : null;
     }
 

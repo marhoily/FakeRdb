@@ -19,7 +19,7 @@ public sealed class Database : Dictionary<string, Table>
 
         return;
 
-        Func<int, object?> PrepareColumnValueGenerator(Column column)
+        Func<int, object?> PrepareColumnValueGenerator(ColumnHeader column)
         {
             var col = Array.IndexOf(columns, column.Name);
             if (col != -1)
