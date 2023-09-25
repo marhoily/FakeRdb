@@ -42,6 +42,23 @@ public static class SelectExecutor
                 select headRow.Concat(tailRow);
         }
     }
+    private static Table CartesianProduct2(Table[] tables)
+    {
+        return tables.Length == 0 
+            ? Table.Empty
+            : Recurse(tables[0], tables.Skip(1).ToArray());
+
+        static Table Recurse(Table head, Table[] tail)
+        {
+            if (tail.Length == 0) return head;
+            var rows = from headRow in head.GetRows()
+                from tailRow in Recurse(tail[0], tail.Skip(1).ToArray()).GetRows() 
+                select headRow.Concat(tailRow);
+            var result = head.ConcatColumns(tail[0]);
+            result.AddRows(rows);
+            return result;
+        }
+    }
 
     private static ResultSchema BuildSchema(ResultColumn[] columns, IExpression[] projection)
     {
