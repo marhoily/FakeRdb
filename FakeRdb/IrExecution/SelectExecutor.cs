@@ -18,16 +18,14 @@ public static class SelectExecutor
             OrderingTerm[] orderingTerms)
     {
         var product = CartesianProduct(source);
-        if(filter != null)
+        if (filter != null)
             product.ApplyFilter(filter);
-        var temp = product.GetRows().ToList();
-            //ApplyFilter(product, filter).ToList();
 
         // We cannot take sorting out of here to the later stages
-        // because the projection can throw the sorted columns a away
-        ApplyOrdering(temp, orderingTerms);
+        // because the projection can throw the key columns away
+        var temp = product.OrderBy(orderingTerms);
 
-        return ApplyProjection(temp, selectors);
+        return ApplyProjection(temp.GetRows(), selectors);
     }
 
     private static Table CartesianProduct(Table[] tables)
@@ -44,8 +42,8 @@ public static class SelectExecutor
             if (tail.Length == 0) return head;
             var result = head.ConcatColumns(tail[0]);
             result.AddRows(from headRow in head.GetRows()
-                from tailRow in Recurse(tail[0], tail.Skip(1).ToArray()).GetRows() 
-                select headRow.Concat(tailRow));
+                           from tailRow in Recurse(tail[0], tail.Skip(1).ToArray()).GetRows()
+                           select headRow.Concat(tailRow));
             return result;
         }
     }
@@ -73,13 +71,4 @@ public static class SelectExecutor
                 .ToList())
             .ToList();
     }
-
-    private static void ApplyOrdering(List<Row> temp, OrderingTerm[] orderingTerms)
-    {
-        foreach (var orderingTerm in orderingTerms)
-            temp.Sort(Row.Comparer(
-                orderingTerm.Column.ColumnIndex));
-    }
-
-
 }

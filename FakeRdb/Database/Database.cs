@@ -53,7 +53,7 @@ public sealed class Database : Dictionary<string, Table>
                 (column: schema.IndexOf(x.column), x.value))
             .ToArray();
         var counter = 0;
-        for (var rowIndex = 0; rowIndex < table.Count; rowIndex++)
+        for (var rowIndex = 0; rowIndex < table.RowCount; rowIndex++)
         {
             var row = table.GetRow(rowIndex);
             if (filter != null && !filter.Eval<bool>(row)) continue;

@@ -1,3 +1,5 @@
+using static FakeRdb.IR;
+
 namespace FakeRdb;
 
 public sealed class Table
@@ -30,10 +32,10 @@ public sealed class Table
                 Data[i].Add(r.Data[i]);
     }
 
-    public int Count => Data[0].Count;
+    public int RowCount => Data[0].Count;
     public IEnumerable<Row> GetRows()
     {
-        for (var i = 0; i < Count; i++)
+        for (var i = 0; i < RowCount; i++)
             yield return GetRow(i);
     }
     public Row GetRow(int rowIndex)
@@ -85,7 +87,7 @@ public sealed class Table
         Data[columnIndex][rowIndex] = value;
     }
 
-    public void ApplyFilter(IR.IExpression filter)
+    public void ApplyFilter(IExpression filter)
     {
         RemoveAll(row => !filter.Eval<bool>(row));
     }
@@ -94,6 +96,24 @@ public sealed class Table
     {
         var result = new Table(Schema);
         result.AddRows(GetRows());
+        return result;
+    }
+
+    public Table OrderBy(OrderingTerm[] orderingTerms)
+    {
+        var result = this;
+        foreach (var orderingTerm in orderingTerms)
+        {
+            var comparer = Row.Comparer(
+                orderingTerm.Column.ColumnIndex);
+            var derived = new Table(Schema);
+            derived.AddRows(
+                Enumerable.Range(0, RowCount)
+                    .OrderBy(GetRow, comparer)
+                    .Select(GetRow));
+            result = derived;
+        }
+
         return result;
     }
 }
