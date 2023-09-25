@@ -53,16 +53,18 @@ public sealed class Database : Dictionary<string, Table>
                 (column: schema.IndexOf(x.column), x.value))
             .ToArray();
         var counter = 0;
-        foreach (var row in table)
-            if (filter == null || filter.Eval<bool>(row))
+        for (var rowIndex = 0; rowIndex < table.Count; rowIndex++)
+        {
+            var row = table.GetRow(rowIndex);
+            if (filter != null && !filter.Eval<bool>(row)) continue;
+            counter++;
+            foreach (var (column, value) in compiled)
             {
-                counter++;
-                foreach (var (column, value) in compiled)
-                {
-                    row.Data[column] = value.Eval(row)
-                        .Coerce(schema.Columns[column].ColumnType);
-                }
+                table.Set(rowIndex, column, value.Eval(row)
+                    .Coerce(schema.Columns[column].ColumnType));
             }
+        }
+
         return counter;
     }
     public int Delete(string tableName, IExpression? projection)
@@ -71,8 +73,11 @@ public sealed class Database : Dictionary<string, Table>
         if (projection != null)
             return table.RemoveAll(projection.Eval<bool>);
 
-        var affected = table.Count;
-        table.Clear();
+        var affected = table.Data[0].Count;
+        foreach (var column in table.Data)
+        {
+            column.Clear();
+        }
         return affected;
     }
 

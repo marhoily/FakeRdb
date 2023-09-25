@@ -17,7 +17,7 @@ public static class SelectExecutor
             IExpression[] selectors, IExpression? filter,
             OrderingTerm[] orderingTerms)
     {
-        var product = CartesianProduct(source).ToArray();
+        var product = CartesianProduct(source).GetRows().ToArray();
         var temp = ApplyFilter(product, filter).ToList();
 
         // We cannot take sorting out of here to the later stages
@@ -27,22 +27,7 @@ public static class SelectExecutor
         return ApplyProjection(temp, selectors);
     }
 
-    private static IEnumerable<Row> CartesianProduct(Table[] tables)
-    {
-        return tables.Length == 0 
-            ? Enumerable.Empty<Row>()
-            : Recurse(tables[0], tables.Skip(1).ToArray());
-
-        static IEnumerable<Row> Recurse(Table head, Table[] tail)
-        {
-            if (tail.Length == 0) return head;
-            return 
-                from headRow in head 
-                from tailRow in Recurse(tail[0], tail.Skip(1).ToArray()) 
-                select headRow.Concat(tailRow);
-        }
-    }
-    private static Table CartesianProduct2(Table[] tables)
+    private static Table CartesianProduct(Table[] tables)
     {
         return tables.Length == 0 
             ? Table.Empty
@@ -51,11 +36,10 @@ public static class SelectExecutor
         static Table Recurse(Table head, Table[] tail)
         {
             if (tail.Length == 0) return head;
-            var rows = from headRow in head.GetRows()
-                from tailRow in Recurse(tail[0], tail.Skip(1).ToArray()).GetRows() 
-                select headRow.Concat(tailRow);
             var result = head.ConcatColumns(tail[0]);
-            result.AddRows(rows);
+            result.AddRows(from headRow in head.GetRows()
+                from tailRow in Recurse(tail[0], tail.Skip(1).ToArray()).GetRows() 
+                select headRow.Concat(tailRow));
             return result;
         }
     }
