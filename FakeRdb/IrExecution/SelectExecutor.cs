@@ -17,8 +17,11 @@ public static class SelectExecutor
             IExpression[] selectors, IExpression? filter,
             OrderingTerm[] orderingTerms)
     {
-        var product = CartesianProduct(source).GetRows().ToArray();
-        var temp = ApplyFilter(product, filter).ToList();
+        var product = CartesianProduct(source);
+        if(filter != null)
+            product.ApplyFilter(filter);
+        var temp = product.GetRows().ToList();
+            //ApplyFilter(product, filter).ToList();
 
         // We cannot take sorting out of here to the later stages
         // because the projection can throw the sorted columns a away
@@ -29,9 +32,12 @@ public static class SelectExecutor
 
     private static Table CartesianProduct(Table[] tables)
     {
-        return tables.Length == 0 
-            ? Table.Empty
-            : Recurse(tables[0], tables.Skip(1).ToArray());
+        return tables.Length switch
+        {
+            0 => Table.Empty,
+            1 => tables[0].Clone(),
+            _ => Recurse(tables[0], tables.Skip(1).ToArray())
+        };
 
         static Table Recurse(Table head, Table[] tail)
         {
@@ -57,13 +63,6 @@ public static class SelectExecutor
 
         ColumnHeader? AsColumn(IExpression exp) =>
             exp is ColumnExp col ? col.Value : null;
-    }
-
-    private static IEnumerable<Row> ApplyFilter(Row[] table, IExpression? expression)
-    {
-        return expression == null
-            ? table
-            : table.Where(expression.Eval<bool>);
     }
 
     private static List<List<object?>> ApplyProjection(IEnumerable<Row> rows, IExpression[] selectors)

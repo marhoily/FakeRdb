@@ -62,10 +62,10 @@ public sealed class Table
     {
         var counter = 0;
         var list = GetRows().ToList();
-        for (var i = 0; i < list.Count; i++)
+        for (var rowIndex = list.Count - 1; rowIndex >= 0; rowIndex--)
         {
-            if (!predicate(list[i])) continue;
-            RemoveAt(i);
+            if (!predicate(list[rowIndex])) continue;
+            RemoveAt(rowIndex);
             counter++;
         }
         return counter;
@@ -83,5 +83,17 @@ public sealed class Table
     public void Set(int rowIndex, int columnIndex, object? value)
     {
         Data[columnIndex][rowIndex] = value;
+    }
+
+    public void ApplyFilter(IR.IExpression filter)
+    {
+        RemoveAll(row => !filter.Eval<bool>(row));
+    }
+
+    public Table Clone()
+    {
+        var result = new Table(Schema);
+        result.AddRows(GetRows());
+        return result;
     }
 }
