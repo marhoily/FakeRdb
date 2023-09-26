@@ -153,7 +153,7 @@ public sealed class Table
             var column = columns[index];
             result.Add(column.Exp switch
             {
-                ColumnExp columnExp => Get(columnExp.Value.Header.Name),
+                ColumnExp columnExp => Get(columnExp.Value.Header.Name).Derive(column.Alias),
                 _ => ToColumn(index, column)
             });
         }
@@ -167,11 +167,6 @@ public sealed class Table
                 data.Add(col.Exp.Eval(this, i));
             }
 
-            //     column.First.Alias ??
-            //     AsColumn(column.First.Exp)?.Name ??
-            //     column.First.Original,
-            //     AsColumn(column.First.Exp)?.ColumnType ??
-            //     TypeAffinity.NotSet))
             var name = col.Alias ?? col.Original;
             var type = data[0].GetTypeAffinity();
             return new Column(new ColumnHeader(index, name, type), data);

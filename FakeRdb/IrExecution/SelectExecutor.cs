@@ -7,10 +7,9 @@ public static class SelectExecutor
     public static QueryResult Select(Table[] tables, ResultColumn[] columns, IExpression? where,
         OrderingTerm[] ordering)
     {
-        var projection = columns.Select(c => c.Exp).ToArray();
         var data = BuildData(tables, columns, where, ordering);
-        var schema = BuildSchema(columns, projection);
-        return new QueryResult(schema, data.ToList());
+        return new QueryResult(new ResultSchema(
+            data.Schema.Select(c => c.ToDefinition()).ToArray()), data.ToList());
     }
 
     private static Table BuildData(Table[] source,
@@ -46,20 +45,5 @@ public static class SelectExecutor
                            select headRow.Concat(tailRow));
             return result;
         }
-    }
-
-    private static ResultSchema BuildSchema(ResultColumn[] columns, IExpression[] projection)
-    {
-        return new ResultSchema(columns.Zip(projection)
-            .Select(column => new ColumnDefinition(
-                column.First.Alias ??
-                AsColumn(column.First.Exp)?.Name ??
-                column.First.Original,
-                AsColumn(column.First.Exp)?.ColumnType ??
-                TypeAffinity.NotSet))
-            .ToArray());
-
-        ColumnHeader? AsColumn(IExpression exp) =>
-            exp is ColumnExp col ? col.Value.Header : null;
     }
 }
