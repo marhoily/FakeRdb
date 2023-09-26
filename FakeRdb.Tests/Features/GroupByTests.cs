@@ -38,6 +38,12 @@ public sealed class GroupByTests : ComparisonTestBase
             "SELECT Sum(Area) FROM City GROUP BY Country");
     }
     [Fact]
+    public void Should_Filter_Before_GroupBy()
+    {
+        CompareAgainstSqlite(
+            "SELECT Avg(Area) FROM City WHERE Country = 'USA'");
+    }
+    [Fact]
     public void Multiple_Aggregate_Functions()
     {
         CompareAgainstSqlite(
