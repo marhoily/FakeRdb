@@ -127,7 +127,7 @@ public sealed class AstToIrVisitor : SQLiteParserBaseVisitor<IResult?>
             .ToArray();
         var filter = TryVisit<IExpression>(context.whereExpr);
         var groupBy = context._groupByExpr
-            .Select(c => Visit<ColumnExp>(c).Value)
+            .Select(c => Visit<ColumnExp>(c).Value.Header)
             .ToArray();
         return new SelectCore(tables, select, groupBy, filter);
     }
@@ -150,7 +150,7 @@ public sealed class AstToIrVisitor : SQLiteParserBaseVisitor<IResult?>
     public override IResult VisitOrder_by_stmt(SQLiteParser.Order_by_stmtContext context)
     {
         var columnExp = Visit<ColumnExp>(context.ordering_term().Single());
-        return new OrderBy(new[] { new OrderingTerm(columnExp.Value) });
+        return new OrderBy(new[] { new OrderingTerm(columnExp.Value.Header) });
     }
 
     public override IResult? VisitExpr(SQLiteParser.ExprContext context)
@@ -189,7 +189,7 @@ public sealed class AstToIrVisitor : SQLiteParserBaseVisitor<IResult?>
         if (context.STAR() != null)
         {
             return new ResultColumnList(
-                _currentTables.Value.SelectMany(t => t.Schema.Columns)
+                _currentTables.Value.SelectMany(t => t.Columns)
                     .Select(col => new ResultColumn(new ColumnExp(col), "*"))
                     .ToArray());
         }
@@ -215,8 +215,8 @@ public sealed class AstToIrVisitor : SQLiteParserBaseVisitor<IResult?>
 
         var columnName = context.column_name().GetText().Unescape();
         var candidates = tables
-            .Select(t => t.Schema.TryGet(columnName))
-            .OfType<ColumnHeader>()
+            .Select(t => t.TryGet(columnName))
+            .OfType<Column>()
             .ToArray();
         return candidates switch
         {

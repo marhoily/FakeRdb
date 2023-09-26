@@ -60,7 +60,7 @@ public static class SelectExecutor
             .ToArray());
 
         ColumnHeader? AsColumn(IExpression exp) =>
-            exp is ColumnExp col ? col.Value : null;
+            exp is ColumnExp col ? col.Value.Header : null;
     }
 
     private static List<List<object?>> ApplyProjection(IEnumerable<Row> rows, IExpression[] selectors)

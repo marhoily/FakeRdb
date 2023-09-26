@@ -73,8 +73,8 @@ public sealed class Database : Dictionary<string, Table>
         if (projection != null)
             return table.RemoveAll(projection.Eval<bool>);
 
-        var affected = table.Data[0].Count;
-        foreach (var column in table.Data)
+        var affected = table.Columns[0].Count;
+        foreach (var column in table.Columns)
         {
             column.Clear();
         }

@@ -41,7 +41,7 @@ public static class AggregateSelectExecutor
             column.Exp switch
             {
                 IR.AggregateExp => aggregateColumnIndex++,
-                IR.ColumnExp n => n.Value.ColumnIndex,
+                IR.ColumnExp n => n.Value.Header.ColumnIndex,
                 _ => throw new NotImplementedException()
             };
         // contains indices into the 'data' table
@@ -57,7 +57,7 @@ public static class AggregateSelectExecutor
                 IR.AggregateExp => new ColumnDefinition(
                     resultColumn.Alias ?? resultColumn.Original,
                     firstValue.CalculateEffectiveAffinity()),
-                IR.ColumnExp n => new ColumnDefinition(n.Value.Name, n.Value.ColumnType),
+                IR.ColumnExp n => new ColumnDefinition(n.Value.Header.Name, n.Value.Header.ColumnType),
                 _ => throw new ArgumentOutOfRangeException()
             };
 

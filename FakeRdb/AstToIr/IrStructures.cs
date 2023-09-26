@@ -22,7 +22,7 @@ public interface IR : IResult
     public sealed record BinaryExp(BinaryOperator Op, IExpression Left, IExpression Right) : IExpression;
     public sealed record AggregateExp(AggregateFunction Function, IExpression[] Args) : IExpression;
     public sealed record ScalarExp(ScalarFunction Function, IExpression[] Args) : IExpression;
-    public sealed record ColumnExp(ColumnHeader Value) : IExpression;
+    public sealed record ColumnExp(Column Value) : IExpression;
     public sealed record LiteralExp(string Value) : IExpression;
     public sealed record InExp(IExpression Needle, QueryResult Haystack) : IExpression;
 

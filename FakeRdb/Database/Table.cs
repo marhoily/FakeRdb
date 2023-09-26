@@ -4,17 +4,19 @@ namespace FakeRdb;
 
 public sealed class Table
 {
+    private const StringComparison IgnoreCase = StringComparison.InvariantCultureIgnoreCase;
+
     public static readonly Table Empty =
         new(new TableSchema(Array.Empty<ColumnHeader>()));
     public TableSchema Schema { get; }
-    public Column[] Data { get; }
+    public Column[] Columns { get; }
 
     private int _autoincrement;
 
     public Table(TableSchema schema)
     {
         Schema = schema;
-        Data = schema.Columns
+        Columns = schema.Columns
             .Select(col => new Column(col))
             .ToArray();
     }
@@ -23,16 +25,16 @@ public sealed class Table
     public void Add(object?[] oneRow)
     {
         for (var i = 0; i < oneRow.Length; i++) 
-            Data[i].Add(oneRow[i]);
+            Columns[i].Add(oneRow[i]);
     }
     public void AddRows(IEnumerable<Row> rows)
     {
         foreach (var r in rows)
             for (var i = 0; i < r.Data.Length; i++) 
-                Data[i].Add(r.Data[i]);
+                Columns[i].Add(r.Data[i]);
     }
 
-    public int RowCount => Data[0].Count;
+    public int RowCount => Columns[0].Count;
     public IEnumerable<Row> GetRows()
     {
         for (var i = 0; i < RowCount; i++)
@@ -40,10 +42,10 @@ public sealed class Table
     }
     public Row GetRow(int rowIndex)
     {
-        var row = new object?[Data.Length];
-        for (var j = 0; j < Data.Length; j++)
+        var row = new object?[Columns.Length];
+        for (var j = 0; j < Columns.Length; j++)
         {
-            row[j] = Data[j][rowIndex];
+            row[j] = Columns[j][rowIndex];
         }
         return new Row(row);
     }
@@ -75,7 +77,7 @@ public sealed class Table
 
     private void RemoveAt(int rowIndex)
     {
-        foreach (var column in Data)
+        foreach (var column in Columns)
         {
             column.RemoveAt(rowIndex);
         }
@@ -84,7 +86,7 @@ public sealed class Table
 
     public void Set(int rowIndex, int columnIndex, object? value)
     {
-        Data[columnIndex][rowIndex] = value;
+        Columns[columnIndex][rowIndex] = value;
     }
 
     public void ApplyFilter(IExpression filter)
@@ -115,5 +117,10 @@ public sealed class Table
         }
 
         return result;
+    }
+
+    public Column? TryGet(string columnName)
+    {
+        return Array.Find(Columns, f => string.Equals(f.Header.Name, columnName, IgnoreCase));
     }
 }

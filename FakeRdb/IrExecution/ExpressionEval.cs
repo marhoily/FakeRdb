@@ -21,7 +21,7 @@ public static class ExpressionEval
     {
         return arg switch {
             BinaryExp binaryExp => binaryExp.Eval(row),
-            ColumnExp columnExp => row[columnExp.Value],
+            ColumnExp columnExp => row[columnExp.Value.Header],
             InExp inExp => inExp.Eval(row),
             LiteralExp literalExp => literalExp.Value.CoerceToLexicalAffinity(),
             ScalarExp scalarExp => scalarExp.Function(row, scalarExp.Args),

@@ -45,7 +45,7 @@ public static class SqliteBuiltinFunctions
     {
         var exp = (IR.ColumnExp)args.Single();
         var resolve = exp.Eval(dataSet);
-        var affinity = exp.Value.ColumnType;
+        var affinity = exp.Value.Header.ColumnType;
         var result = resolve.GetStorageType(affinity);
         return result.ToString().ToLowerInvariant();
     }
