@@ -36,7 +36,7 @@ public static class AggregateSelectExecutor
         // ---------- project -----------
         // Calculate starting index for aggregate columns.
         // They are placed after all non-aggregate columns.
-        var aggregateColumnIndex = table.Schema.Columns.Length;
+        var aggregateColumnIndex = table.Columns.Length;
         int GetIndex(IR.ResultColumn column) =>
             column.Exp switch
             {

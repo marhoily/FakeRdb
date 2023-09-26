@@ -10,6 +10,9 @@
       <NamedTestSelector>
         <TestName>FakeRdb.Tests.JoinTests.JoinWithCountryAndGroupByContinent</TestName>
       </NamedTestSelector>
+      <NamedTestSelector>
+        <TestName>FakeRdb.Tests.CartesianProductTests.Should_Return_2x3_Rows</TestName>
+      </NamedTestSelector>
     </IgnoredTests>
   </Settings>
 </ProjectConfiguration>

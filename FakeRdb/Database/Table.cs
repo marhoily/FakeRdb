@@ -7,16 +7,15 @@ public sealed class Table
     private const StringComparison IgnoreCase = StringComparison.InvariantCultureIgnoreCase;
 
     public static readonly Table Empty =
-        new(new TableSchema(Array.Empty<ColumnHeader>()));
-    public TableSchema Schema { get; }
+        new(Array.Empty<ColumnHeader>());
     public Column[] Columns { get; }
+    public IEnumerable<ColumnHeader> Schema => Columns.Select(c => c.Header);
 
     private int _autoincrement;
 
-    public Table(TableSchema schema)
+    public Table(IEnumerable<ColumnHeader> columns)
     {
-        Schema = schema;
-        Columns = schema.Columns
+        Columns = columns
             .Select(col => new Column(col, new List<object?>()))
             .ToArray();
     }
@@ -24,13 +23,13 @@ public sealed class Table
     public long Autoincrement() => ++_autoincrement;
     public void Add(object?[] oneRow)
     {
-        for (var i = 0; i < oneRow.Length; i++) 
+        for (var i = 0; i < oneRow.Length; i++)
             Columns[i].Rows.Add(oneRow[i]);
     }
     public void AddRows(IEnumerable<Row> rows)
     {
         foreach (var r in rows)
-            for (var i = 0; i < r.Data.Length; i++) 
+            for (var i = 0; i < r.Data.Length; i++)
                 Columns[i].Rows.Add(r.Data[i]);
     }
 
@@ -52,9 +51,7 @@ public sealed class Table
 
     public Table ConcatColumns(Table table)
     {
-        return new Table(new TableSchema(
-            Schema.Columns.Concat(table.Schema.Columns)
-                .ToArray()));
+        return new Table(Schema.Concat(table.Schema).ToArray());
     }
 
     public IEnumerable<IGrouping<Row.CompositeKey, Row>> GroupBy(Func<Row, Row.CompositeKey> keySelector)
@@ -122,5 +119,14 @@ public sealed class Table
     public Column? TryGet(string columnName)
     {
         return Array.Find(Columns, f => string.Equals(f.Header.Name, columnName, IgnoreCase));
+    }
+
+    public int IndexOf(string columnName)
+    {
+        var result = Array.FindIndex(Columns,
+            column => string.Equals(column.Header.Name, columnName, IgnoreCase));
+        if (result == -1)
+            throw Resources.ColumnNotFound(columnName);
+        return result;
     }
 }

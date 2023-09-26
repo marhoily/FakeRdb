@@ -8,9 +8,9 @@ public sealed class Database : Dictionary<string, Table>
     {
         var table = this[tableName];
         if (columns.Length == 0) // TODO: Should it be here or in outer method? Is there more efficient way?
-            columns = table.Schema.Columns.Select(c => c.Name).ToArray();
+            columns = table.Schema.Select(c => c.Name).ToArray();
 
-        var columnGenerator = table.Schema.Columns
+        var columnGenerator = table.Schema
             .Select(PrepareColumnValueGenerator)
             .ToArray();
 
@@ -48,9 +48,8 @@ public sealed class Database : Dictionary<string, Table>
         IExpression? filter)
     {
         var table = this[tableName] ?? throw new ArgumentOutOfRangeException(nameof(tableName));
-        var schema = table.Schema;
         var compiled = assignments.Select(x =>
-                (column: schema.IndexOf(x.column), x.value))
+                (column: table.IndexOf(x.column), x.value))
             .ToArray();
         var counter = 0;
         for (var rowIndex = 0; rowIndex < table.RowCount; rowIndex++)
@@ -61,7 +60,7 @@ public sealed class Database : Dictionary<string, Table>
             foreach (var (column, value) in compiled)
             {
                 table.Set(rowIndex, column, value.Eval(row)
-                    .Coerce(schema.Columns[column].ColumnType));
+                    .Coerce(table.Columns[column].Header.ColumnType));
             }
         }
 

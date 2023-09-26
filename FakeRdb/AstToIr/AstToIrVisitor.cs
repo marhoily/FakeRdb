@@ -61,7 +61,7 @@ public sealed class AstToIrVisitor : SQLiteParserBaseVisitor<IResult?>
                     col.type_name().ToRuntimeType(),
                     col.column_constraint().Any(c => c.AUTOINCREMENT_() != null)))
             .ToArray();
-        _db.Add(tableName, new Table(new TableSchema(columns)));
+        _db.Add(tableName, new Table(columns));
         return null;
     }
 
