@@ -52,6 +52,7 @@ public abstract class ComparisonTestBase : IDisposable
         if (x1 != null)
         {
             x2.Should().NotBeNull();
+            _output.WriteLine(x1.Message);
             AssertErrorsMatch(x1.Message, x2!.Message);
         }
         else if (x2 != null)
@@ -81,6 +82,11 @@ public abstract class ComparisonTestBase : IDisposable
         {
             "SQLite Error 1: 'SELECTs to the left and right of UNION do not have the same number of result columns'.",
             "SELECTs to the left and right of UNION do not have the same number of result columns"
+        },
+        new[]
+        {
+            "SQLite Error 1: 'ambiguous column name: (?<t>\\w+)'.",
+            "Ambiguous column ref: (?<t>\\w+)"
         },
     };
     // Makes sure actual error either matches the expected completely,

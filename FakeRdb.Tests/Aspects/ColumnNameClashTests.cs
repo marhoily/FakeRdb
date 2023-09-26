@@ -24,13 +24,29 @@ public sealed class ColumnNameClashTests : ComparisonTestBase
     {
         CompareAgainstSqlite("SELECT * FROM Country, City");
     }
-   // [Fact]
-    public void Where_References_Different_Tables()
+    [Fact]
+    public void Ambiguous_Column_Name_In_Where()
     {
         CompareAgainstSqlite(
             """
             SELECT * FROM Country, City
             WHERE Name = 'USA' AND Name = 'Berlin'
+            """);
+    }
+    [Fact]
+    public void Ambiguous_Column_Name_In_Select()
+    {
+        CompareAgainstSqlite(
+            """
+            SELECT Name FROM Country, City
+            """);
+    }
+    [Fact]
+    public void Disambiguate_Column_Name_In_Select()
+    {
+        CompareAgainstSqlite(
+            """
+            SELECT Country.Name, City.Name FROM Country, City
             """);
     }
 }
