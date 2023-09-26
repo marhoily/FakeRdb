@@ -220,6 +220,9 @@ public sealed class Table : IResult
     }
     public Table GroupBy2(Column[] columns, ResultColumn[] projection)
     {
+        if (columns.Length == 0 && !projection.Any(col => col.Exp is AggregateExp))
+            return this;
+
         var groups = Enumerable.Range(0, RowCount)
             .GroupBy(rowIndex => new Row.CompositeKey(
                 columns.Select(c => c.Rows[rowIndex]).ToArray()))
