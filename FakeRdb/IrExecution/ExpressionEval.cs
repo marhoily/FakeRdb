@@ -122,4 +122,9 @@ public static class ExpressionEval
         var nn = n.Coerce(arg.Haystack.Schema.Columns.Single().ColumnType);
         return arg.Haystack.Data.Any(r => Equals(nn, r[0]));
     }
+
+    public static object? Invoke(this AggregateExp arg)
+    {
+        throw new NotImplementedException();
+    }
 }

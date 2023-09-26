@@ -27,7 +27,7 @@ public sealed class Table
 
     public long Autoincrement() => ++_autoincrement;
 
-    public void Add(object?[] oneRow)
+    public void Add(params object?[] oneRow)
     {
         for (var i = 0; i < oneRow.Length; i++)
             Columns[i].Rows.Add(oneRow[i]);
@@ -38,6 +38,12 @@ public sealed class Table
         foreach (var r in rows)
             for (var i = 0; i < r.Data.Length; i++)
                 Columns[i].Rows.Add(r.Data[i]);
+    }
+    public void AddRows(IEnumerable<IEnumerable<object?>> rows)
+    {
+        foreach (var row in rows)
+            foreach (var (dest, src) in Columns.Zip(row))
+                dest.Rows.Add(src);
     }
 
     public int RowCount => Columns[0].Rows.Count;
@@ -184,5 +190,27 @@ public sealed class Table
         return Utils.PrettyPrint.Table(
             Schema.Select(col => $"{col.Name} : {col.ColumnType}").ToList(),
             ToList());
+    }
+    public Table GroupBy(Column[] columns, ResultColumn[] projection)
+    {
+
+        var rows = Enumerable.Range(0, RowCount)
+            .GroupBy(rowIndex => new Row.CompositeKey(
+                columns.Select(c => c.Rows[rowIndex]).ToArray()))
+            .OrderBy(g => g.Key) // Required to mimic SQLite's grouping behavior
+            .Select(g => projection.Select(col => col.Exp switch
+            {
+                AggregateExp agg => agg.Function.Invoke(
+                    g.Select(GetRow).ToArray(), agg.Args).Value,
+                var otherExp => otherExp.Eval(this, g.First())
+            }))
+            .ToArray();
+        var result = new Table(projection.Zip(rows.First())
+            .Select((col, n) => new ColumnHeader(n,
+                col.First.Alias ?? col.First.Original, 
+                col.Second.CalculateEffectiveAffinity())));
+
+        result.AddRows(rows);
+        return result;
     }
 }

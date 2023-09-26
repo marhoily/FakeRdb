@@ -1,6 +1,6 @@
 namespace FakeRdb;
 
-public sealed record Row(object?[] Data)
+public sealed record Row(params object?[] Data)
 {
     public override string ToString() => string.Join(", ", Data);
 
