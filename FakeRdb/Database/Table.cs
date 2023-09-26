@@ -155,12 +155,14 @@ public sealed class Table : IResult
 
     public Column? TryGet(string columnName)
     {
-        return Array.Find(Columns, f => string.Equals(f.Header.Name, columnName, IgnoreCase));
+        return Array.Find(Columns, f => string.Equals(
+                   f.Header.FullName, columnName, IgnoreCase)) ??
+               Array.Find(Columns, f => string.Equals(
+                   f.Header.Name, columnName, IgnoreCase));
     }
     public Column Get(string columnName)
     {
-        return Array.Find(Columns, f => string.Equals(f.Header.Name, columnName, IgnoreCase))
-            ?? throw Resources.ColumnNotFound(columnName);
+        return TryGet(columnName) ?? throw Resources.ColumnNotFound(columnName);
     }
 
     public int IndexOf(string columnName)
@@ -181,7 +183,7 @@ public sealed class Table : IResult
             var id = column.Alias ?? column.Original;
             result.Add(column.Exp switch
             {
-                ColumnExp col => Get(col.Value.Header.Name).Derive(column.Alias),
+                ColumnExp col => Get(col.Value.Header.FullName).Derive(column.Alias),
                 AggregateExp => Get(id),
                 _ => ToColumn(i, column)
             });
@@ -239,10 +241,11 @@ public sealed class Table : IResult
             }).ToArray());
         var columnHeaders = rows.Length == 0
             ? projection.Select((col, n) => new ColumnHeader(n,
-                col.Alias ?? col.Original, "???", TypeAffinity.NotSet))
+                col.Alias ?? col.Original, null, TypeAffinity.NotSet))
             : projection.Zip(rows.First())
                 .Select((col, n) => new ColumnHeader(n,
-                    col.First.Alias ?? col.First.Original,"???", 
+                    col.First.Alias ?? col.First.Original,
+                    null,
                     col.Second.CalculateEffectiveAffinity()));
         return nativeColumns.Concat(
             new Table(Name, columnHeaders).WithRows(rows));
