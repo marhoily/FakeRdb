@@ -34,17 +34,19 @@ public sealed class Table : IResult
             Columns[i].Rows.Add(oneRow[i]);
     }
 
-    public void AddRows(IEnumerable<Row> rows)
+    public Table WithRows(IEnumerable<Row> rows)
     {
         foreach (var r in rows)
             for (var i = 0; i < r.Data.Length; i++)
                 Columns[i].Rows.Add(r.Data[i]);
+        return this;
     }
-    public void AddRows(IEnumerable<IEnumerable<object?>> rows)
+    public Table WithRows(IEnumerable<IEnumerable<object?>> rows)
     {
         foreach (var row in rows)
             foreach (var (dest, src) in Columns.Zip(row))
                 dest.Rows.Add(src);
+        return this;
     }
 
     public int RowCount => Columns[0].Rows.Count;
@@ -116,9 +118,7 @@ public sealed class Table : IResult
 
     public Table Clone()
     {
-        var result = new Table(Headers);
-        result.AddRows(GetRows());
-        return result;
+        return new Table(Headers).WithRows(GetRows());
     }
 
     public Table OrderBy(OrderingTerm[] orderingTerms)
@@ -127,12 +127,11 @@ public sealed class Table : IResult
         foreach (var orderingTerm in orderingTerms)
         {
             var comparer = Row.Comparer(orderingTerm.Column.ColumnIndex);
-            var derived = new Table(Headers);
-            derived.AddRows(
-                Enumerable.Range(0, RowCount)
+            result = new Table(Headers)
+                .WithRows(Enumerable
+                    .Range(0, RowCount)
                     .OrderBy(GetRow, comparer)
                     .Select(GetRow));
-            result = derived;
         }
 
         return result;
@@ -231,9 +230,8 @@ public sealed class Table : IResult
                 .Select((col, n) => new ColumnHeader(n,
                     col.First.Alias ?? col.First.Original,
                     col.Second.CalculateEffectiveAffinity()));
-        var result = new Table(columnHeaders);
-        result.AddRows(rows);
-        return nativeColumns.Concat(result);
+        return nativeColumns.Concat(
+            new Table(columnHeaders).WithRows(rows));
     }
 
     private static void ValidateSchema(Column[] x, Column[] y)
@@ -253,9 +251,7 @@ public sealed class Table : IResult
             .Order(Row.Comparer(0))
             .ToList();
 
-        var result = new Table(x.Headers);
-        result.AddRows(resultData);
-        return result;
+        return new Table(x.Headers).WithRows(resultData);
     }
     public static Table Intersect(Table x, Table y)
     {
@@ -264,9 +260,7 @@ public sealed class Table : IResult
             .Intersect(y.GetRows(), Row.EqualityComparer)
             .Order(Row.Comparer(0))
             .ToList();
-        var result = new Table(x.Headers);
-        result.AddRows(resultData);
-        return result;
+        return new Table(x.Headers).WithRows(resultData);
     }
     public static Table Except(Table x, Table y)
     {
@@ -277,9 +271,7 @@ public sealed class Table : IResult
             .Order(Row.Comparer(0))
             .ToList();
 
-        var result = new Table(x.Headers);
-        result.AddRows(resultData);
-        return result;
+        return new Table(x.Headers).WithRows(resultData);
     }
     public static Table UnionAll(Table x, Table y)
     {
@@ -287,10 +279,9 @@ public sealed class Table : IResult
 
         var resultData = x.GetRows().ToList();
         resultData.AddRange(y.GetRows());
+        
+        return new Table(x.Headers).WithRows(resultData);
 
-        var result = new Table(x.Headers);
-        result.AddRows(resultData);
-        return result;
     }
     public Table ResolveColumnTypes()
     {

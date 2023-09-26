@@ -4,8 +4,8 @@ namespace FakeRdb;
 
 public static class SelectExecutor
 {
-    public static Table Select(Table[] tables, 
-        ResultColumn[] columns, 
+    public static Table Select(Table[] tables,
+        ResultColumn[] columns,
         IExpression? where,
         ColumnHeader[] groupBy,
         OrderingTerm[] ordering)
@@ -25,21 +25,21 @@ public static class SelectExecutor
 
     private static Table CartesianProduct(Table[] tables)
     {
-        return tables.Length switch
+        return tables switch
         {
-            0 => Table.Empty,
-            1 => tables[0].Clone(),
-            _ => Recurse(tables[0], tables.Skip(1).ToArray())
+            [] => Table.Empty,
+            [var t] => t.Clone(),
+            [var head, .. var tail] _ => Recurse(head, tail)
         };
 
         static Table Recurse(Table head, Table[] tail)
         {
             if (tail.Length == 0) return head;
-            var result = head.ConcatHeaders(tail[0]);
-            result.AddRows(from headRow in head.GetRows()
-                           from tailRow in Recurse(tail[0], tail.Skip(1).ToArray()).GetRows()
-                           select headRow.Concat(tailRow));
-            return result;
+            return head
+                .ConcatHeaders(tail[0])
+                .WithRows(from headRow in head.GetRows()
+                    from tailRow in Recurse(tail[0], tail.Skip(1).ToArray()).GetRows()
+                    select headRow.Concat(tailRow));
         }
     }
 }
