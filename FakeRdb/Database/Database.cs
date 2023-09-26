@@ -54,12 +54,11 @@ public sealed class Database : Dictionary<string, Table>
         var counter = 0;
         for (var rowIndex = 0; rowIndex < table.RowCount; rowIndex++)
         {
-            var row = table.GetRow(rowIndex);
-            if (filter != null && !filter.Eval<bool>(row)) continue;
+            if (filter != null && !filter.Eval<bool>(table, rowIndex)) continue;
             counter++;
             foreach (var (column, value) in compiled)
             {
-                table.Set(rowIndex, column, value.Eval(row)
+                table.Set(rowIndex, column, value.Eval(table, rowIndex)
                     .Coerce(table.Columns[column].Header.ColumnType));
             }
         }
@@ -70,7 +69,7 @@ public sealed class Database : Dictionary<string, Table>
     {
         var table = this[tableName];
         if (projection != null)
-            return table.RemoveAll(projection.Eval<bool>);
+            return table.RemoveAll(row => projection.Eval<bool>(table, row));
 
         var affected = table.Columns[0].Rows.Count;
         foreach (var column in table.Columns)

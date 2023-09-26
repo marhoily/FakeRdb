@@ -227,8 +227,7 @@ public sealed class Table : IResult
         var rows = groups
             .Select(g => projection.Select(col => col.Exp switch
                 {
-                    AggregateExp agg => agg.Function.Invoke(
-                        g.Select(GetRow).ToArray(), agg.Args),
+                    AggregateExp agg => agg.Function.Invoke(this, g, agg.Args),
                     var otherExp => otherExp.Eval(this, g.First())
                 }))
             .ToArray();

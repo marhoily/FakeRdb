@@ -4,8 +4,6 @@ namespace FakeRdb;
 
 public static class ExpressionEval
 {
-    public static T Eval<T>(this IExpression exp, Row[] dataSet) => (T)exp.Eval(dataSet)!;
-    public static T Eval<T>(this IExpression exp, Row dataSet) => (T)exp.Eval(dataSet)!;
     public static T Eval<T>(this IExpression exp, Table table, int rowIndex) => (T)exp.Eval(table, rowIndex)!;
 
     public static object? Eval(this IExpression arg)
@@ -19,18 +17,6 @@ public static class ExpressionEval
         };
     }
 
-    public static object? Eval(this IExpression arg, Row row)
-    {
-        return arg switch
-        {
-            BinaryExp binaryExp => binaryExp.Eval(row),
-            ColumnExp columnExp => row[columnExp.Value.Header],
-            InExp inExp => inExp.Eval(row),
-            LiteralExp literalExp => literalExp.Value.CoerceToLexicalAffinity(),
-            ScalarExp scalarExp => scalarExp.Function(row, scalarExp.Args),
-            _ => throw new ArgumentOutOfRangeException(nameof(arg))
-        };
-    }
     public static object? Eval(this IExpression arg, Table table, int rowIndex)
     {
         return arg switch
@@ -39,16 +25,7 @@ public static class ExpressionEval
             ColumnExp columnExp => table.Get(columnExp.Value.Header.FullName).Rows[rowIndex],
             InExp inExp => inExp.Eval(table, rowIndex),
             LiteralExp literalExp => literalExp.Value.CoerceToLexicalAffinity(),
-            ScalarExp scalarExp => scalarExp.Function(table.GetRow(rowIndex), scalarExp.Args),
-            _ => throw new ArgumentOutOfRangeException(nameof(arg))
-        };
-    }
-
-    private static object? Eval(this IExpression arg, Row[] dataSet)
-    {
-        return arg switch
-        {
-            AggregateExp aggregateExp => aggregateExp.Function(dataSet, aggregateExp.Args),
+            ScalarExp scalarExp => scalarExp.Function(table, rowIndex, scalarExp.Args),
             _ => throw new ArgumentOutOfRangeException(nameof(arg))
         };
     }
@@ -60,12 +37,6 @@ public static class ExpressionEval
         return arg.Eval(l, r);
     }
 
-    private static object? Eval(this BinaryExp arg, Row row)
-    {
-        var l = arg.Left.Eval(row);
-        var r = arg.Right.Eval(row);
-        return arg.Eval(l, r);
-    }
     private static object? Eval(this BinaryExp arg, Table table, int rowIndex)
     {
         var l = arg.Left.Eval(table, rowIndex);
@@ -116,12 +87,6 @@ public static class ExpressionEval
         }
     }
 
-    private static object Eval(this InExp arg, Row dataSet)
-    {
-        var n = arg.Needle.Eval(dataSet);
-        var nn = n.Coerce(arg.Haystack.Header.ColumnType);
-        return arg.Haystack.Rows.Any(f => Equals(nn, f));
-    }
     private static object Eval(this InExp arg, Table table, int rowIndex)
     {
         var n = arg.Needle.Eval(table, rowIndex);

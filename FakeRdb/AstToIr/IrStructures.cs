@@ -3,8 +3,8 @@
 /// <summary> Intermediate representation </summary>
 public interface IR : IResult
 {
-    public delegate object? AggregateFunction(Row[] dataSet, IExpression[] args);
-    public delegate string ScalarFunction(Row row, IExpression[] args);
+    public delegate object? AggregateFunction(Table table, IEnumerable<int> rowSet, IExpression[] args);
+    public delegate string ScalarFunction(Table table, int rowIndex, IExpression[] args);
 
     public interface IExpression : IR { }
     public interface ICompoundSelect : IR { }
