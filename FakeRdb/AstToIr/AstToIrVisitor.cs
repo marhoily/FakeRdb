@@ -57,10 +57,11 @@ public sealed class AstToIrVisitor : SQLiteParserBaseVisitor<IResult?>
         var columns = context.column_def().Select((col, n) =>
                 new ColumnHeader(n,
                     col.column_name().GetText(),
+                    tableName + "." + col.column_name().GetText(),
                     col.type_name().ToRuntimeType(),
                     col.column_constraint().Any(c => c.AUTOINCREMENT_() != null)))
             .ToArray();
-        _db.Add(tableName, new Table(columns));
+        _db.Add(tableName, new Table(tableName, columns));
         return null;
     }
 

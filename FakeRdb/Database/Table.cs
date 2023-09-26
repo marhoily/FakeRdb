@@ -7,20 +7,24 @@ public sealed class Table : IResult
     private const StringComparison IgnoreCase = StringComparison.InvariantCultureIgnoreCase;
 
     public static readonly Table Empty =
-        new(Array.Empty<ColumnHeader>());
+        new("", Array.Empty<ColumnHeader>());
+
+    public string Name { get; }
     public Column[] Columns { get; }
     public IEnumerable<ColumnHeader> Headers => Columns.Select(c => c.Header);
 
     private int _autoincrement;
 
-    public Table(Column[] columns)
+    public Table(string name, Column[] columns)
     {
         columns.Select(c => c.Rows.Count).AssertAreAllEqual();
+        this.Name = name;
         Columns = columns;
     }
 
-    public Table(IEnumerable<ColumnHeader> columns)
+    public Table(string name, IEnumerable<ColumnHeader> columns)
     {
+        Name = name;
         Columns = columns
             .Select(col => new Column(col, new List<object?>()))
             .ToArray();
@@ -69,12 +73,12 @@ public sealed class Table : IResult
 
     public Table ConcatHeaders(Table table)
     {
-        return new Table(Headers.Concat(table.Headers).ToArray());
+        return new Table(Name, Headers.Concat(table.Headers).ToArray());
     }
 
     public Table Concat(Table table)
     {
-        return new Table(Columns.Concat(table.Columns).ToArray());
+        return new Table(Name, Columns.Concat(table.Columns).ToArray());
     }
 
     public IEnumerable<IGrouping<Row.CompositeKey, Row>> GroupBy(Func<Row, Row.CompositeKey> keySelector)
@@ -130,7 +134,7 @@ public sealed class Table : IResult
 
     public Table Clone()
     {
-        return new Table(Headers).WithRows(GetRows());
+        return new Table(Name, Headers).WithRows(GetRows());
     }
 
     public Table OrderBy(OrderingTerm[] orderingTerms)
@@ -139,7 +143,7 @@ public sealed class Table : IResult
         foreach (var orderingTerm in orderingTerms)
         {
             var columnIndex = IndexOf(orderingTerm.Column.Name);
-            result = new Table(Headers)
+            result = new Table(Name, Headers)
                 .WithRows(Enumerable
                     .Range(0, RowCount)
                     .OrderBy(GetRow, Row.Comparer(columnIndex))
@@ -183,7 +187,7 @@ public sealed class Table : IResult
             });
         }
 
-        return new Table(result.ToArray());
+        return new Table(Name, result.ToArray());
         Column ToColumn(int index, ResultColumn col)
         {
             var data = new List<object?>();
@@ -194,7 +198,7 @@ public sealed class Table : IResult
 
             var name = col.Alias ?? col.Original;
             var type = data[0].GetTypeAffinity();
-            return new Column(new ColumnHeader(index, name, type), data);
+            return new Column(new ColumnHeader(index, name, Name + "." + name, type), data);
         }
     }
 
@@ -226,7 +230,7 @@ public sealed class Table : IResult
                     var otherExp => otherExp.Eval(this, g.First())
                 }))
             .ToArray();
-        var nativeColumns = new Table(Columns
+        var nativeColumns = new Table(Name, Columns
             .Select(col => col with
             {
                 Rows = groups
@@ -235,13 +239,13 @@ public sealed class Table : IResult
             }).ToArray());
         var columnHeaders = rows.Length == 0
             ? projection.Select((col, n) => new ColumnHeader(n,
-                col.Alias ?? col.Original, TypeAffinity.NotSet))
+                col.Alias ?? col.Original, "???", TypeAffinity.NotSet))
             : projection.Zip(rows.First())
                 .Select((col, n) => new ColumnHeader(n,
-                    col.First.Alias ?? col.First.Original,
+                    col.First.Alias ?? col.First.Original,"???", 
                     col.Second.CalculateEffectiveAffinity()));
         return nativeColumns.Concat(
-            new Table(columnHeaders).WithRows(rows));
+            new Table(Name, columnHeaders).WithRows(rows));
     }
 
     private static void ValidateSchema(Column[] x, Column[] y)
@@ -261,7 +265,7 @@ public sealed class Table : IResult
             .Order(Row.Comparer(0))
             .ToList();
 
-        return new Table(x.Headers).WithRows(resultData);
+        return new Table("???", x.Headers).WithRows(resultData);
     }
     public static Table Intersect(Table x, Table y)
     {
@@ -270,7 +274,7 @@ public sealed class Table : IResult
             .Intersect(y.GetRows(), Row.EqualityComparer)
             .Order(Row.Comparer(0))
             .ToList();
-        return new Table(x.Headers).WithRows(resultData);
+        return new Table("???", x.Headers).WithRows(resultData);
     }
     public static Table Except(Table x, Table y)
     {
@@ -281,7 +285,7 @@ public sealed class Table : IResult
             .Order(Row.Comparer(0))
             .ToList();
 
-        return new Table(x.Headers).WithRows(resultData);
+        return new Table("???", x.Headers).WithRows(resultData);
     }
     public static Table UnionAll(Table x, Table y)
     {
@@ -290,12 +294,12 @@ public sealed class Table : IResult
         var resultData = x.GetRows().ToList();
         resultData.AddRange(y.GetRows());
 
-        return new Table(x.Headers).WithRows(resultData);
+        return new Table("???", x.Headers).WithRows(resultData);
 
     }
     public Table ResolveColumnTypes()
     {
-        return new Table(Columns.Select(col =>
+        return new Table(Name, Columns.Select(col =>
         {
             if (col.Header.ColumnType != TypeAffinity.NotSet) return col;
             var affinity = col.Rows.FirstOrDefault().GetTypeAffinity();

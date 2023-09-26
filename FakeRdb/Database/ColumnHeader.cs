@@ -1,6 +1,7 @@
 namespace FakeRdb;
 
 public sealed record ColumnHeader(int ColumnIndex, string Name,
+    string FullName,
     TypeAffinity ColumnType, bool IsAutoincrement = false);
 
 public sealed record Column(ColumnHeader Header, List<object?> Rows)

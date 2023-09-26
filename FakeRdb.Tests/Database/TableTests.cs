@@ -2,10 +2,10 @@
 
 public sealed class TableTests
 {
-    private readonly Table _table = new(new[]
+    private readonly Table _table = new("T", new[]
     {
-        new ColumnHeader(0, "X", TypeAffinity.NotSet),
-        new ColumnHeader(1, "Y", TypeAffinity.NotSet)
+        new ColumnHeader(0, "X", "T.X", TypeAffinity.NotSet),
+        new ColumnHeader(1, "Y", "T.Y", TypeAffinity.NotSet)
     });
 
     public TableTests()
@@ -20,5 +20,5 @@ public sealed class TableTests
     {
 
     }
- 
+
 }
