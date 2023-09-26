@@ -21,9 +21,7 @@ public static class IrExecutor
 
     private static Table Execute(this SelectCore query, params OrderingTerm[] orderingTerms)
     {
-        return query.Columns.Any(c => c.Exp is AggregateExp)
-            ? AggregateSelectExecutor.SelectAggregate(query.From.Single(), query.Columns, query.GroupBy)
-            : SelectExecutor.Select(query.From, query.Columns, query.Where, query.GroupBy,orderingTerms);
+        return SelectExecutor.Select(query.From, query.Columns, query.Where, query.GroupBy,orderingTerms);
     }
     private static Table ExecuteCompound(this Database db, ICompoundSelect query)
     {

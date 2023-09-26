@@ -160,13 +160,15 @@ public sealed class Table : IResult
     public Table Project(ResultColumn[] columns)
     {
         var result = new List<Column>();
-        for (var index = 0; index < columns.Length; index++)
+        for (var i = 0; i < columns.Length; i++)
         {
-            var column = columns[index];
+            var column = columns[i];
+            var id = column.Alias ?? column.Original;
             result.Add(column.Exp switch
             {
-                ColumnExp columnExp => Get(columnExp.Value.Header.Name).Derive(column.Alias),
-                _ => ToColumn(index, column)
+                ColumnExp col => Get(col.Value.Header.Name).Derive(column.Alias),
+                AggregateExp => Get(id),
+                _ => ToColumn(i, column)
             });
         }
 
@@ -198,27 +200,6 @@ public sealed class Table : IResult
             ToList());
     }
     public Table GroupBy(Column[] columns, ResultColumn[] projection)
-    {
-        var rows = Enumerable.Range(0, RowCount)
-            .GroupBy(rowIndex => new Row.CompositeKey(
-                columns.Select(c => c.Rows[rowIndex]).ToArray()))
-            .OrderBy(g => g.Key) // Required to mimic SQLite's grouping behavior
-            .Select(g => projection.Select(col => col.Exp switch
-            {
-                AggregateExp agg => agg.Function.Invoke(
-                    g.Select(GetRow).ToArray(), agg.Args),
-                var otherExp => otherExp.Eval(this, g.First())
-            }))
-            .ToArray();
-        var result = new Table(projection.Zip(rows.First())
-            .Select((col, n) => new ColumnHeader(n,
-                col.First.Alias ?? col.First.Original,
-                col.Second.CalculateEffectiveAffinity())));
-
-        result.AddRows(rows);
-        return result;
-    }
-    public Table GroupBy2(Column[] columns, ResultColumn[] projection)
     {
         if (columns.Length == 0 && !projection.Any(col => col.Exp is AggregateExp))
             return this;

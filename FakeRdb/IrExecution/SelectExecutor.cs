@@ -11,7 +11,7 @@ public static class SelectExecutor
         OrderingTerm[] ordering)
     {
         var product = CartesianProduct(tables);
-        product = product.GroupBy2(
+        product = product.GroupBy(
             groupBy.Select(c => product.Columns[c.ColumnIndex]).ToArray(),
             columns);
 
