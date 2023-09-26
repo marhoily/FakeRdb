@@ -28,6 +28,16 @@ public static class ExpressionEval
             _ => throw new ArgumentOutOfRangeException(nameof(arg))
         };
     }
+  public static object? Eval(this IExpression arg, Table table, int rowIndex)
+  {
+      return arg switch {
+          BinaryExp binaryExp => binaryExp.Eval(table, rowIndex),
+          InExp inExp => inExp.Eval(table, rowIndex),
+          LiteralExp literalExp => literalExp.Value.CoerceToLexicalAffinity(),
+          ScalarExp scalarExp => scalarExp.Function(table.GetRow(rowIndex), scalarExp.Args),
+          _ => throw new ArgumentOutOfRangeException(nameof(arg))
+      };
+  }
 
     private static object Eval(this IExpression arg, Row[] dataSet)
     {
@@ -48,6 +58,12 @@ public static class ExpressionEval
     {
         var l = arg.Left.Eval(row);
         var r = arg.Right.Eval(row);
+        return arg.Eval(l, r);
+    }
+    private static object? Eval(this BinaryExp arg, Table table, int rowIndex)
+    {
+        var l = arg.Left.Eval(table, rowIndex);
+        var r = arg.Right.Eval(table, rowIndex);
         return arg.Eval(l, r);
     }
 
@@ -96,6 +112,12 @@ public static class ExpressionEval
     private static object Eval(this InExp arg, Row dataSet)
     {
         var n = arg.Needle.Eval(dataSet);
+        var nn = n.Coerce(arg.Haystack.Schema.Columns.Single().ColumnType);
+        return arg.Haystack.Data.Any(r => Equals(nn, r[0]));
+    }
+    private static object Eval(this InExp arg, Table table, int rowIndex)
+    {
+        var n = arg.Needle.Eval(table, rowIndex);
         var nn = n.Coerce(arg.Haystack.Schema.Columns.Single().ColumnType);
         return arg.Haystack.Data.Any(r => Equals(nn, r[0]));
     }

@@ -13,6 +13,11 @@ public sealed class Table
 
     private int _autoincrement;
 
+    public Table(Column[] columns)
+    {
+        Columns = columns;
+    }
+
     public Table(IEnumerable<ColumnHeader> columns)
     {
         Columns = columns
@@ -21,11 +26,13 @@ public sealed class Table
     }
 
     public long Autoincrement() => ++_autoincrement;
+
     public void Add(object?[] oneRow)
     {
         for (var i = 0; i < oneRow.Length; i++)
             Columns[i].Rows.Add(oneRow[i]);
     }
+
     public void AddRows(IEnumerable<Row> rows)
     {
         foreach (var r in rows)
@@ -39,6 +46,7 @@ public sealed class Table
         for (var i = 0; i < RowCount; i++)
             yield return GetRow(i);
     }
+
     public Row GetRow(int rowIndex)
     {
         var row = new object?[Columns.Length];
@@ -46,6 +54,7 @@ public sealed class Table
         {
             row[j] = Columns[j].Rows[rowIndex];
         }
+
         return new Row(row);
     }
 
@@ -69,6 +78,7 @@ public sealed class Table
             RemoveAt(rowIndex);
             counter++;
         }
+
         return counter;
     }
 
@@ -129,4 +139,38 @@ public sealed class Table
             throw Resources.ColumnNotFound(columnName);
         return result;
     }
+
+    private Table ApplyProjection(ResultColumn[] columns)
+    {
+        var result = new List<Column>();
+        for (var index = 0; index < columns.Length; index++)
+        {
+            var column = columns[index];
+            result.Add(column.Exp switch
+            {
+                ColumnExp columnExp => columnExp.Value,
+                _ => ToColumn(index, column)
+            });
+        }
+
+        return new Table(result.ToArray());
+        Column ToColumn(int index, ResultColumn col)
+        {
+            var data = new List<object?>();
+            for (var i = 0; i < RowCount; i++)
+            {
+                data.Add(col.Exp.Eval(this, i));
+            }
+
+            //     column.First.Alias ??
+            //     AsColumn(column.First.Exp)?.Name ??
+            //     column.First.Original,
+            //     AsColumn(column.First.Exp)?.ColumnType ??
+            //     TypeAffinity.NotSet))
+            var name = col.Alias ?? col.Original;
+            var type = data[0].GetTypeAffinity();
+            return new Column(new ColumnHeader(index, name, type), data);
+        }
+    }
+
 }
