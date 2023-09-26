@@ -83,7 +83,7 @@ public sealed class Database : Dictionary<string, Table>
     {
         return tableName == null ? null : this[tableName];
     }
-    public Table[]? TryGetTableList(string? tableName)
+    public ICollection<Table>? TryGetTableList(string? tableName)
     {
         return tableName == null ? null : new[] { this[tableName] };
     }

@@ -6,7 +6,7 @@ namespace FakeRdb;
 /// isolated scopes for variables or tables.
 /// </summary>
 /// <typeparam name="T">Type of the scoped value.</typeparam>
-public struct ScopedValue<T> : IDisposable where T : notnull
+public struct ScopedValue<T> : IDisposable where T : new()
 {
     private T? _value;
 
@@ -24,6 +24,11 @@ public struct ScopedValue<T> : IDisposable where T : notnull
     public ScopedValue<T> Set(T value)
     {
         _value = value;
+        return this;
+    }
+    public ScopedValue<T> Open()
+    {
+        _value = new T();
         return this;
     }
 
