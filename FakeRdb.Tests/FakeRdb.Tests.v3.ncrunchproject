@@ -2,16 +2,13 @@
   <Settings>
     <IgnoredTests>
       <NamedTestSelector>
-        <TestName>FakeRdb.Tests.MultiTableSelectTests.Should_Fill_In_The_Tables</TestName>
-      </NamedTestSelector>
-      <NamedTestSelector>
         <TestName>FakeRdb.Tests.GroupByTests.Multiple_Aggregate_Funcitons</TestName>
       </NamedTestSelector>
       <NamedTestSelector>
         <TestName>FakeRdb.Tests.JoinTests.JoinWithCountryAndGroupByContinent</TestName>
       </NamedTestSelector>
       <NamedTestSelector>
-        <TestName>FakeRdb.Tests.CartesianProductTests.Should_Return_2x3_Rows</TestName>
+        <TestName>FakeRdb.Tests.MultiTableSelectTests.Should_Fill_In_The_Tables</TestName>
       </NamedTestSelector>
     </IgnoredTests>
   </Settings>

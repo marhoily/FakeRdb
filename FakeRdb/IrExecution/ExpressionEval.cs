@@ -126,9 +126,4 @@ public static class ExpressionEval
         var nn = n.Coerce(arg.Haystack.Header.ColumnType);
         return arg.Haystack.Rows.Any(f => Equals(nn, f));
     }
-
-    public static object? Invoke(this AggregateExp arg)
-    {
-        throw new NotImplementedException();
-    }
 }

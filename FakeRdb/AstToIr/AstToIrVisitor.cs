@@ -40,8 +40,6 @@ public sealed class AstToIrVisitor : SQLiteParserBaseVisitor<IResult?>
             (var x, null) => x,
             (null, var y) => y,
             (Table t, Affected a) => new QueryResult(t, a.RecordsCount),
-            (QueryResult q, Affected a) => q.Merge(a),
-            (Affected a, QueryResult q) => q.Merge(a),
             (Affected x, Affected y) => new Affected(x.RecordsCount + y.RecordsCount),
 
             _ => throw new ArgumentOutOfRangeException()
