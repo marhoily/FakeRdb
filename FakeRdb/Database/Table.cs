@@ -67,7 +67,6 @@ public sealed class Table : IResult
         return new Row(row);
     }
 
-
     public Table ConcatHeaders(Table table)
     {
         return new Table(Headers.Concat(table.Headers).ToArray());
@@ -96,6 +95,19 @@ public sealed class Table : IResult
 
         return counter;
     }
+    public int RemoveAll(Func<int, bool> predicate)
+    {
+        var counter = 0;
+        var list = GetRows().ToList();
+        for (var rowIndex = list.Count - 1; rowIndex >= 0; rowIndex--)
+        {
+            if (!predicate(rowIndex)) continue;
+            RemoveAt(rowIndex);
+            counter++;
+        }
+
+        return counter;
+    }
 
     private void RemoveAt(int rowIndex)
     {
@@ -113,7 +125,7 @@ public sealed class Table : IResult
 
     public void ApplyFilter(IExpression filter)
     {
-        RemoveAll(row => !filter.Eval<bool>(row));
+        RemoveAll(row => !filter.Eval<bool>(this, row));
     }
 
     public Table Clone()

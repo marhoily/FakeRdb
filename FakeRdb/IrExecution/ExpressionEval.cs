@@ -6,6 +6,7 @@ public static class ExpressionEval
 {
     public static T Eval<T>(this IExpression exp, Row[] dataSet) => (T)exp.Eval(dataSet)!;
     public static T Eval<T>(this IExpression exp, Row dataSet) => (T)exp.Eval(dataSet)!;
+    public static T Eval<T>(this IExpression exp, Table table, int rowIndex) => (T)exp.Eval(table, rowIndex)!;
 
     public static object? Eval(this IExpression arg)
     {
@@ -35,7 +36,7 @@ public static class ExpressionEval
         return arg switch
         {
             BinaryExp binaryExp => binaryExp.Eval(table, rowIndex),
-            ColumnExp columnExp => columnExp.Value.Rows[rowIndex],
+            ColumnExp columnExp => table.Get(columnExp.Value.Header.Name).Rows[rowIndex],
             InExp inExp => inExp.Eval(table, rowIndex),
             LiteralExp literalExp => literalExp.Value.CoerceToLexicalAffinity(),
             ScalarExp scalarExp => scalarExp.Function(table.GetRow(rowIndex), scalarExp.Args),
