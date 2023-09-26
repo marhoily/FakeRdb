@@ -210,20 +210,12 @@ public sealed class AstToIrVisitor : SQLiteParserBaseVisitor<IResult?>
 
     public override IResult VisitColumn_access(SQLiteParser.Column_accessContext context)
     {
-        return Inner() ?? throw Resources.ColumnNotFound(context.GetText());
+        return ResolveColumn(ResolveTables()) ??
+               throw Resources.ColumnNotFound(context.GetText());
 
-        IResult? Inner()
+        IResult? ResolveColumn(ICollection<Table>? tables)
         {
-            var tableRef = context.table_name()?.GetText();
-            var table = tableRef != null && _currentTables.Value
-                .TryGetValue(tableRef, out var tbl)
-                ? tbl
-                : _db.Try(tableRef);
-            if (table == null && tableRef != null)
-                return null;
-            var tables = table != null
-                ? (ICollection<Table>)new[] { table }
-                : _currentTables.Value.Values;
+            if (tables == null) return null;
 
             var columnName = context.column_name().GetText().Unescape();
             var candidates = tables
@@ -238,6 +230,19 @@ public sealed class AstToIrVisitor : SQLiteParserBaseVisitor<IResult?>
                 [var c] => new ColumnExp(c.Header.FullName),
                 _ => throw Resources.AmbiguousColumnReference(columnName)
             };
+        }
+        ICollection<Table>? ResolveTables()
+        {
+            var tableRef = context.table_name()?.GetText();
+            var table = tableRef != null && _currentTables.Value
+                .TryGetValue(tableRef, out var tbl)
+                ? tbl
+                : _db.Try(tableRef);
+            if (table == null && tableRef != null)
+                return null;
+            return table != null
+                ? new[] { table }
+                : _currentTables.Value.Values;
         }
     }
 
