@@ -139,7 +139,7 @@ public sealed class AstToIrVisitor : SQLiteParserBaseVisitor<IResult?>
         using var _ = _currentTables.Set(new [] {table});
         var assignments = context.update_assignment()
             .Select(a => (
-                ColumnName: a.column_name().GetText(),
+                ColumnName: tableName+"."+a.column_name().GetText(),
                 Value: Visit<IExpression>(a.expr())))
             .ToArray();
         var filter = TryVisit<IExpression>(context.where_clause()?.expr());
@@ -216,7 +216,7 @@ public sealed class AstToIrVisitor : SQLiteParserBaseVisitor<IResult?>
 
         var columnName = context.column_name().GetText().Unescape();
         var candidates = tables
-            .Select(t => t.TryGet(columnName))
+            .Select(t => t.TryLocal(columnName))
             .OfType<Column>()
             .ToArray();
         return candidates switch

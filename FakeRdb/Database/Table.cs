@@ -156,7 +156,12 @@ public sealed class Table : IResult
     public Column? TryGet(string columnName)
     {
         return Array.Find(Columns, f => string.Equals(
-                   f.Header.FullName, columnName, IgnoreCase)) ??
+                   f.Header.FullName, columnName, IgnoreCase));
+    }
+    public Column? TryLocal(string columnName)
+    {
+        return Array.Find(Columns, f => string.Equals(
+                   f.Header.FullName, columnName, IgnoreCase))??
                Array.Find(Columns, f => string.Equals(
                    f.Header.Name, columnName, IgnoreCase));
     }
@@ -170,9 +175,6 @@ public sealed class Table : IResult
         var result =
             Array.FindIndex(Columns, column => string
                 .Equals(column.Header.FullName, columnName, IgnoreCase));
-        if (result == -1)
-            result = Array.FindIndex(Columns, column => string
-                .Equals(column.Header.Name, columnName, IgnoreCase));
         if (result == -1)
             throw Resources.ColumnNotFound(columnName);
         return result;
@@ -244,11 +246,12 @@ public sealed class Table : IResult
             }).ToArray());
         var columnHeaders = rows.Length == 0
             ? projection.Select((col, n) => new ColumnHeader(n,
-                col.Alias ?? col.Original, null, TypeAffinity.NotSet))
+                col.Alias ?? col.Original, 
+                col.Alias ?? col.Original, TypeAffinity.NotSet))
             : projection.Zip(rows.First())
                 .Select((col, n) => new ColumnHeader(n,
                     col.First.Alias ?? col.First.Original,
-                    null,
+                    col.First.Alias ?? col.First.Original,
                     col.Second.CalculateEffectiveAffinity()));
         return nativeColumns.Concat(
             new Table(Name, columnHeaders).WithRows(rows));
