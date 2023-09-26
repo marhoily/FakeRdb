@@ -32,6 +32,7 @@ public static class ExpressionEval
   {
       return arg switch {
           BinaryExp binaryExp => binaryExp.Eval(table, rowIndex),
+          ColumnExp columnExp => columnExp.Value.Rows[rowIndex],
           InExp inExp => inExp.Eval(table, rowIndex),
           LiteralExp literalExp => literalExp.Value.CoerceToLexicalAffinity(),
           ScalarExp scalarExp => scalarExp.Function(table.GetRow(rowIndex), scalarExp.Args),

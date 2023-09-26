@@ -8,13 +8,13 @@ public static class SelectExecutor
         OrderingTerm[] ordering)
     {
         var projection = columns.Select(c => c.Exp).ToArray();
-        var data = BuildData(tables, projection, where, ordering);
+        var data = BuildData(tables, columns, where, ordering);
         var schema = BuildSchema(columns, projection);
-        return new QueryResult(schema, data);
+        return new QueryResult(schema, data.ToList());
     }
 
-    private static List<List<object?>> BuildData(Table[] source,
-            IExpression[] selectors, IExpression? filter,
+    private static Table BuildData(Table[] source,
+        ResultColumn[] selectors, IExpression? filter,
             OrderingTerm[] orderingTerms)
     {
         var product = CartesianProduct(source);
@@ -25,7 +25,7 @@ public static class SelectExecutor
         // because the projection can throw the key columns away
         var temp = product.OrderBy(orderingTerms);
 
-        return ApplyProjection(temp.GetRows(), selectors);
+        return temp.ApplyProjection(selectors);
     }
 
     private static Table CartesianProduct(Table[] tables)
@@ -61,14 +61,5 @@ public static class SelectExecutor
 
         ColumnHeader? AsColumn(IExpression exp) =>
             exp is ColumnExp col ? col.Value.Header : null;
-    }
-
-    private static List<List<object?>> ApplyProjection(IEnumerable<Row> rows, IExpression[] selectors)
-    {
-        return rows
-            .Select(row => selectors
-                .Select(selector => selector.Eval(row))
-                .ToList())
-            .ToList();
     }
 }

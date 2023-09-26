@@ -130,6 +130,11 @@ public sealed class Table
     {
         return Array.Find(Columns, f => string.Equals(f.Header.Name, columnName, IgnoreCase));
     }
+    public Column Get(string columnName)
+    {
+        return Array.Find(Columns, f => string.Equals(f.Header.Name, columnName, IgnoreCase))
+            ?? throw Resources.ColumnNotFound(columnName);
+    }
 
     public int IndexOf(string columnName)
     {
@@ -140,7 +145,7 @@ public sealed class Table
         return result;
     }
 
-    private Table ApplyProjection(ResultColumn[] columns)
+    public Table ApplyProjection(ResultColumn[] columns)
     {
         var result = new List<Column>();
         for (var index = 0; index < columns.Length; index++)
@@ -148,7 +153,7 @@ public sealed class Table
             var column = columns[index];
             result.Add(column.Exp switch
             {
-                ColumnExp columnExp => columnExp.Value,
+                ColumnExp columnExp => Get(columnExp.Value.Header.Name),
                 _ => ToColumn(index, column)
             });
         }
@@ -173,4 +178,16 @@ public sealed class Table
         }
     }
 
+    public List<List<object?>> ToList()
+    {
+
+        return GetRows().Select(r => r.Data.ToList()).ToList();
+    }
+
+    public override string ToString()
+    {
+        return Utils.PrettyPrint.Table(
+            Schema.Select(col => $"{col.Name} : {col.ColumnType}").ToList(),
+            ToList());
+    }
 }
