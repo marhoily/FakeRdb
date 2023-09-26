@@ -127,7 +127,7 @@ public sealed class AstToIrVisitor : SQLiteParserBaseVisitor<IResult?>
             .ToArray();
         var filter = TryVisit<IExpression>(context.whereExpr);
         var groupBy = context._groupByExpr
-            .Select(c => Visit<ColumnExp>(c).Value.Header)
+            .Select(c => Visit<ColumnExp>(c).FullColumnName)
             .ToArray();
         return new SelectCore(tables, select, groupBy, filter);
     }
@@ -150,7 +150,7 @@ public sealed class AstToIrVisitor : SQLiteParserBaseVisitor<IResult?>
     public override IResult VisitOrder_by_stmt(SQLiteParser.Order_by_stmtContext context)
     {
         var columnExp = Visit<ColumnExp>(context.ordering_term().Single());
-        return new OrderBy(new[] { new OrderingTerm(columnExp.Value.Header) });
+        return new OrderBy(new[] { new OrderingTerm(columnExp.FullColumnName) });
     }
 
     public override IResult? VisitExpr(SQLiteParser.ExprContext context)
@@ -191,7 +191,7 @@ public sealed class AstToIrVisitor : SQLiteParserBaseVisitor<IResult?>
         {
             return new ResultColumnList(
                 _currentTables.Value.SelectMany(t => t.Columns)
-                    .Select(col => new ResultColumn(new ColumnExp(col), "*"))
+                    .Select(col => new ResultColumn(new ColumnExp(col.Header.FullName), "*"))
                     .ToArray());
         }
         var result = TryVisit<IExpression>(context.expr()) ?? throw new Exception();
@@ -224,7 +224,7 @@ public sealed class AstToIrVisitor : SQLiteParserBaseVisitor<IResult?>
             // It's not allowed to access aliases declared in SELECT while still in select
             [] when _alias.TryGet(columnName, out var exp) => exp,
             [] => throw Resources.ColumnNotFound(columnName),
-            [var c] => new ColumnExp(c),
+            [var c] => new ColumnExp(c.Header.FullName),
             _ => throw Resources.AmbiguousColumnReference(columnName)
         };
     }

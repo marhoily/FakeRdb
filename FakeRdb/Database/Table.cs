@@ -142,7 +142,7 @@ public sealed class Table : IResult
         var result = this;
         foreach (var orderingTerm in orderingTerms)
         {
-            var columnIndex = IndexOf(orderingTerm.Column.Name);
+            var columnIndex = IndexOf(orderingTerm.FullColumnName);
             result = new Table(Name, Headers)
                 .WithRows(Enumerable
                     .Range(0, RowCount)
@@ -167,8 +167,12 @@ public sealed class Table : IResult
 
     public int IndexOf(string columnName)
     {
-        var result = Array.FindIndex(Columns,
-            column => string.Equals(column.Header.Name, columnName, IgnoreCase));
+        var result =
+            Array.FindIndex(Columns, column => string
+                .Equals(column.Header.FullName, columnName, IgnoreCase));
+        if (result == -1)
+            result = Array.FindIndex(Columns, column => string
+                .Equals(column.Header.Name, columnName, IgnoreCase));
         if (result == -1)
             throw Resources.ColumnNotFound(columnName);
         return result;
@@ -183,7 +187,7 @@ public sealed class Table : IResult
             var id = column.Alias ?? column.Original;
             result.Add(column.Exp switch
             {
-                ColumnExp col => Get(col.Value.Header.FullName).Derive(column.Alias),
+                ColumnExp col => Get(col.FullColumnName).Derive(column.Alias),
                 AggregateExp => Get(id),
                 _ => ToColumn(i, column)
             });

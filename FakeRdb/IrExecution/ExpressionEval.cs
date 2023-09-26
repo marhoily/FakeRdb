@@ -22,7 +22,7 @@ public static class ExpressionEval
         return arg switch
         {
             BinaryExp binaryExp => binaryExp.Eval(table, rowIndex),
-            ColumnExp columnExp => table.Get(columnExp.Value.Header.FullName).Rows[rowIndex],
+            ColumnExp columnExp => table.Get(columnExp.FullColumnName).Rows[rowIndex],
             InExp inExp => inExp.Eval(table, rowIndex),
             LiteralExp literalExp => literalExp.Value.CoerceToLexicalAffinity(),
             ScalarExp scalarExp => scalarExp.Function(table, rowIndex, scalarExp.Args),

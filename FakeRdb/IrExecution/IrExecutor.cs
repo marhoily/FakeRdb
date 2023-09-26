@@ -47,13 +47,12 @@ public static class IrExecutor
     public static Table Select(Table[] tables,
         ResultColumn[] columns,
         IExpression? where,
-        ColumnHeader[] groupBy,
+        string[] groupBy,
         OrderingTerm[] ordering)
     {
         var product = CartesianProduct(tables);
         product = product.GroupBy(
-            groupBy.Select(c => product.Columns[c.ColumnIndex]).ToArray(),
-            columns);
+            groupBy.Select(product.Get).ToArray(), columns);
 
         if (where != null)
             product.ApplyFilter(where);
