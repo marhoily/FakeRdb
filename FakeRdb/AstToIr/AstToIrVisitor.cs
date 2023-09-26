@@ -24,6 +24,7 @@ public sealed class AstToIrVisitor : SQLiteParserBaseVisitor<IResult?>
     private readonly FakeDbParameterCollection _parameters;
     private ScopedValue<Table[]> _currentTables;
     private readonly HierarchicalAliasStore<IExpression> _alias = new();
+    private readonly Dictionary<string, Table> _tableAlias = new();
 
     public AstToIrVisitor(string originalSql, Database db, FakeDbParameterCollection parameters)
     {
@@ -118,9 +119,9 @@ public sealed class AstToIrVisitor : SQLiteParserBaseVisitor<IResult?>
     public override IResult VisitSelect_core(SQLiteParser.Select_coreContext context)
     {
         using var a = _alias.OpenScope();
-        var tableNames = context.table_or_subquery()
-            .Select(exp => exp.table_name().GetText().Unescape());
-        var tables = tableNames.Select(name => _db[name]).ToArray();
+        var tables = context.table_or_subquery()
+            .Select(Visit<Table>)
+            .ToArray();
         using var t = _currentTables.Set(tables);
         var select = context.result_column()
             .SelectMany(c => Visit<ResultColumnList>(c).List)
@@ -136,10 +137,10 @@ public sealed class AstToIrVisitor : SQLiteParserBaseVisitor<IResult?>
     {
         var tableName = context.qualified_table_name().GetText();
         var table = _db[tableName];
-        using var _ = _currentTables.Set(new [] {table});
+        using var _ = _currentTables.Set(new[] { table });
         var assignments = context.update_assignment()
             .Select(a => (
-                ColumnName: tableName+"."+a.column_name().GetText(),
+                ColumnName: tableName + "." + a.column_name().GetText(),
                 Value: Visit<IExpression>(a.expr())))
             .ToArray();
         var filter = TryVisit<IExpression>(context.where_clause()?.expr());
@@ -209,8 +210,9 @@ public sealed class AstToIrVisitor : SQLiteParserBaseVisitor<IResult?>
 
     public override IResult VisitColumn_access(SQLiteParser.Column_accessContext context)
     {
-        var tableName = context.table_name()?.GetText();
-        var tables = _db.TrySet(tableName) ?? _currentTables.Value;
+        var tableRef = context.table_name()?.GetText();
+        var tables = tableRef != null && _tableAlias.TryGetValue(tableRef, out var tbl) ? new[] { tbl }
+            : _db.TryGetTableList(tableRef) ?? _currentTables.Value;
         if (tables == null)
             throw new InvalidOperationException("Couldn't resolve table!");
 
@@ -240,9 +242,19 @@ public sealed class AstToIrVisitor : SQLiteParserBaseVisitor<IResult?>
     public override IResult VisitDelete_stmt(SQLiteParser.Delete_stmtContext context)
     {
         var tableName = context.qualified_table_name().GetText();
-        _currentTables.Set(new []{_db[tableName]});
+        _currentTables.Set(new[] { _db[tableName] });
         return new Affected(_db.Delete(tableName,
             TryVisit<IExpression>(context.expr())));
+    }
+
+    public override IResult VisitTable_or_subquery(SQLiteParser.Table_or_subqueryContext context)
+    {
+        var tableName = context.table_name().GetText().Unescape();
+        var table = _db[tableName];
+
+        if (context.table_alias() is { } alias)
+            _tableAlias[alias.GetText()] = table;
+        return table;
     }
 
     private T Visit<T>(IParseTree? tree)
