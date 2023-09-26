@@ -81,10 +81,9 @@ public sealed class Database : Dictionary<string, Table>
 
     public Table? Try(string? tableName)
     {
-        return tableName == null ? null : this[tableName];
+        return tableName == null 
+            ? null 
+            : TryGetValue(tableName, out var res) ? res : null;
     }
-    public ICollection<Table>? TryGetTableList(string? tableName)
-    {
-        return tableName == null ? null : new[] { this[tableName] };
-    }
+    
 }

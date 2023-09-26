@@ -210,27 +210,35 @@ public sealed class AstToIrVisitor : SQLiteParserBaseVisitor<IResult?>
 
     public override IResult VisitColumn_access(SQLiteParser.Column_accessContext context)
     {
-        var tableRef = context.table_name()?.GetText();
-        var tables = tableRef != null && _currentTables.Value
-                .TryGetValue(tableRef, out var tbl) 
-            ? new[] { tbl }
-            : _db.TryGetTableList(tableRef) ?? _currentTables.Value.Values;
-        if (tables == null)
-            throw new InvalidOperationException("Couldn't resolve table!");
+        return Inner() ?? throw Resources.ColumnNotFound(context.GetText());
 
-        var columnName = context.column_name().GetText().Unescape();
-        var candidates = tables
-            .Select(t => t.TryLocal(columnName))
-            .OfType<Column>()
-            .ToArray();
-        return candidates switch
+        IResult? Inner()
         {
-            // It's not allowed to access aliases declared in SELECT while still in select
-            [] when _alias.TryGet(columnName, out var exp) => exp,
-            [] => throw Resources.ColumnNotFound(columnName),
-            [var c] => new ColumnExp(c.Header.FullName),
-            _ => throw Resources.AmbiguousColumnReference(columnName)
-        };
+            var tableRef = context.table_name()?.GetText();
+            var table = tableRef != null && _currentTables.Value
+                .TryGetValue(tableRef, out var tbl)
+                ? tbl
+                : _db.Try(tableRef);
+            if (table == null && tableRef != null)
+                return null;
+            var tables = table != null
+                ? (ICollection<Table>)new[] { table }
+                : _currentTables.Value.Values;
+
+            var columnName = context.column_name().GetText().Unescape();
+            var candidates = tables
+                .Select(t => t.TryLocal(columnName))
+                .OfType<Column>()
+                .ToArray();
+            return candidates switch
+            {
+                // It's not allowed to access aliases declared in SELECT while still in select
+                [] when _alias.TryGet(columnName, out var exp) => exp,
+                [] => null,
+                [var c] => new ColumnExp(c.Header.FullName),
+                _ => throw Resources.AmbiguousColumnReference(columnName)
+            };
+        }
     }
 
     public override IResult VisitFunction_call(SQLiteParser.Function_callContext context)

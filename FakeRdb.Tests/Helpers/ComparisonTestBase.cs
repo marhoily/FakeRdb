@@ -70,13 +70,13 @@ public abstract class ComparisonTestBase : IDisposable
     {
         new[]
         {
-            "SQLite Error 1: 'no such table: (?<t>\\w+)'.",
-            "The given key '(?<t>\\w+)' was not present in the dictionary."
+            "SQLite Error 1: 'no such table: (?<t>[A-Za-z.]+)'.",
+            "The given key '(?<t>[A-Za-z.]+)' was not present in the dictionary."
         },
         new[]
         {
-            "SQLite Error 1: 'no such column: (?<t>\\w+)'.",
-            "Column (?<t>\\w+) is not found"
+            "SQLite Error 1: 'no such column: (?<t>[A-Za-z.]+)'.",
+            "Column (?<t>[A-Za-z.]+) is not found"
         },
         new[]
         {
@@ -88,7 +88,7 @@ public abstract class ComparisonTestBase : IDisposable
             "SQLite Error 1: 'ambiguous column name: (?<t>\\w+)'.",
             "Ambiguous column ref: (?<t>\\w+)"
         },
-    };
+     };
     // Makes sure actual error either matches the expected completely,
     // or equivalent to any of it counterparts in the lookup table, using Regex
     protected static void AssertErrorsMatch(string expected, string actual)

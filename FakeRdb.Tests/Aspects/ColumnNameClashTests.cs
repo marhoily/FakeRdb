@@ -49,4 +49,24 @@ public sealed class ColumnNameClashTests : ComparisonTestBase
             SELECT Country.Name, City.Name FROM Country, City
             """);
     }
+    [Fact]
+    public void Cross_Reference()
+    {
+        CompareAgainstSqlite(
+            """
+            SELECT * FROM Country
+            UNION
+            SELECT Country.Name FROM City
+            """);
+    }
+    [Fact]
+    public void Alias_Cross_Reference()
+    {
+        CompareAgainstSqlite(
+            """
+            SELECT * FROM Country as x
+            UNION
+            SELECT x.Name FROM City
+            """);
+    }
 }
