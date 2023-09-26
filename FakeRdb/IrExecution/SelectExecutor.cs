@@ -4,10 +4,17 @@ namespace FakeRdb;
 
 public static class SelectExecutor
 {
-    public static Table Select(Table[] tables, ResultColumn[] columns, IExpression? where,
+    public static Table Select(Table[] tables, 
+        ResultColumn[] columns, 
+        IExpression? where,
+        ColumnHeader[] groupBy,
         OrderingTerm[] ordering)
     {
         var product = CartesianProduct(tables);
+        product.GroupBy2(
+            groupBy.Select(c => product.Columns[c.ColumnIndex]).ToArray(),
+            columns);
+
         if (where != null)
             product.ApplyFilter(where);
 
@@ -28,7 +35,7 @@ public static class SelectExecutor
         static Table Recurse(Table head, Table[] tail)
         {
             if (tail.Length == 0) return head;
-            var result = head.ConcatColumns(tail[0]);
+            var result = head.ConcatHeaders(tail[0]);
             result.AddRows(from headRow in head.GetRows()
                            from tailRow in Recurse(tail[0], tail.Skip(1).ToArray()).GetRows()
                            select headRow.Concat(tailRow));

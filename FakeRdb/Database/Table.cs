@@ -15,6 +15,7 @@ public sealed class Table : IResult
 
     public Table(Column[] columns)
     {
+        columns.Select(c => c.Rows.Count).AssertAreAllEqual();
         Columns = columns;
     }
 
@@ -63,11 +64,16 @@ public sealed class Table : IResult
 
         return new Row(row);
     }
-   
 
-    public Table ConcatColumns(Table table)
+
+    public Table ConcatHeaders(Table table)
     {
         return new Table(Headers.Concat(table.Headers).ToArray());
+    }
+
+    public Table Concat(Table table)
+    {
+        return new Table(Columns.Concat(table.Columns).ToArray());
     }
 
     public IEnumerable<IGrouping<Row.CompositeKey, Row>> GroupBy(Func<Row, Row.CompositeKey> keySelector)
@@ -187,7 +193,7 @@ public sealed class Table : IResult
 
     public override string ToString()
     {
-        return Utils.PrettyPrint.Table(
+        return PrettyPrint.Table(
             Headers.Select(col => $"{col.Name} : {col.ColumnType}").ToList(),
             ToList());
     }
@@ -206,11 +212,44 @@ public sealed class Table : IResult
             .ToArray();
         var result = new Table(projection.Zip(rows.First())
             .Select((col, n) => new ColumnHeader(n,
-                col.First.Alias ?? col.First.Original, 
+                col.First.Alias ?? col.First.Original,
                 col.Second.CalculateEffectiveAffinity())));
 
         result.AddRows(rows);
         return result;
+    }
+    public Table GroupBy2(Column[] columns, ResultColumn[] projection)
+    {
+        var groups = Enumerable.Range(0, RowCount)
+            .GroupBy(rowIndex => new Row.CompositeKey(
+                columns.Select(c => c.Rows[rowIndex]).ToArray()))
+            .OrderBy(g => g.Key)  // Required to mimic grouping behavior of Sqlite
+            .ToList();
+        var rows = groups
+            .Select(g => projection.Select(col => col.Exp switch
+                {
+                    AggregateExp agg => agg.Function.Invoke(
+                        g.Select(GetRow).ToArray(), agg.Args),
+                    var otherExp => otherExp.Eval(this, g.First())
+                }))
+            .ToArray();
+        var nativeColumns = new Table(Columns
+            .Select(col => col with
+            {
+                Rows = groups
+                    .Select(g => col.Rows[g.First()])
+                    .ToList()
+            }).ToArray());
+        var columnHeaders = rows.Length == 0
+            ? projection.Select((col, n) => new ColumnHeader(n,
+                col.Alias ?? col.Original, TypeAffinity.NotSet))
+            : projection.Zip(rows.First())
+                .Select((col, n) => new ColumnHeader(n,
+                    col.First.Alias ?? col.First.Original,
+                    col.Second.CalculateEffectiveAffinity()));
+        var result = new Table(columnHeaders);
+        result.AddRows(rows);
+        return nativeColumns.Concat(result);
     }
 
     private static void ValidateSchema(Column[] x, Column[] y)

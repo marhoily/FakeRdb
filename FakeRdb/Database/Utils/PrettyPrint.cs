@@ -1,4 +1,4 @@
-﻿namespace FakeRdb.Utils;
+﻿namespace FakeRdb;
 
 public static class PrettyPrint
 {

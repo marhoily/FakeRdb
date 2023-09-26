@@ -23,7 +23,7 @@ public static class IrExecutor
     {
         return query.Columns.Any(c => c.Exp is AggregateExp)
             ? AggregateSelectExecutor.SelectAggregate(query.From.Single(), query.Columns, query.GroupBy)
-            : SelectExecutor.Select(query.From, query.Columns, query.Where, orderingTerms);
+            : SelectExecutor.Select(query.From, query.Columns, query.Where, query.GroupBy,orderingTerms);
     }
     private static Table ExecuteCompound(this Database db, ICompoundSelect query)
     {
