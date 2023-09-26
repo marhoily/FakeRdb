@@ -24,4 +24,13 @@ public sealed class CartesianProductTests : ComparisonTestBase
     {
         CompareAgainstSqlite("SELECT * FROM Country, City");
     }
+    [Fact]
+    public void Where_References_Different_Tables()
+    {
+        CompareAgainstSqlite(
+            """
+            SELECT * FROM Country, City
+            WHERE CountryName = 'USA' AND CityName = 'Berlin'
+            """);
+    }
 }
