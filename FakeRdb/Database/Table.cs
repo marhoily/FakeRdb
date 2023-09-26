@@ -138,11 +138,11 @@ public sealed class Table : IResult
         var result = this;
         foreach (var orderingTerm in orderingTerms)
         {
-            var comparer = Row.Comparer(orderingTerm.Column.ColumnIndex);
+            var columnIndex = IndexOf(orderingTerm.Column.Name);
             result = new Table(Headers)
                 .WithRows(Enumerable
                     .Range(0, RowCount)
-                    .OrderBy(GetRow, comparer)
+                    .OrderBy(GetRow, Row.Comparer(columnIndex))
                     .Select(GetRow));
         }
 
