@@ -45,20 +45,4 @@ public static class IrExecutor
 
         throw new ArgumentOutOfRangeException();
     }
-
-
-    public static IResult PostProcess(this IResult result)
-    {
-        if (result is not QueryResult q) return result;
-
-        var columns = q.Table.Columns.Select(col =>
-        {
-            if (col.Header.ColumnType != TypeAffinity.NotSet) return col;
-            var affinity = col.Rows.FirstOrDefault().GetTypeAffinity();
-            var newHeader = col.Header with { ColumnType = affinity };
-            return col with { Header = newHeader };
-        });
-        return q with { Table = new Table(columns.ToArray())};
-
-    }
 }

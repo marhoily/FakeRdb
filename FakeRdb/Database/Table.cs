@@ -269,5 +269,14 @@ public sealed class Table : IResult
         result.AddRows(resultData);
         return result;
     }
-
+    public Table ResolveColumnTypes()
+    {
+        return new Table(Columns.Select(col =>
+        {
+            if (col.Header.ColumnType != TypeAffinity.NotSet) return col;
+            var affinity = col.Rows.FirstOrDefault().GetTypeAffinity();
+            var newHeader = col.Header with { ColumnType = affinity };
+            return col with { Header = newHeader };
+        }).ToArray());
+    }
 }

@@ -20,11 +20,11 @@ public static class QueryExecutionPipeline
     public static DbDataReader ExecuteReader(this Database db, 
         string sql, FakeDbParameterCollection parameters)
     {
-     
         return db.Execute(sql, parameters) switch
         {
             Affected affected => new NoResultDataReader(affected.RecordsCount),
             QueryResult queryResult => new DataSetDbReader(queryResult),
+            Table t => new DataSetDbReader(t),
             var x => throw new ArgumentOutOfRangeException(x?.ToString())
         };
     }

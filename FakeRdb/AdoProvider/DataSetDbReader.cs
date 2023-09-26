@@ -2,31 +2,38 @@ namespace FakeRdb;
 
 public sealed class DataSetDbReader : DbDataReader
 {
-    private readonly QueryResult _queryResult;
+    private readonly Table _table;
+    private readonly int _recordsAffected = -1;
     private int _currentRow = -1;
 
     public DataSetDbReader(QueryResult queryResult)
     {
-        _queryResult = queryResult ?? throw new ArgumentNullException(nameof(queryResult));
+        _table = queryResult.Table;
+        _recordsAffected = queryResult.RecordsCount;
+    }
+
+    public DataSetDbReader(Table t)
+    {
+        _table = t;
     }
 
     public override int Depth => 0;
-    public override int FieldCount => _queryResult.Table.Columns.Length;
+    public override int FieldCount => _table.Columns.Length;
 
     public override object this[int ordinal] => GetValue(ordinal);
 
     public override object this[string name] => GetValue(GetOrdinal(name));
 
-    public override bool HasRows => _queryResult.Table.RowCount > 0;
+    public override bool HasRows => _table.RowCount > 0;
 
     public override bool IsClosed => false;
 
-    public override int RecordsAffected => _queryResult.RecordsCount;
+    public override int RecordsAffected => _recordsAffected;
 
     public override bool Read()
     {
         _currentRow++;
-        return _currentRow < _queryResult.Table.RowCount;
+        return _currentRow < _table.RowCount;
     }
 
     public override bool NextResult()
@@ -74,7 +81,7 @@ public sealed class DataSetDbReader : DbDataReader
 
     public override string GetDataTypeName(int ordinal)
     {
-        return _queryResult.Table.Columns[ordinal]
+        return _table.Columns[ordinal]
             .Header.ColumnType
             .ToString().ToUpperInvariant();
     }
@@ -127,14 +134,14 @@ public sealed class DataSetDbReader : DbDataReader
 
     public override string GetName(int ordinal)
     {
-        return _queryResult.Table.Columns[ordinal].Header.Name;
+        return _table.Columns[ordinal].Header.Name;
     }
 
     public override int GetOrdinal(string name)
     {
-        for (int i = 0; i < _queryResult.Table.Columns.Length; i++)
+        for (int i = 0; i < _table.Columns.Length; i++)
         {
-            if (string.Equals(_queryResult.Table.Columns[i].Header.Name, name, StringComparison.OrdinalIgnoreCase))
+            if (string.Equals(_table.Columns[i].Header.Name, name, StringComparison.OrdinalIgnoreCase))
             {
                 return i;
             }
@@ -150,12 +157,12 @@ public sealed class DataSetDbReader : DbDataReader
 
     public override object GetValue(int ordinal)
     {
-        return _queryResult.Table.Columns[ordinal].Rows[_currentRow] ?? DBNull.Value;
+        return _table.Columns[ordinal].Rows[_currentRow] ?? DBNull.Value;
     }
 
     public override int GetValues(object[] values)
     {
-        var count = Math.Min(values.Length, _queryResult.Table.Columns.Length);
+        var count = Math.Min(values.Length, _table.Columns.Length);
         for (int i = 0; i < count; i++)
         {
             values[i] = GetValue(i);
@@ -170,6 +177,6 @@ public sealed class DataSetDbReader : DbDataReader
 
     public override IEnumerator GetEnumerator()
     {
-        return _queryResult.Table.GetRows().GetEnumerator();
+        return _table.GetRows().GetEnumerator();
     }
 }
