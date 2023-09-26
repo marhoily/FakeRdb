@@ -193,7 +193,6 @@ public sealed class Table
     }
     public Table GroupBy(Column[] columns, ResultColumn[] projection)
     {
-
         var rows = Enumerable.Range(0, RowCount)
             .GroupBy(rowIndex => new Row.CompositeKey(
                 columns.Select(c => c.Rows[rowIndex]).ToArray()))
@@ -201,7 +200,7 @@ public sealed class Table
             .Select(g => projection.Select(col => col.Exp switch
             {
                 AggregateExp agg => agg.Function.Invoke(
-                    g.Select(GetRow).ToArray(), agg.Args).Value,
+                    g.Select(GetRow).ToArray(), agg.Args),
                 var otherExp => otherExp.Eval(this, g.First())
             }))
             .ToArray();

@@ -4,22 +4,24 @@ namespace FakeRdb;
 
 public static class ExpressionEval
 {
-    public static T Eval<T>(this IExpression exp, Row[] dataSet) => (T)exp.Eval(dataSet);
+    public static T Eval<T>(this IExpression exp, Row[] dataSet) => (T)exp.Eval(dataSet)!;
     public static T Eval<T>(this IExpression exp, Row dataSet) => (T)exp.Eval(dataSet)!;
 
     public static object? Eval(this IExpression arg)
     {
-        return arg switch {
+        return arg switch
+        {
             BinaryExp binaryExp => binaryExp.Eval(),
             BindExp bindExp => bindExp.Value,
             LiteralExp literalExp => literalExp.Value.CoerceToLexicalAffinity(),
             _ => throw new ArgumentOutOfRangeException(nameof(arg))
         };
     }
-    
+
     public static object? Eval(this IExpression arg, Row row)
     {
-        return arg switch {
+        return arg switch
+        {
             BinaryExp binaryExp => binaryExp.Eval(row),
             ColumnExp columnExp => row[columnExp.Value.Header],
             InExp inExp => inExp.Eval(row),
@@ -28,21 +30,23 @@ public static class ExpressionEval
             _ => throw new ArgumentOutOfRangeException(nameof(arg))
         };
     }
-  public static object? Eval(this IExpression arg, Table table, int rowIndex)
-  {
-      return arg switch {
-          BinaryExp binaryExp => binaryExp.Eval(table, rowIndex),
-          ColumnExp columnExp => columnExp.Value.Rows[rowIndex],
-          InExp inExp => inExp.Eval(table, rowIndex),
-          LiteralExp literalExp => literalExp.Value.CoerceToLexicalAffinity(),
-          ScalarExp scalarExp => scalarExp.Function(table.GetRow(rowIndex), scalarExp.Args),
-          _ => throw new ArgumentOutOfRangeException(nameof(arg))
-      };
-  }
-
-    private static object Eval(this IExpression arg, Row[] dataSet)
+    public static object? Eval(this IExpression arg, Table table, int rowIndex)
     {
-        return arg switch {
+        return arg switch
+        {
+            BinaryExp binaryExp => binaryExp.Eval(table, rowIndex),
+            ColumnExp columnExp => columnExp.Value.Rows[rowIndex],
+            InExp inExp => inExp.Eval(table, rowIndex),
+            LiteralExp literalExp => literalExp.Value.CoerceToLexicalAffinity(),
+            ScalarExp scalarExp => scalarExp.Function(table.GetRow(rowIndex), scalarExp.Args),
+            _ => throw new ArgumentOutOfRangeException(nameof(arg))
+        };
+    }
+
+    private static object? Eval(this IExpression arg, Row[] dataSet)
+    {
+        return arg switch
+        {
             AggregateExp aggregateExp => aggregateExp.Function(dataSet, aggregateExp.Args),
             _ => throw new ArgumentOutOfRangeException(nameof(arg))
         };
@@ -75,7 +79,7 @@ public static class ExpressionEval
             : arg.Right.GetTypeAffinity();
 
         var result = Calc(arg.Op, l.Coerce(coerceTo), r.Coerce(coerceTo));
-        
+
         /*
          * Any operators applied to column names, including the no-op unary "+" operator,
          * convert the column name into an expression which always has no affinity.
