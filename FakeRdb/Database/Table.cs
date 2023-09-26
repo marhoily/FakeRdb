@@ -192,12 +192,10 @@ public sealed class Table : IResult
         return GetRows().Select(r => r.Data.ToList()).ToList();
     }
 
-    public override string ToString()
-    {
-        return PrettyPrint.Table(
+    public string Print => PrettyPrint.Table(
             Headers.Select(col => $"{col.Name} : {col.ColumnType}").ToList(),
             ToList());
-    }
+
     public Table GroupBy(Column[] columns, ResultColumn[] projection)
     {
         if (columns.Length == 0 && !projection.Any(col => col.Exp is AggregateExp))
@@ -279,7 +277,7 @@ public sealed class Table : IResult
 
         var resultData = x.GetRows().ToList();
         resultData.AddRange(y.GetRows());
-        
+
         return new Table(x.Headers).WithRows(resultData);
 
     }

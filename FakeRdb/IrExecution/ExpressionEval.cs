@@ -109,6 +109,7 @@ public static class ExpressionEval
                 BinaryOperator.Less => x is IComparable c ? c.CompareTo(y) == -1 : throw new NotSupportedException(),
                 BinaryOperator.Addition => (dynamic)x + (dynamic)y,
                 BinaryOperator.Concatenation => string.Concat(x, y),
+                BinaryOperator.And => (bool)x && (bool)y,
                 _ => throw new ArgumentOutOfRangeException(op.ToString())
             });
         }
