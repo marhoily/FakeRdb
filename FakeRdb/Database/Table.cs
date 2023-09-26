@@ -17,7 +17,7 @@ public sealed class Table
     {
         Schema = schema;
         Columns = schema.Columns
-            .Select(col => new Column(col))
+            .Select(col => new Column(col, new List<object?>()))
             .ToArray();
     }
 
@@ -25,16 +25,16 @@ public sealed class Table
     public void Add(object?[] oneRow)
     {
         for (var i = 0; i < oneRow.Length; i++) 
-            Columns[i].Add(oneRow[i]);
+            Columns[i].Rows.Add(oneRow[i]);
     }
     public void AddRows(IEnumerable<Row> rows)
     {
         foreach (var r in rows)
             for (var i = 0; i < r.Data.Length; i++) 
-                Columns[i].Add(r.Data[i]);
+                Columns[i].Rows.Add(r.Data[i]);
     }
 
-    public int RowCount => Columns[0].Count;
+    public int RowCount => Columns[0].Rows.Count;
     public IEnumerable<Row> GetRows()
     {
         for (var i = 0; i < RowCount; i++)
@@ -45,7 +45,7 @@ public sealed class Table
         var row = new object?[Columns.Length];
         for (var j = 0; j < Columns.Length; j++)
         {
-            row[j] = Columns[j][rowIndex];
+            row[j] = Columns[j].Rows[rowIndex];
         }
         return new Row(row);
     }
@@ -79,14 +79,14 @@ public sealed class Table
     {
         foreach (var column in Columns)
         {
-            column.RemoveAt(rowIndex);
+            column.Rows.RemoveAt(rowIndex);
         }
     }
 
 
     public void Set(int rowIndex, int columnIndex, object? value)
     {
-        Columns[columnIndex][rowIndex] = value;
+        Columns[columnIndex].Rows[rowIndex] = value;
     }
 
     public void ApplyFilter(IExpression filter)
