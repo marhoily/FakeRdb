@@ -4,7 +4,7 @@ namespace FakeRdb;
 
 public static class IrExecutor
 {
-    public static QueryResult Execute(this Database db, SelectStmt stmt)
+    public static Table Execute(this Database db, SelectStmt stmt)
     {
         // If it's just a core query, we must directly
         // execute it with the ordering terms
@@ -13,22 +13,19 @@ public static class IrExecutor
 
         // If there are multiple cores connected by "UNION" or "EXCEPT"
         // execute all of them without ordering terms first...
-        var result = db.ExecuteCompound(stmt.Query);
-        // ...and then do the ordering.
-        foreach (var orderingTerm in stmt.OrderingTerms)
-            result.Data.Sort(Row.Comparer(
-                result.Schema.IndexOf(orderingTerm.Column)));
-        return result;
+        return db.ExecuteCompound(stmt.Query)
+            // ...and then do the ordering.
+            .OrderBy(stmt.OrderingTerms);
 
     }
 
-    private static QueryResult Execute(this SelectCore query, params OrderingTerm[] orderingTerms)
+    private static Table Execute(this SelectCore query, params OrderingTerm[] orderingTerms)
     {
         return query.Columns.Any(c => c.Exp is AggregateExp)
             ? AggregateSelectExecutor.SelectAggregate(query.From.Single(), query.Columns, query.GroupBy)
             : SelectExecutor.Select(query.From, query.Columns, query.Where, orderingTerms);
     }
-    private static QueryResult ExecuteCompound(this Database db, ICompoundSelect query)
+    private static Table ExecuteCompound(this Database db, ICompoundSelect query)
     {
         if (query is SelectCore core)
             return core.Execute();
@@ -38,10 +35,10 @@ public static class IrExecutor
             var right = db.ExecuteCompound(compound.Right);
             return compound.Operator switch
             {
-                CompoundOperator.Union => Union(left, right),
-                CompoundOperator.UnionAll => UnionAll(left, right),
-                CompoundOperator.Intersect => Intersect(left, right),
-                CompoundOperator.Except => Except(left, right),
+                CompoundOperator.Union => Table.Union(left, right),
+                CompoundOperator.UnionAll => Table.UnionAll(left, right),
+                CompoundOperator.Intersect => Table.Intersect(left, right),
+                CompoundOperator.Except => Table.Except(left, right),
                 _ => throw new ArgumentOutOfRangeException()
             };
         }
@@ -49,69 +46,19 @@ public static class IrExecutor
         throw new ArgumentOutOfRangeException();
     }
 
-    private static void ValidateSchema(ResultSchema x, ResultSchema y)
-    {
-        if (x.Columns.Length != y.Columns.Length)
-        {
-            throw new ArgumentException("SELECTs to the left and right of UNION do not have the same number of result columns");
-        }
-    }
-    private static QueryResult Union(QueryResult x, QueryResult y)
-    {
-        ValidateSchema(x.Schema, y.Schema);
-
-        // Use Distinct to remove duplicates. This assumes that List<object?> implements appropriate equality semantics.
-        var resultData = x.Data.Concat(y.Data)
-            .Distinct(Row.EqualityComparer)
-            .Order(Row.Comparer(0))
-            .ToList();
-
-        return new QueryResult(x.Schema, resultData);
-    }
-    private static QueryResult Intersect(QueryResult x, QueryResult y)
-    {
-        ValidateSchema(x.Schema, y.Schema);
-        var resultData = x.Data
-            .Intersect(y.Data, Row.EqualityComparer)
-            .Order(Row.Comparer(0))
-            .ToList();
-        return new QueryResult(x.Schema, resultData);
-    }
-    private static QueryResult Except(QueryResult x, QueryResult y)
-    {
-        ValidateSchema(x.Schema, y.Schema);
-
-        var resultData = x.Data
-            .Except(y.Data, Row.EqualityComparer)
-            .Order(Row.Comparer(0))
-            .ToList();
-
-        return new QueryResult(x.Schema, resultData);
-    }
-    private static QueryResult UnionAll(QueryResult x, QueryResult y)
-    {
-        ValidateSchema(x.Schema, y.Schema);
-        var resultData = new List<List<object?>>(x.Data);
-        resultData.AddRange(y.Data);
-        return new QueryResult(x.Schema, resultData);
-    }
 
     public static IResult PostProcess(this IResult result)
     {
         if (result is not QueryResult q) return result;
 
-        var columns = q.Schema.Columns;
-        var firstRow = q.Data.FirstOrDefault();
-        for (var i = 0; i < columns.Length; i++)
+        var columns = q.Table.Columns.Select(col =>
         {
-            if (columns[i].ColumnType != TypeAffinity.NotSet) continue;
-            columns[i] = columns[i] with
-            {
-                ColumnType = firstRow != null
-                    ? firstRow[i].GetTypeAffinity()
-                    : TypeAffinity.Blob
-            };
-        }
-        return result;
+            if (col.Header.ColumnType != TypeAffinity.NotSet) return col;
+            var affinity = col.Rows.FirstOrDefault().GetTypeAffinity();
+            var newHeader = col.Header with { ColumnType = affinity };
+            return col with { Header = newHeader };
+        });
+        return q with { Table = new Table(columns.ToArray())};
+
     }
 }

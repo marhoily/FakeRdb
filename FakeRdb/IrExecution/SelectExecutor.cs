@@ -4,7 +4,7 @@ namespace FakeRdb;
 
 public static class SelectExecutor
 {
-    public static QueryResult Select(Table[] tables, ResultColumn[] columns, IExpression? where,
+    public static Table Select(Table[] tables, ResultColumn[] columns, IExpression? where,
         OrderingTerm[] ordering)
     {
         var product = CartesianProduct(tables);
@@ -13,9 +13,7 @@ public static class SelectExecutor
 
         // We cannot take sorting out of here to the later stages
         // because the projection can throw the key columns away
-        var data = product.OrderBy(ordering).Project(columns);
-        return new QueryResult(new ResultSchema(
-            data.Schema.Select(c => c.ToDefinition()).ToArray()), data.ToList());
+        return product.OrderBy(ordering).Project(columns);
     }
 
     private static Table CartesianProduct(Table[] tables)

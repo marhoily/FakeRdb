@@ -24,7 +24,7 @@ public interface IR : IResult
     public sealed record ScalarExp(ScalarFunction Function, IExpression[] Args) : IExpression;
     public sealed record ColumnExp(Column Value) : IExpression;
     public sealed record LiteralExp(string Value) : IExpression;
-    public sealed record InExp(IExpression Needle, QueryResult Haystack) : IExpression;
+    public sealed record InExp(IExpression Needle, Column Haystack) : IExpression;
 
     public sealed record ValuesTable(ValuesRow[] Rows) : IResult;
     public sealed record ValuesRow(IExpression[] Cells);

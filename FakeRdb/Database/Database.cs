@@ -8,9 +8,9 @@ public sealed class Database : Dictionary<string, Table>
     {
         var table = this[tableName];
         if (columns.Length == 0) // TODO: Should it be here or in outer method? Is there more efficient way?
-            columns = table.Schema.Select(c => c.Name).ToArray();
+            columns = table.Headers.Select(c => c.Name).ToArray();
 
-        var columnGenerator = table.Schema
+        var columnGenerator = table.Headers
             .Select(PrepareColumnValueGenerator)
             .ToArray();
 

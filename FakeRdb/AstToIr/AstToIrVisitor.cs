@@ -99,7 +99,8 @@ public sealed class AstToIrVisitor : SQLiteParserBaseVisitor<IResult?>
         var stmt = orderBy != null
             ? new SelectStmt(select, orderBy.Terms)
             : new SelectStmt(select);
-        return _db.Execute(stmt).PostProcess();
+        var execute = new QueryResult(_db.Execute(stmt));
+        return execute.PostProcess();
     }
 
     public override IResult VisitSelect_expr(SQLiteParser.Select_exprContext context)
@@ -172,7 +173,8 @@ public sealed class AstToIrVisitor : SQLiteParserBaseVisitor<IResult?>
         var right = Visit(context.children.Last()) ?? throw new NotImplementedException();
         if (operand == SQLiteLexer.IN_)
         {
-            return new InExp(left, (QueryResult)right);
+            var table = (QueryResult)right;
+            return new InExp(left, table.Table.Columns.Single());
         }
 
         var op = context.ToBinaryOperator(operand);

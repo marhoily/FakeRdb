@@ -2,14 +2,14 @@ using static FakeRdb.IR;
 
 namespace FakeRdb;
 
-public sealed class Table
+public sealed class Table : IResult
 {
     private const StringComparison IgnoreCase = StringComparison.InvariantCultureIgnoreCase;
 
     public static readonly Table Empty =
         new(Array.Empty<ColumnHeader>());
     public Column[] Columns { get; }
-    public IEnumerable<ColumnHeader> Schema => Columns.Select(c => c.Header);
+    public IEnumerable<ColumnHeader> Headers => Columns.Select(c => c.Header);
 
     private int _autoincrement;
 
@@ -63,10 +63,11 @@ public sealed class Table
 
         return new Row(row);
     }
+   
 
     public Table ConcatColumns(Table table)
     {
-        return new Table(Schema.Concat(table.Schema).ToArray());
+        return new Table(Headers.Concat(table.Headers).ToArray());
     }
 
     public IEnumerable<IGrouping<Row.CompositeKey, Row>> GroupBy(Func<Row, Row.CompositeKey> keySelector)
@@ -109,7 +110,7 @@ public sealed class Table
 
     public Table Clone()
     {
-        var result = new Table(Schema);
+        var result = new Table(Headers);
         result.AddRows(GetRows());
         return result;
     }
@@ -119,9 +120,8 @@ public sealed class Table
         var result = this;
         foreach (var orderingTerm in orderingTerms)
         {
-            var comparer = Row.Comparer(
-                orderingTerm.Column.ColumnIndex);
-            var derived = new Table(Schema);
+            var comparer = Row.Comparer(orderingTerm.Column.ColumnIndex);
+            var derived = new Table(Headers);
             derived.AddRows(
                 Enumerable.Range(0, RowCount)
                     .OrderBy(GetRow, comparer)
@@ -188,7 +188,7 @@ public sealed class Table
     public override string ToString()
     {
         return Utils.PrettyPrint.Table(
-            Schema.Select(col => $"{col.Name} : {col.ColumnType}").ToList(),
+            Headers.Select(col => $"{col.Name} : {col.ColumnType}").ToList(),
             ToList());
     }
     public Table GroupBy(Column[] columns, ResultColumn[] projection)
@@ -212,4 +212,62 @@ public sealed class Table
         result.AddRows(rows);
         return result;
     }
+
+    private static void ValidateSchema(Column[] x, Column[] y)
+    {
+        if (x.Length != y.Length)
+        {
+            throw new ArgumentException("SELECTs to the left and right of UNION do not have the same number of result columns");
+        }
+    }
+    public static Table Union(Table x, Table y)
+    {
+        ValidateSchema(x.Columns, y.Columns);
+
+        // Use Distinct to remove duplicates. This assumes that List<object?> implements appropriate equality semantics.
+        var resultData = x.GetRows().Concat(y.GetRows())
+            .Distinct(Row.EqualityComparer)
+            .Order(Row.Comparer(0))
+            .ToList();
+
+        var result = new Table(x.Headers);
+        result.AddRows(resultData);
+        return result;
+    }
+    public static Table Intersect(Table x, Table y)
+    {
+        ValidateSchema(x.Columns, y.Columns);
+        var resultData = x.GetRows()
+            .Intersect(y.GetRows(), Row.EqualityComparer)
+            .Order(Row.Comparer(0))
+            .ToList();
+        var result = new Table(x.Headers);
+        result.AddRows(resultData);
+        return result;
+    }
+    public static Table Except(Table x, Table y)
+    {
+        ValidateSchema(x.Columns, y.Columns);
+
+        var resultData = x.GetRows()
+            .Except(y.GetRows(), Row.EqualityComparer)
+            .Order(Row.Comparer(0))
+            .ToList();
+
+        var result = new Table(x.Headers);
+        result.AddRows(resultData);
+        return result;
+    }
+    public static Table UnionAll(Table x, Table y)
+    {
+        ValidateSchema(x.Columns, y.Columns);
+
+        var resultData = x.GetRows().ToList();
+        resultData.AddRange(y.GetRows());
+
+        var result = new Table(x.Headers);
+        result.AddRows(resultData);
+        return result;
+    }
+
 }

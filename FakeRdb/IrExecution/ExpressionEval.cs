@@ -117,14 +117,14 @@ public static class ExpressionEval
     private static object Eval(this InExp arg, Row dataSet)
     {
         var n = arg.Needle.Eval(dataSet);
-        var nn = n.Coerce(arg.Haystack.Schema.Columns.Single().ColumnType);
-        return arg.Haystack.Data.Any(r => Equals(nn, r[0]));
+        var nn = n.Coerce(arg.Haystack.Header.ColumnType);
+        return arg.Haystack.Rows.Any(f => Equals(nn, f));
     }
     private static object Eval(this InExp arg, Table table, int rowIndex)
     {
         var n = arg.Needle.Eval(table, rowIndex);
-        var nn = n.Coerce(arg.Haystack.Schema.Columns.Single().ColumnType);
-        return arg.Haystack.Data.Any(r => Equals(nn, r[0]));
+        var nn = n.Coerce(arg.Haystack.Header.ColumnType);
+        return arg.Haystack.Rows.Any(f => Equals(nn, f));
     }
 
     public static object? Invoke(this AggregateExp arg)
