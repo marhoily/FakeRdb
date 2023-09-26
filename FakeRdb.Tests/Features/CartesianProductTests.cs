@@ -33,4 +33,13 @@ public sealed class CartesianProductTests : ComparisonTestBase
             WHERE CountryName = 'USA' AND CityName = 'Berlin'
             """);
     }
+    [Fact]
+    public void Effective_Join()
+    {
+        CompareAgainstSqlite(
+            """
+            SELECT * FROM Country, City
+            WHERE CountryName = CityName
+            """);
+    }
 }

@@ -50,6 +50,15 @@ public sealed class ColumnNameClashTests : ComparisonTestBase
             """);
     }
     [Fact]
+    public void Disambiguate_Column_Name_In_Where()
+    {
+        CompareAgainstSqlite(
+            """
+            SELECT * FROM Country, City
+            WHERE Country.Name = 'USA' AND Country.Name = 'Berlin'
+            """);
+    }
+    [Fact]
     public void Cross_Reference()
     {
         CompareAgainstSqlite(

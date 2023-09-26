@@ -45,7 +45,19 @@ public sealed class JoinTests : ComparisonTestBase
     }
 
     [Fact]
-    public void JoinWithCountryAndGroupByContinent()
+    public void Cartesian_Style()
+    {
+        CompareAgainstSqlite(
+            """
+            SELECT City.Name, Country.Continent 
+            FROM City, Country
+            WHERE City.Country = Country.CountryName 
+            """
+        );
+    }
+
+    [Fact]
+    public void Simplest_Join()
     {
         CompareAgainstSqlite(
             """
@@ -55,6 +67,4 @@ public sealed class JoinTests : ComparisonTestBase
             """
         );
     }
-
-
 }
