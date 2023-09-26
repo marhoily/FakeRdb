@@ -145,7 +145,7 @@ public sealed class Table
         return result;
     }
 
-    public Table ApplyProjection(ResultColumn[] columns)
+    public Table Project(ResultColumn[] columns)
     {
         var result = new List<Column>();
         for (var index = 0; index < columns.Length; index++)

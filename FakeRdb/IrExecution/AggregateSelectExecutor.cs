@@ -61,7 +61,7 @@ public static class AggregateSelectExecutor
                 _ => throw new ArgumentOutOfRangeException()
             };
 
-        // Most operations make sqlite loose the affinity of the original column.
+        // Most operations make sqlite lose the affinity of the original column.
         // In that case, to determine the type of the result column
         // effective affinity of the first-row value is used.
         var schema = projection
