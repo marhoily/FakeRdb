@@ -122,7 +122,7 @@ public sealed class AstToIrVisitor : SQLiteParserBaseVisitor<IResult?>
         using var t = _currentTables.Set(new Dictionary<string, Table>());
         var tables = context.table_or_subquery()
             .Select(Visit<Table>)
-            .ToArray();
+            .ToList();
         var select = context.result_column()
             .SelectMany(c => Visit<ResultColumnList>(c).List)
             .ToArray();
@@ -130,7 +130,15 @@ public sealed class AstToIrVisitor : SQLiteParserBaseVisitor<IResult?>
         var groupBy = context._groupByExpr
             .Select(c => Visit<ColumnExp>(c).FullColumnName)
             .ToArray();
-        return new SelectCore(tables, select, groupBy, filter);
+        // EquiJoins and NonEquiJoins
+        var join = TryVisit<Join>(context.join_clause());
+        if (join != null)
+        {
+            filter = Expr.And(filter, join.Constraint);
+            tables.Add(join.Left);
+            tables.Add(join.Right);
+        }
+        return new SelectCore(tables.ToArray(), select, groupBy, filter);
     }
 
     public override IResult VisitUpdate_stmt(Update_stmtContext context)
@@ -272,6 +280,19 @@ public sealed class AstToIrVisitor : SQLiteParserBaseVisitor<IResult?>
         var table = _db[tableName];
         _currentTables.Value.Add(alias ?? tableName, table);
         return table;
+    }
+
+    public override IResult VisitJoin_clause(Join_clauseContext context)
+    {
+        var left = Visit<Table>(context.table_or_subquery(0));
+        var right = Visit<Table>(context.table_or_subquery(1));
+        var constraint = Visit<IExpression>(context.join_constraint(0));
+        var op = context.join_operator(0).ToJoinOperator();
+        return new Join(left, op, right, constraint);
+    }
+    public override IResult VisitJoin_constraint(Join_constraintContext context)
+    {
+        return Visit<IExpression>(context.expr());
     }
 
     private T Visit<T>(IParseTree? tree)

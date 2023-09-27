@@ -3,6 +3,19 @@ using static FakeRdb.IR;
 
 namespace FakeRdb;
 
+[Flags]
+public enum JoinOperator
+{
+    None = 0,
+    Natural = 1 << 0,
+    Left = 1 << 1,
+    Outer = 1 << 2,
+    Inner = 1 << 3,
+    Cross = 1 << 4,
+
+    LeftOuter = JoinOperator.Left | JoinOperator.Outer 
+}
+
 public static class EnumConversions
 {
     public static BinaryOperator ToBinaryOperator(this SQLiteParser.ExprContext context, int tokenType)
@@ -54,6 +67,19 @@ public static class EnumConversions
             _ => throw new InvalidOperationException("WTF?")
         };
         return compoundOperator;
+    }
+
+    public static JoinOperator ToJoinOperator(this SQLiteParser.Join_operatorContext context)
+    {
+        var result = JoinOperator.None;
+
+        if (context.NATURAL_() != null) result |= JoinOperator.Natural;
+        if (context.LEFT_() != null) result |= JoinOperator.Left;
+        if (context.OUTER_() != null) result |= JoinOperator.Outer;
+        if (context.INNER_() != null) result |= JoinOperator.Inner;
+        if (context.CROSS_() != null) result |= JoinOperator.Cross;
+
+        return result;
     }
 
     public static IResult ToFunctionCall(this string functionName, IExpression[] args)

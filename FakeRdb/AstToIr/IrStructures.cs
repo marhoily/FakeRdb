@@ -12,6 +12,7 @@ public interface IR : IResult
     public sealed record SelectStmt(ICompoundSelect Query, params OrderingTerm[] OrderingTerms) : IR;
     public sealed record CompoundSelect(CompoundOperator Operator, ICompoundSelect Left, ICompoundSelect Right) : ICompoundSelect;
     public sealed record SelectCore(Table[] From, ResultColumn[] Columns, string[] GroupBy, IExpression? Where) : ICompoundSelect;
+    public sealed record Join(Table Left, JoinOperator Op, Table Right, IExpression Constraint) : IR;
     public sealed record OrderBy(OrderingTerm[] Terms) : IR;
     public sealed record OrderingTerm(string FullColumnName) : IR;
 
