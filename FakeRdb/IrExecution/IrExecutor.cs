@@ -21,9 +21,14 @@ public static class IrExecutor
 
     private static Table Execute(this SelectCore query, params OrderingTerm[] orderingTerms)
     {
-        var product = CartesianProduct(query.From);
-        if (query.Where != null)
-            product.ApplyFilter(query.Where);
+        var singleSource = query.AlternativeSources.Single();
+        var product = CartesianProduct(
+            singleSource
+                .SingleTableConditions
+                .Select(c => c.Table).ToArray());
+
+        if (singleSource.GeneralCondition != null)
+            product.ApplyFilter(singleSource.GeneralCondition);
 
         var grouped = product.GroupBy(query.GroupBy
             .Select(product.Get).ToArray(), query.Columns);

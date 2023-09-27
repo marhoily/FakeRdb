@@ -14,4 +14,6 @@ public static class Expr
             _ => new BinaryExp(BinaryOperator.And, x, y)
         };
     }
+
+    public static readonly IExpression True = new LiteralExp("True");
 }

@@ -12,7 +12,9 @@ namespace FakeRdb;
 ///     <item>Dereference aliases</item>
 ///     <item>Unquote and parse literals</item>
 ///     <item>Bind SQL parameters</item>
-///     <item>Distinguish between plain and aggregate functions</item>
+///     <item>Simplify constant expressions</item>
+///     <item>Push single-table predicates closer to their tables</item>
+///     <item>Recognize equi-join predicates</item>
 /// TODO:
 ///     <item>Check function call argument types</item>
 /// 
@@ -20,6 +22,9 @@ namespace FakeRdb;
 /// </summary>
 public sealed class AstToIrVisitor : SQLiteParserBaseVisitor<IResult?>
 {
+    // ReSharper disable once NotAccessedPositionalProperty.Local
+    private sealed record Join(Table Left, JoinOperator Op, Table Right, IExpression Constraint) : IR;
+
     private readonly string _originalSql;
     private readonly Database _db;
     private readonly FakeDbParameterCollection _parameters;
@@ -138,7 +143,11 @@ public sealed class AstToIrVisitor : SQLiteParserBaseVisitor<IResult?>
             tables.Add(join.Left);
             tables.Add(join.Right);
         }
-        return new SelectCore(tables.ToArray(), select, groupBy, filter);
+
+
+        var alternativeSources = ConditionAnalyzer
+            .BuildAlternativeSources(tables, filter);
+        return new SelectCore(alternativeSources, select, groupBy);
     }
 
     public override IResult VisitUpdate_stmt(Update_stmtContext context)

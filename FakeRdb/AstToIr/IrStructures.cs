@@ -11,8 +11,21 @@ public interface IR : IResult
 
     public sealed record SelectStmt(ICompoundSelect Query, params OrderingTerm[] OrderingTerms) : IR;
     public sealed record CompoundSelect(CompoundOperator Operator, ICompoundSelect Left, ICompoundSelect Right) : ICompoundSelect;
-    public sealed record SelectCore(Table[] From, ResultColumn[] Columns, string[] GroupBy, IExpression? Where) : ICompoundSelect;
-    public sealed record Join(Table Left, JoinOperator Op, Table Right, IExpression Constraint) : IR;
+    /// <summary>
+    /// Represents the core part of a SELECT query. This class is built from
+    /// multiple `DisjunctiveQuery` which collectively serve as the data sources 
+    /// for the query. Each "DisjunctiveQuery" instance encapsulates a disjunction
+    /// (logical OR) of sets of conditions (alternatives) that together form a valid
+    /// 'scenario' or 'case' for fetching records.
+    ///
+    /// <p>In this way, the "Sources" parameter effectively describes all the different
+    /// combinations of conditions that would satisfy the SELECT query, onto which
+    /// a projection ("Columns") and grouping ("GroupBy") are applied.</p>
+    /// </summary>
+    public sealed record SelectCore(
+        CompositeCondition[] AlternativeSources,
+        ResultColumn[] Columns,
+        string[] GroupBy) : ICompoundSelect;
     public sealed record OrderBy(OrderingTerm[] Terms) : IR;
     public sealed record OrderingTerm(string FullColumnName) : IR;
 
@@ -27,6 +40,22 @@ public interface IR : IResult
     public sealed record LiteralExp(string Value) : IExpression;
     public sealed record InExp(IExpression Needle, Column Haystack) : IExpression;
 
+    public sealed record CompositeCondition(
+        SingleTableCondition[] SingleTableConditions,
+        EquiJoinCondition[] EquiJoinConditions,
+        IExpression? GeneralCondition);
+
+    /// <summary>
+    /// Represents conditions specific to a single table.
+    /// The Filter should only involve columns from one table and contain no OR/AND.
+    /// </summary>
+    public sealed record SingleTableCondition(Table Table, IExpression Filter);
+
+    public sealed record EquiJoinCondition(
+        string LeftTable, string LeftColumn, 
+        string RightTable, string RightColumn);
+
+  
     public sealed record ValuesTable(ValuesRow[] Rows) : IResult;
     public sealed record ValuesRow(IExpression[] Cells);
 }
