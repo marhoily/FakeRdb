@@ -10,9 +10,6 @@
       <NamedTestSelector>
         <TestName>FakeRdb.Tests.MultiTableSelectTests.Should_Fill_In_The_Tables</TestName>
       </NamedTestSelector>
-      <NamedTestSelector>
-        <TestName>FakeRdb.Tests.JoinTests.Simplest_Join</TestName>
-      </NamedTestSelector>
     </IgnoredTests>
   </Settings>
 </ProjectConfiguration>

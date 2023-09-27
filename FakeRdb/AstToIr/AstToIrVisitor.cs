@@ -1,5 +1,6 @@
 using Antlr4.Runtime.Tree;
 using static FakeRdb.IR;
+using static SQLiteParser;
 
 namespace FakeRdb;
 
@@ -46,12 +47,12 @@ public sealed class AstToIrVisitor : SQLiteParserBaseVisitor<IResult?>
         };
     }
 
-    public override IResult? VisitSql_stmt(SQLiteParser.Sql_stmtContext context)
+    public override IResult? VisitSql_stmt(Sql_stmtContext context)
     {
         return VisitChildren(context);
     }
 
-    public override IResult? VisitCreate_table_stmt(SQLiteParser.Create_table_stmtContext context)
+    public override IResult? VisitCreate_table_stmt(Create_table_stmtContext context)
     {
         var tableName = context.table_name().GetText();
         var columns = context.column_def().Select((col, n) =>
@@ -65,7 +66,7 @@ public sealed class AstToIrVisitor : SQLiteParserBaseVisitor<IResult?>
         return null;
     }
 
-    public override IResult VisitInsert_stmt(SQLiteParser.Insert_stmtContext context)
+    public override IResult VisitInsert_stmt(Insert_stmtContext context)
     {
         /*
          * The right-hand operand of an IN or NOT IN operator has no
@@ -83,7 +84,7 @@ public sealed class AstToIrVisitor : SQLiteParserBaseVisitor<IResult?>
         return new Affected(valuesTable.Rows.Length);
     }
 
-    public override IResult VisitValues_clause(SQLiteParser.Values_clauseContext context)
+    public override IResult VisitValues_clause(Values_clauseContext context)
     {
         return new ValuesTable(context.value_row()
             .Select(r => new ValuesRow(r.expr()
@@ -92,7 +93,7 @@ public sealed class AstToIrVisitor : SQLiteParserBaseVisitor<IResult?>
             .ToArray());
     }
 
-    public override IResult VisitSelect_stmt(SQLiteParser.Select_stmtContext context)
+    public override IResult VisitSelect_stmt(Select_stmtContext context)
     {
         var select = Visit<ICompoundSelect>(context.select_expr());
         var orderBy = TryVisit<OrderBy>(context.order_by_stmt());
@@ -102,7 +103,7 @@ public sealed class AstToIrVisitor : SQLiteParserBaseVisitor<IResult?>
         return _db.Execute(stmt).ResolveColumnTypes();
     }
 
-    public override IResult VisitSelect_expr(SQLiteParser.Select_exprContext context)
+    public override IResult VisitSelect_expr(Select_exprContext context)
     {
         var right = Visit<ICompoundSelect>(context.select_core());
         var left = TryVisit<ICompoundSelect>(context.select_expr());
@@ -115,7 +116,7 @@ public sealed class AstToIrVisitor : SQLiteParserBaseVisitor<IResult?>
         return new CompoundSelect(op, left, right);
     }
 
-    public override IResult VisitSelect_core(SQLiteParser.Select_coreContext context)
+    public override IResult VisitSelect_core(Select_coreContext context)
     {
         using var a = _alias.OpenScope();
         using var t = _currentTables.Set(new Dictionary<string, Table>());
@@ -132,7 +133,7 @@ public sealed class AstToIrVisitor : SQLiteParserBaseVisitor<IResult?>
         return new SelectCore(tables, select, groupBy, filter);
     }
 
-    public override IResult VisitUpdate_stmt(SQLiteParser.Update_stmtContext context)
+    public override IResult VisitUpdate_stmt(Update_stmtContext context)
     {
         var tableName = context.qualified_table_name().GetText();
         var table = _db[tableName];
@@ -148,13 +149,13 @@ public sealed class AstToIrVisitor : SQLiteParserBaseVisitor<IResult?>
         return new Affected(recordsAffected);
     }
 
-    public override IResult VisitOrder_by_stmt(SQLiteParser.Order_by_stmtContext context)
+    public override IResult VisitOrder_by_stmt(Order_by_stmtContext context)
     {
         var columnExp = Visit<ColumnExp>(context.ordering_term().Single());
         return new OrderBy(new[] { new OrderingTerm(columnExp.FullColumnName) });
     }
 
-    public override IResult? VisitExpr(SQLiteParser.ExprContext context)
+    public override IResult? VisitExpr(ExprContext context)
     {
         if (context.BIND_PARAMETER() is { } bind)
         {
@@ -164,7 +165,7 @@ public sealed class AstToIrVisitor : SQLiteParserBaseVisitor<IResult?>
         }
 
         // try and filter out binary\unary expression
-        if (context.children[0] is not SQLiteParser.ExprContext)
+        if (context.children[0] is not ExprContext)
             return VisitChildren(context);
         if (context.children[1] is not ITerminalNode { Symbol.Type: var operand })
             return VisitChildren(context);
@@ -181,12 +182,12 @@ public sealed class AstToIrVisitor : SQLiteParserBaseVisitor<IResult?>
         return new BinaryExp(op, left, (IExpression)right);
     }
 
-    public override IResult VisitLiteral_value(SQLiteParser.Literal_valueContext context)
+    public override IResult VisitLiteral_value(Literal_valueContext context)
     {
         return new LiteralExp(context.GetText());
     }
 
-    public override IResult VisitResult_column(SQLiteParser.Result_columnContext context)
+    public override IResult VisitResult_column(Result_columnContext context)
     {
         if (context.STAR() != null)
         {
@@ -208,7 +209,7 @@ public sealed class AstToIrVisitor : SQLiteParserBaseVisitor<IResult?>
             new ResultColumn(result, originalText, als));
     }
 
-    public override IResult VisitColumn_access(SQLiteParser.Column_accessContext context)
+    public override IResult VisitColumn_access(Column_accessContext context)
     {
         return ResolveColumn(ResolveTables()) ??
                throw Resources.ColumnNotFound(context.GetText());
@@ -246,7 +247,7 @@ public sealed class AstToIrVisitor : SQLiteParserBaseVisitor<IResult?>
         }
     }
 
-    public override IResult VisitFunction_call(SQLiteParser.Function_callContext context)
+    public override IResult VisitFunction_call(Function_callContext context)
     {
         var functionName = context.function_name().GetText()!;
         return functionName.ToFunctionCall(context.expr()
@@ -254,7 +255,7 @@ public sealed class AstToIrVisitor : SQLiteParserBaseVisitor<IResult?>
             .ToArray());
     }
 
-    public override IResult VisitDelete_stmt(SQLiteParser.Delete_stmtContext context)
+    public override IResult VisitDelete_stmt(Delete_stmtContext context)
     {
         var tableName = context.qualified_table_name().GetText();
         using var _ = _currentTables.Open();
@@ -263,7 +264,7 @@ public sealed class AstToIrVisitor : SQLiteParserBaseVisitor<IResult?>
             TryVisit<IExpression>(context.expr())));
     }
 
-    public override IResult VisitTable_or_subquery(SQLiteParser.Table_or_subqueryContext context)
+    public override IResult VisitTable_or_subquery(Table_or_subqueryContext context)
     {
         var tableName = context.table_name().GetText().Unescape();
         var alias = context.table_alias()?.GetText();
