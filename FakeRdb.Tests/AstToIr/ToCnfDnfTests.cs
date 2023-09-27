@@ -5,7 +5,7 @@ using static FakeRdb.UnaryOperator;
 
 namespace FakeRdb.Tests;
 
-public sealed class ToCnfTests
+public sealed class ToCnfDnfTests
 {
     private static readonly bool A = default;
     private static readonly bool B = default;
@@ -13,66 +13,98 @@ public sealed class ToCnfTests
     private static readonly bool D = default;
 
     // ReSharper disable DoubleNegationOperator
-    [Fact] public void Simplest() => AssertCnf(() => A, "A");
-    [Fact] public void And() => AssertCnf(() => A && B, "A && B");
-    [Fact] public void AndOfOr() => AssertCnf(() => (A || B) && C, "(A || B) && C");
-    [Fact] public void OrOfAnd() => AssertCnf(() => (A && B) || C, "(A || C) && (B || C)");
-    [Fact] public void NotOfAnd() => AssertCnf(() => !(A && B), "!A || !B");
-    [Fact] public void NotOfOr() => AssertCnf(() => !(A || B), "!A && !B");
-    [Fact] public void DoubleNegative() => AssertCnf(() => !!A, "A");
+    [Fact] public void Cnf_Simplest() => AssertCnf(() => A, "A");
+    [Fact] public void Cnf_And() => AssertCnf(() => A && B, "A && B");
+    [Fact] public void Cnf_AndOfOr() => AssertCnf(() => (A || B) && C, "(A || B) && C");
+    [Fact] public void Cnf_OrOfAnd() => AssertCnf(() => (A && B) || C, "(A || C) && (B || C)");
+    [Fact] public void Cnf_NotOfAnd() => AssertCnf(() => !(A && B), "!A || !B");
+    [Fact] public void Cnf_NotOfOr() => AssertCnf(() => !(A || B), "!A && !B");
+    [Fact] public void Cnf_DoubleNegative() => AssertCnf(() => !!A, "A");
     [Fact]
-    public void AndOrCombo() => AssertCnf(() =>
+    public void Cnf_AndOrCombo() => AssertCnf(() =>
         (A && B) || (C && D),
         "(A || C) && (A || D) && (B || C) && (B || D)");
     [Fact]
-    public void ComplexExpression1() => AssertCnf(() =>
+    public void Cnf_ComplexExpression1() => AssertCnf(() =>
         (A && (B || C)) || D,
         "(A || D) && (B || C || D)");
     [Fact]
-    public void ComplexExpression2() => AssertCnf(() =>
+    public void Cnf_ComplexExpression2() => AssertCnf(() =>
         !(A && (B || C)) || D,
         "(!A || !B) && (!A || !C) || D");
+
+    [Fact] public void Dnf_Simplest() => AssertDnf(() => A, "A");
+    [Fact]
+    public void Dnf_NotOfOr() => AssertDnf(() =>
+        !(A || B),
+        "!A && !B");
+    [Fact]
+    public void Dnf_AndOfOr() => AssertDnf(() =>
+        (A || B) && (C || D),
+        "A && C || A && D || B && C || B && D");
+
+    [Fact]
+    public void Dnf_OrOfAnd() => AssertDnf(() =>
+        (A && B) || (C && D), "A && B || C && D");
+    [Fact]
+    public void Dnf_NestedAndOr() => AssertDnf(() =>
+        (A || (B && C)) && D, "A && D || B && C && D");
+    [Fact]
+    public void Dnf_NestedOrAnd() => AssertDnf(() =>
+        (A && (B || C)) || D, "A && B || A && C || D");
+
     // ReSharper restore DoubleNegationOperator
 
-    /// <summary>
-    /// Validates that an expression and its Conjunctive Normal Form (CNF) representation are semantically equivalent.
-    /// This is done by:
-    /// 1. Verifying that the CNF transformation produces the expected expression.
-    /// 2. Iterating through all possible permutations of parameter values and confirming that:
-    ///    - The original expression, its CNF representation, and the C# counterpart all yield the same Boolean result.
-    /// </summary>
-    /// <param name="compTimeExp">The compile-time expression to test.</param>
-    /// <param name="expectedExpression">The expected CNF expression as a string.</param>
     private static void AssertCnf(Expression<Func<bool>> compTimeExp, string expectedExpression)
     {
         var (compiled, parsed, mapping) = Parse(compTimeExp);
         var cnf = parsed.ToCnf();
-        cnf.Print().Should().Be(expectedExpression);
+        Assert(expectedExpression, cnf, mapping, compiled, parsed);
+
+    }
+    private static void AssertDnf(Expression<Func<bool>> compTimeExp, string expectedExpression)
+    {
+        var (compiled, parsed, mapping) = Parse(compTimeExp);
+        var dnf = parsed.ToDnf();
+        Assert(expectedExpression, dnf, mapping, compiled, parsed);
+    }
+
+    /// <summary>
+    /// Validates that an expression and its transformed representation (CNF\DNF) are semantically equivalent.
+    /// This is done by:
+    /// 1. Verifying that the transformation produces the expected expression.
+    /// 2. Iterating through all possible permutations of parameter values and confirming that:
+    ///    - The original expression, its transformed representation, and the C# counterpart all yield the same Boolean result.
+    /// </summary>
+    private static void Assert(string expectedExpression, 
+        IExpression transformed, string[] mapping, 
+        Func<uint, bool> compiled, IExpression parsed)
+    {
+        transformed.Print().Should().Be(expectedExpression);
         for (uint i = 0; i < (1 << mapping.Length); ++i)
         {
             var expectedCalc = compiled(i);
-            Eval(parsed, i).Should().Be(expectedCalc);
-            Eval(cnf, i).Should().Be(expectedCalc);
+            Eval(parsed, mapping, i).Should().Be(expectedCalc);
+            Eval(transformed, mapping, i).Should().Be(expectedCalc);
         }
+    }
 
-        return;
-
-
-        bool Eval(IExpression exp, uint bitfield)
-        {
-            return exp switch
+    private static bool Eval(IExpression exp, string[] mapping, uint bitfield)
+    {
+        return Inner(exp);
+        bool Inner(IExpression a) =>
+            a switch
             {
-                BinaryExp { Op: Or, Left: var left, Right: var right } => 
-                    Eval(left, bitfield) || Eval(right, bitfield),
-                BinaryExp { Op: BinaryOperator.And, Left: var left, Right: var right } => 
-                    Eval(left, bitfield) && Eval(right, bitfield),
-                ColumnExp literal => 
-                    (bitfield & (1 << Array.IndexOf(mapping,literal.FullColumnName))) != 0,
-                UnaryExp { Op:Not, Operand: var operand } => 
-                    !Eval(operand, bitfield),
-                _ => throw new ArgumentOutOfRangeException(nameof(exp))
+                BinaryExp { Op: Or, Left: var left, Right: var right } =>
+                    Inner(left) || Inner(right),
+                BinaryExp { Op: BinaryOperator.And, Left: var left, Right: var right } =>
+                    Inner(left) && Inner(right),
+                ColumnExp literal =>
+                    (bitfield & (1 << Array.IndexOf(mapping, literal.FullColumnName))) != 0,
+                UnaryExp { Op: Not, Operand: var operand } =>
+                    !Inner(operand),
+                _ => throw new ArgumentOutOfRangeException(nameof(a))
             };
-        }
     }
 
     private static (Func<uint, bool>, IExpression, string[]) Parse(Expression<Func<bool>> exp)
@@ -127,7 +159,7 @@ public sealed class ToCnfTests
             };
         }
     }
-    
+
     private static Func<uint, bool> CreateCompiledFunc(Expression<Func<bool>> originalExpression, List<string> bitMapping)
     {
         // Create parameter of type uint

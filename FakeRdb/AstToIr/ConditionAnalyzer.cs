@@ -18,7 +18,7 @@ public static class ConditionAnalyzer
         return new []{compositeCondition};
     }
 
-    public static bool AreEquivalent(IExpression x, IExpression y)
+    private static bool AreEquivalent(IExpression x, IExpression y)
     {
         switch (x, y)
         {
@@ -50,8 +50,8 @@ public static class ConditionAnalyzer
                 return false;
         }
     }
-    
-    public static IExpression SimplifyIdempotent(IExpression expr)
+
+    private static IExpression SimplifyIdempotent(IExpression expr)
     {
         // Base case: If the expression is a leaf node, return as is
         if (expr is not BinaryExp binaryExp)
@@ -72,7 +72,7 @@ public static class ConditionAnalyzer
         return new BinaryExp(binaryExp.Op, simplifiedLeft, simplifiedRight);
     }
 
-    public static IExpression ApplyDeMorgansLaw(IExpression exp)
+    private static IExpression ApplyDeMorgansLaw(IExpression exp)
     {
         return exp switch
         {
@@ -105,7 +105,7 @@ public static class ConditionAnalyzer
         return SimplifyIdempotent(cnf);
     }
 
-    public static IExpression DistributeOrOverAnd(IExpression expr)
+    private static IExpression DistributeOrOverAnd(IExpression expr)
     {
         switch (expr)
         {
@@ -132,5 +132,38 @@ public static class ConditionAnalyzer
         }
     }
 
+    public static IExpression ToDnf(this IExpression expr)
+    {
+        var afterDeMorgans = ApplyDeMorgansLaw(expr);
+        var dnf = DistributeAndOverOr(afterDeMorgans);
+        return SimplifyIdempotent(dnf);
+    }
+
+    private static IExpression DistributeAndOverOr(IExpression expr)
+    {
+        switch (expr)
+        {
+            case BinaryExp { Op: BinaryOperator.And, Left: BinaryExp { Op: BinaryOperator.Or, Left: var leftOrLeft, Right: var leftOrRight }, Right: var right }:
+                // (A OR B) AND C -> (A AND C) OR (B AND C)
+                return new BinaryExp(BinaryOperator.Or, 
+                    DistributeAndOverOr(new BinaryExp(BinaryOperator.And, leftOrLeft, right)), 
+                    DistributeAndOverOr(new BinaryExp(BinaryOperator.And, leftOrRight, right)));
+
+            case BinaryExp { Op: BinaryOperator.And, Left: var left, Right: BinaryExp { Op: BinaryOperator.Or, Left: var rightOrLeft, Right: var rightOrRight } }:
+                // A AND (B OR C) -> (A AND B) OR (A AND C)
+                return new BinaryExp(BinaryOperator.Or, 
+                    DistributeAndOverOr(new BinaryExp(BinaryOperator.And, left, rightOrLeft)), 
+                    DistributeAndOverOr(new BinaryExp(BinaryOperator.And, left, rightOrRight)));
+
+            case BinaryExp binaryExp:
+                // If neither child is an OR, recurse on the children and return
+                return new BinaryExp(binaryExp.Op, 
+                    DistributeAndOverOr(binaryExp.Left), 
+                    DistributeAndOverOr(binaryExp.Right));
+
+            default:
+                return expr;
+        }
+    }
 
 }
