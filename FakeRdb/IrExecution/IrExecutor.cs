@@ -21,7 +21,16 @@ public static class IrExecutor
 
     private static Table Execute(this SelectCore query, params OrderingTerm[] orderingTerms)
     {
-        return Select(query.From, query.Columns, query.Where, query.GroupBy,orderingTerms);
+        var product = CartesianProduct(query.From);
+        if (query.Where != null)
+            product.ApplyFilter(query.Where);
+
+        var grouped = product.GroupBy(query.GroupBy
+            .Select(product.Get).ToArray(), query.Columns);
+
+        // We cannot take sorting out of SelectCore to the later stages
+        // because the projection can throw the key columns away
+        return grouped.OrderBy(orderingTerms).Project(query.Columns);
     }
     private static Table ExecuteCompound(this Database db, ICompoundSelect query)
     {
@@ -42,24 +51,6 @@ public static class IrExecutor
         }
 
         throw new ArgumentOutOfRangeException();
-    }
-
-    public static Table Select(Table[] tables,
-        ResultColumn[] columns,
-        IExpression? where,
-        string[] groupBy,
-        OrderingTerm[] ordering)
-    {
-        var product = CartesianProduct(tables);
-        product = product.GroupBy(
-            groupBy.Select(product.Get).ToArray(), columns);
-
-        if (where != null)
-            product.ApplyFilter(where);
-
-        // We cannot take sorting out of here to the later stages
-        // because the projection can throw the key columns away
-        return product.OrderBy(ordering).Project(columns);
     }
 
     private static Table CartesianProduct(Table[] tables)
