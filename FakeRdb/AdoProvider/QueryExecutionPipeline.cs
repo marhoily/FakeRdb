@@ -13,9 +13,9 @@ public static class QueryExecutionPipeline
         var parser = new SQLiteParser(tokens);
         parser.RemoveErrorListeners();
         parser.AddErrorListener(new AntlrExceptionThrowingErrorListener());
-        var chatContext = parser.sql_stmt_list();
+        var context = parser.sql_stmt_list();
         var visitor = new AstToIrVisitor(sql, db,parameters);
-        return visitor.Visit(chatContext);
+        return visitor.Visit(context);
     }
     public static DbDataReader ExecuteReader(this Database db, 
         string sql, FakeDbParameterCollection parameters)

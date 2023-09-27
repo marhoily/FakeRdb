@@ -1,7 +1,16 @@
 namespace FakeRdb;
 
+public enum UnaryOperator
+{
+    Not,
+    // others
+}
 public enum BinaryOperator
 {
+    Equal,
+    And,
+    Or,
+
     Multiplication,
     Concatenation,
     Division,
@@ -16,7 +25,6 @@ public enum BinaryOperator
     LessOrEqual,
     Greater,
     GreaterOrEqual,
-    Equal,
     NotEqual,
     Is,
     In,
@@ -24,7 +32,5 @@ public enum BinaryOperator
     Glob,
     Match,
     RegExp,
-    And,
-    Or,
     IsNot
 }

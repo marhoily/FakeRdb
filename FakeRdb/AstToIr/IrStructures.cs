@@ -6,7 +6,6 @@ public interface IR : IResult
     public delegate object? AggregateFunction(Table table, IEnumerable<int> rowSet, IExpression[] args);
     public delegate string ScalarFunction(Table table, int rowIndex, IExpression[] args);
 
-    public interface IExpression : IR { }
     public interface ICompoundSelect : IR { }
 
     public sealed record SelectStmt(ICompoundSelect Query, params OrderingTerm[] OrderingTerms) : IR;
@@ -32,12 +31,15 @@ public interface IR : IResult
     public sealed record ResultColumnList(params ResultColumn[] List) : IR;
     public sealed record ResultColumn(IExpression Exp, string Original, string? Alias = null) : IR;
 
-    public sealed record BindExp(object? Value) : IExpression;
+    public interface IExpression : IR { }
+    public sealed record UnaryExp(UnaryOperator Op, IExpression Operand) : IExpression;
     public sealed record BinaryExp(BinaryOperator Op, IExpression Left, IExpression Right) : IExpression;
-    public sealed record AggregateExp(AggregateFunction Function, IExpression[] Args) : IExpression;
-    public sealed record ScalarExp(ScalarFunction Function, IExpression[] Args) : IExpression;
     public sealed record ColumnExp(string FullColumnName) : IExpression;
     public sealed record LiteralExp(string Value) : IExpression;
+
+    public sealed record BindExp(object? Value) : IExpression;
+    public sealed record AggregateExp(AggregateFunction Function, IExpression[] Args) : IExpression;
+    public sealed record ScalarExp(ScalarFunction Function, IExpression[] Args) : IExpression;
     public sealed record InExp(IExpression Needle, Column Haystack) : IExpression;
 
     public sealed record CompositeCondition(

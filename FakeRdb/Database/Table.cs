@@ -216,7 +216,7 @@ public sealed class Table : IResult
         return GetRows().Select(r => r.Data.ToList()).ToList();
     }
 
-    public string Print => PrettyPrint.Table(
+    public string Print => DebugPrint.Table(
             Headers.Select(col => $"{col.Name} : {col.ColumnType}").ToList(),
             ToList());
 
