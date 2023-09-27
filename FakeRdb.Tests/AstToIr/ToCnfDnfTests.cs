@@ -33,11 +33,11 @@ public sealed class ToCnfDnfTests
         !(A && (B || C)) || D,
         "(!A || !B) && (!A || !C) || D");
 
+    [Fact] public void Dnf_Showcase() => AssertDnf(
+        () => (A || B) && C, "A && C || B && C");
+
     [Fact] public void Dnf_Simplest() => AssertDnf(() => A, "A");
-    [Fact]
-    public void Dnf_NotOfOr() => AssertDnf(() =>
-        !(A || B),
-        "!A && !B");
+    [Fact] public void Dnf_NotOfOr() => AssertDnf(() => !(A || B), "!A && !B");
     [Fact]
     public void Dnf_AndOfOr() => AssertDnf(() =>
         (A || B) && (C || D),
