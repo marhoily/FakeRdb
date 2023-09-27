@@ -37,6 +37,9 @@ public interface IR : IResult
     public sealed record ColumnExp(string FullColumnName) : IExpression;
     public sealed record LiteralExp(string Value) : IExpression;
 
+    public sealed record AndGroup(IExpression[] Conditions);
+    public sealed record OrGroup(AndGroup[] Alternatives);
+
     public sealed record BindExp(object? Value) : IExpression;
     public sealed record AggregateExp(AggregateFunction Function, IExpression[] Args) : IExpression;
     public sealed record ScalarExp(ScalarFunction Function, IExpression[] Args) : IExpression;

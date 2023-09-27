@@ -4,6 +4,52 @@ namespace FakeRdb;
 
 public static class BooleanAlgebra
 {
+    public static OrGroup? DecomposeDnf(IExpression expr)
+    {
+        switch (expr)
+        {
+            case BinaryExp { Op: BinaryOperator.Or } binaryOr:
+            {
+                var leftGroup = DecomposeDnf(binaryOr.Left);
+                var rightGroup = DecomposeDnf(binaryOr.Right);
+
+                if (leftGroup is null || rightGroup is null)
+                    return null;
+
+                return new OrGroup(leftGroup.Alternatives.Concat(rightGroup.Alternatives).ToArray());
+            }
+            case BinaryExp { Op: BinaryOperator.And } binaryAnd:
+            {
+                var andGroup = ExtractAndConditions(binaryAnd);
+                return new OrGroup(new[] { andGroup });
+            }
+            default:
+                // Single condition, wrapped in AndGroup and OrGroup
+                return new OrGroup(new[] { new AndGroup(new[] { expr }) });
+        }
+    }
+
+    private static AndGroup ExtractAndConditions(BinaryExp binaryAnd)
+    {
+        var conditions = new List<IExpression>();
+
+        void TraverseAnd(BinaryExp exp)
+        {
+            if (exp.Left is BinaryExp leftAnd && leftAnd.Op == BinaryOperator.And)
+                TraverseAnd(leftAnd);
+            else
+                conditions.Add(exp.Left);
+
+            if (exp.Right is BinaryExp rightAnd && rightAnd.Op == BinaryOperator.And)
+                TraverseAnd(rightAnd);
+            else
+                conditions.Add(exp.Right);
+        }
+
+        TraverseAnd(binaryAnd);
+        return new AndGroup(conditions.ToArray());
+    }
+
     /// <summary>
     /// Transforms the given expression into its Conjunctive Normal Form (CNF).
     /// The CNF form of an expression is an AND of ORs.
