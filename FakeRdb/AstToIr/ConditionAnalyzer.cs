@@ -81,7 +81,7 @@ public static class ConditionAnalyzer
                 (ColumnExp l, IExpression) => new SingleTableCondition(l.Table, binaryExp),
 
                 (SingleTableCondition l, ColumnExp r) when l.Table == r.Table => 
-                    l with { Filter = new BinaryExp(And, l.Filter, r) },
+                    l with { Filter = new BinaryExp(binaryExp.Operand, l.Filter, r) },
                 (SingleTableCondition l, ColumnExp r) when l.Table != r.Table => 
                     binaryExp,
 
