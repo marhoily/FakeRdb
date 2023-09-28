@@ -10,11 +10,12 @@ public static class ExpressionGenerators
 
     private static Gen<IExpression> AnyExpression() =>
         Gen.Sized(size => Gen.OneOf(
-            Gen.Resize(size / 2, LiteralExpGen()),
+            LiteralExpGen(),
             Gen.Resize(size / 2, BinaryExpGen())));
 
     private static Gen<IExpression> LiteralExpGen() =>
-        from value in Gen.Elements("1", "2", "3", "'string'", "5.2")
+        from value in Gen.Elements(
+            "1", "'string'", "5.2", "true", "false", "NULL")
         select (IExpression) new LiteralExp(value);
 
     private static Gen<BinaryOperator> AnyBinaryOperator() =>

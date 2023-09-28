@@ -31,13 +31,13 @@ public static class ConditionAnalyzer
                 case IExpression exp:
                     generalCondition = Expr.And(generalCondition, exp);
                     break;
-            }   
+            }
         }
 
         var extra = tables
             .Except(singleTableConditions.Keys)
             .Select(table => new SingleTableCondition(table, Expr.True));
-        foreach (var stc in extra) 
+        foreach (var stc in extra)
             singleTableConditions.Add(stc.Table, stc);
 
         var compositeCondition =
@@ -70,18 +70,10 @@ public static class ConditionAnalyzer
                 return new SingleTableCondition(lce.Table, binaryExp);
             }
 
-            if (left is not SingleTableCondition ls ||
-                right is not SingleTableCondition rs)
+            if (left is not SingleTableCondition ||
+                right is not SingleTableCondition)
                 return binaryExp;
-            if (ls.Table == rs.Table)
-                return ls with { Filter = new BinaryExp(And, ls.Filter, rs.Filter) };
-            if (binaryExp.Op == Equal &&
-                ls.Filter is ColumnExp lc &&
-                rs.Filter is ColumnExp rc)
-                return new EquiJoinCondition(
-                    ls.Table, lc.FullColumnName,
-                    rs.Table, rc.FullColumnName);
-            return binaryExp;
+            throw new InvalidOperationException("Unreachable");
         }
     }
 }
