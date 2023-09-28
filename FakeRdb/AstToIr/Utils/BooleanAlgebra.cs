@@ -4,7 +4,7 @@ namespace FakeRdb;
 
 public static class BooleanAlgebra
 {
-    public static OrGroup? DecomposeDnf(IExpression expr)
+    public static OrGroup? DecomposeDnf(this IExpression expr)
     {
         switch (expr)
         {

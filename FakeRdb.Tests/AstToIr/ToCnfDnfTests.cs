@@ -132,7 +132,7 @@ public sealed class ToCnfDnfTests
                     {
                         bitMapping.Add(name);
                     }
-                    return new ColumnExp(name);
+                    return new ColumnExp(null!, name);
                 case ConstantExpression constExp:
                     return new LiteralExp(constExp.Value?.ToString() ?? "NULL");
                 default:

@@ -31,10 +31,11 @@ public interface IR : IResult
     public sealed record ResultColumnList(params ResultColumn[] List) : IR;
     public sealed record ResultColumn(IExpression Exp, string Original, string? Alias = null) : IR;
 
-    public interface IExpression : IR { }
+    public interface ITaggedCondition{ }
+    public interface IExpression : IR, ITaggedCondition { }
     public sealed record UnaryExp(UnaryOperator Op, IExpression Operand) : IExpression;
     public sealed record BinaryExp(BinaryOperator Op, IExpression Left, IExpression Right) : IExpression;
-    public sealed record ColumnExp(string FullColumnName) : IExpression;
+    public sealed record ColumnExp(Table Table, string FullColumnName) : IExpression;
     public sealed record LiteralExp(string Value) : IExpression;
 
     public sealed record AndGroup(IExpression[] Conditions);
@@ -54,11 +55,10 @@ public interface IR : IResult
     /// Represents conditions specific to a single table.
     /// The Filter should only involve columns from one table and contain no OR/AND.
     /// </summary>
-    public sealed record SingleTableCondition(Table Table, IExpression Filter);
-
+    public sealed record SingleTableCondition(Table Table, IExpression Filter) : ITaggedCondition;
     public sealed record EquiJoinCondition(
-        string LeftTable, string LeftColumn, 
-        string RightTable, string RightColumn);
+        Table LeftTable, string LeftColumn, 
+        Table RightTable, string RightColumn) : ITaggedCondition;
 
   
     public sealed record ValuesTable(ValuesRow[] Rows) : IResult;

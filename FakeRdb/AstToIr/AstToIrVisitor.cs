@@ -209,8 +209,9 @@ public sealed class AstToIrVisitor : SQLiteParserBaseVisitor<IResult?>
         if (context.STAR() != null)
         {
             return new ResultColumnList(
-                _currentTables.Value.Values.SelectMany(t => t.Columns)
-                    .Select(col => new ResultColumn(new ColumnExp(col.Header.FullName), "*"))
+                _currentTables.Value.Values.SelectMany(t => t.Columns
+                    .Select(col => new ResultColumn(
+                        new ColumnExp(t, col.Header.FullName), "*")))
                     .ToArray());
         }
         var result = TryVisit<IExpression>(context.expr()) ?? throw new Exception();
@@ -237,15 +238,15 @@ public sealed class AstToIrVisitor : SQLiteParserBaseVisitor<IResult?>
 
             var columnName = context.column_name().GetText().Unescape();
             var candidates = tables
-                .Select(t => t.TryLocal(columnName))
-                .OfType<Column>()
+                .Select(t => (table: t, column: t.TryLocal(columnName)))
+                .Where(p => p.column != null)
                 .ToArray();
             return candidates switch
             {
                 // It's not allowed to access aliases declared in SELECT while still in select
                 [] when _alias.TryGet(columnName, out var exp) => exp,
                 [] => null,
-                [var c] => new ColumnExp(c.Header.FullName),
+                [var c] => new ColumnExp(c.table, c.column!.Header.FullName),
                 _ => throw Resources.AmbiguousColumnReference(columnName)
             };
         }
