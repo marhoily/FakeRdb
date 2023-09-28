@@ -105,7 +105,7 @@ public sealed class AstToIrVisitor : SQLiteParserBaseVisitor<IResult?>
         var stmt = orderBy != null
             ? new SelectStmt(select, orderBy.Terms)
             : new SelectStmt(select);
-        return _db.Execute(stmt).ResolveColumnTypes();
+        return _db.ExecuteStmt(stmt).ResolveColumnTypes();
     }
 
     public override IResult VisitSelect_expr(Select_exprContext context)

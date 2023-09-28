@@ -4,22 +4,42 @@ namespace FakeRdb;
 
 public static class IrExecutor
 {
-    public static Table Execute(this Database db, SelectStmt stmt)
+    public static Table ExecuteStmt(this Database db, SelectStmt stmt)
     {
         // If it's just a core query, we must directly
         // execute it with the ordering terms
         if (stmt.Query is SelectCore core)
-            return core.Execute(stmt.OrderingTerms);
+            return core.ExecuteCore(stmt.OrderingTerms);
 
         // If there are multiple cores connected by "UNION" or "EXCEPT"
         // execute all of them without ordering terms first...
         return db.ExecuteCompound(stmt.Query)
             // ...and then do the ordering.
             .OrderBy(stmt.OrderingTerms);
-
     }
 
-    private static Table Execute(this SelectCore query, params OrderingTerm[] orderingTerms)
+    private static Table ExecuteCompound(this Database db, ICompoundSelect query)
+    {
+        if (query is SelectCore core)
+            return core.ExecuteCore();
+        if (query is CompoundSelect compound)
+        {
+            var left = db.ExecuteCompound(compound.Left);
+            var right = db.ExecuteCompound(compound.Right);
+            return compound.Operator switch
+            {
+                CompoundOperator.Union => Table.Union(left, right),
+                CompoundOperator.UnionAll => Table.UnionAll(left, right),
+                CompoundOperator.Intersect => Table.Intersect(left, right),
+                CompoundOperator.Except => Table.Except(left, right),
+                _ => throw new ArgumentOutOfRangeException()
+            };
+        }
+
+        throw new ArgumentOutOfRangeException();
+    }
+
+    private static Table ExecuteCore(this SelectCore query, params OrderingTerm[] orderingTerms)
     {
         var singleSource = query.AlternativeSources.Single();
         var product = JoinTables(
@@ -38,34 +58,19 @@ public static class IrExecutor
         // because the projection can throw the key columns away
         return grouped.OrderBy(orderingTerms).Project(query.Columns);
     }
-    private static Table ExecuteCompound(this Database db, ICompoundSelect query)
-    {
-        if (query is SelectCore core)
-            return core.Execute();
-        if (query is CompoundSelect compound)
-        {
-            var left = db.ExecuteCompound(compound.Left);
-            var right = db.ExecuteCompound(compound.Right);
-            return compound.Operator switch
-            {
-                CompoundOperator.Union => Table.Union(left, right),
-                CompoundOperator.UnionAll => Table.UnionAll(left, right),
-                CompoundOperator.Intersect => Table.Intersect(left, right),
-                CompoundOperator.Except => Table.Except(left, right),
-                _ => throw new ArgumentOutOfRangeException()
-            };
-        }
-
-        throw new ArgumentOutOfRangeException();
-    }
 
     /// <summary>
     /// Joins multiple tables using specified equi-join conditions.
-    /// An equi-join is a type of join where we combine rows from two tables based on the equality between two columns from each table.
-    /// This is useful for associating rows that contain related data, improving query performance, and simplifying data retrieval.
-    /// If no equi-join condition is specified for a pair of tables, the method falls back to performing a Cartesian product.
-    /// A Cartesian product combines each row from the first table with each row from the second, which can result in a large number of rows.
+    /// An equi-join matches rows from two tables based on the equality between specified columns from each table.
+    /// Using equi-joins improves performance, as it allows targeted row scans or even direct jumps to specific rows using an index.
+    /// If no equi-join condition is provided for a pair of tables, the method defaults to performing a Cartesian product.
+    /// A Cartesian product pairs each row from the first table with every row from the second, potentially resulting in a large number of rows.
     /// </summary>
+    /// <remarks>
+    /// This implementation uses nested loop joins for combining rows. Nested loop joins are simple and work well when one of the tables is small or when the joined columns are indexed. 
+    /// However, they can be inefficient for large data-sets or complex join conditions.
+    /// Other join algorithms like "hash joins" or "sort-merge joins" could offer better performance for certain scenarios but are not implemented here.
+    /// </remarks>
     private static Table JoinTables(Table[] tables, EquiJoinCondition[] equiJoins)
     {
         return tables switch
