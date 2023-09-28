@@ -4,7 +4,15 @@ namespace FakeRdb;
 
 public static class ExpressionEval
 {
-    public static T Eval<T>(this IExpression exp, Table table, int rowIndex) => (T)exp.Eval(table, rowIndex)!;
+    public static T Eval<T>(this IExpression exp, Table table, int rowIndex)
+    {
+        var eval = exp.Eval(table, rowIndex)!;
+        if (typeof(T) == typeof(bool) && eval is long l)
+        {
+            return (T)(object)(l != 0);
+        }
+        return (T)eval;
+    }
 
     public static object? Eval(this IExpression arg)
     {

@@ -64,7 +64,7 @@ public static class ConditionAnalyzer
 
             return (left, right) switch
             {
-                (ColumnExp l, ColumnExp r) =>
+                (ColumnExp l, ColumnExp r) when l.Table != r.Table =>
                     new EquiJoinCondition(
                         l.Table, l.FullColumnName,
                         r.Table, r.FullColumnName),

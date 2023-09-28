@@ -47,7 +47,7 @@ public sealed class FilterExpressionsTest : ComparisonTestBase
         CompareAgainstSqlite(
             """
             SELECT id FROM Questionnaire
-            WHERE IsAdult AND IsEmployed AND HasCar
+            WHERE IsAdult < IsEmployed AND HasCar
             """);
     }
 }
