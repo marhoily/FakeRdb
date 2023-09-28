@@ -26,7 +26,7 @@ public sealed class ComparisonRulesTest
     [InlineData(new byte[] { 1 }, 1L, 1)]
     public void CompareSqliteObjectsTheory(object? a, object? b, int expectedResult)
     {
-        int result = ObjectComparer.Compare(a, b);
+        int result = CustomFieldComparer.Compare(a, b);
         Assert.Equal(expectedResult, result);
     }
 }

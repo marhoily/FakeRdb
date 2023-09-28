@@ -60,7 +60,7 @@ public sealed record Row(params object?[] Data)
             var a = x[_columnIndex];
             var b = y[_columnIndex];
             if (ReferenceEquals(a, b)) return 0;
-            return ObjectComparer.Compare(a, b);
+            return CustomFieldComparer.Compare(a, b);
         }
     }
 
@@ -117,7 +117,7 @@ public sealed record Row(params object?[] Data)
         public int CompareTo(CompositeKey? other)
         {
             if (other == null) return 0;
-            return ObjectComparer.Compare(
+            return CustomFieldComparer.Compare(
                 _keyComponents[0], other._keyComponents[0]);
         }
 

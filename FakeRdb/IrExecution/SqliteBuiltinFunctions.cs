@@ -5,7 +5,7 @@ namespace FakeRdb;
 
 public static class SqliteBuiltinFunctions
 {
-    public static readonly IComparer<object?> Comparer = new ObjectComparer();
+    public static readonly IComparer<object?> Comparer = new CustomFieldComparer();
 
     public static object? Max(Table table, IEnumerable<int> rowSet, IExpression[] args)
     {

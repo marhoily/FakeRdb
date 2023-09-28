@@ -1,12 +1,14 @@
 namespace FakeRdb;
 
-public sealed class ObjectComparer : IComparer<object?>
+public sealed class CustomFieldComparer : IComparer<object?>
 {
     int IComparer<object?>.Compare(object? x, object? y)
     {
         return Compare(x, y);
     }
 
+    public new static bool Equals(object? a, object? b)
+        => Compare(a, b) == 0;
     public static int Compare(object? a, object? b)
     {
         if (a == null && b == null) return 0;

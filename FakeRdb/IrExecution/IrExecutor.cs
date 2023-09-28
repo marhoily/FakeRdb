@@ -22,10 +22,11 @@ public static class IrExecutor
     private static Table Execute(this SelectCore query, params OrderingTerm[] orderingTerms)
     {
         var singleSource = query.AlternativeSources.Single();
-        var product = CartesianProduct(
+        var product = JoinTables(
             singleSource
                 .SingleTableConditions
-                .Select(c => c.Table.Filter(c.Filter)).ToArray());
+                .Select(c => c.Table.Filter(c.Filter)).ToArray(),
+            singleSource.EquiJoinConditions);
 
         if (singleSource.GeneralCondition != null)
             product.ApplyFilter(singleSource.GeneralCondition);
@@ -58,23 +59,59 @@ public static class IrExecutor
         throw new ArgumentOutOfRangeException();
     }
 
-    private static Table CartesianProduct(Table[] tables)
+    /// <summary>
+    /// Joins multiple tables using specified equi-join conditions.
+    /// An equi-join is a type of join where we combine rows from two tables based on the equality between two columns from each table.
+    /// This is useful for associating rows that contain related data, improving query performance, and simplifying data retrieval.
+    /// If no equi-join condition is specified for a pair of tables, the method falls back to performing a Cartesian product.
+    /// A Cartesian product combines each row from the first table with each row from the second, which can result in a large number of rows.
+    /// </summary>
+    private static Table JoinTables(Table[] tables, EquiJoinCondition[] equiJoins)
     {
         return tables switch
         {
             [] => Table.Empty,
             [var t] => t.Clone(),
-            [var head, .. var tail] _ => Recurse(head, tail)
+            [var head, .. var tail] _ => JoinRemainingTablesRecursively(head, tail)
         };
 
-        static Table Recurse(Table head, Table[] tail)
+        Table JoinRemainingTablesRecursively(Table head, Table[] tail)
         {
             if (tail.Length == 0) return head;
-            return head
-                .ConcatHeaders(tail[0])
-                .WithRows(from headRow in head.GetRows()
-                    from tailRow in Recurse(tail[0], tail.Skip(1).ToArray()).GetRows()
-                    select headRow.Concat(tailRow));
+
+            var tableToJoinNext = tail[0];
+            var remainingTables = tail.Skip(1).ToArray();
+            var condition = equiJoins.FindFor(head, tableToJoinNext);
+            var result = head.ConcatHeaders(tableToJoinNext);
+
+            if (condition == null) // fallback
+                return CartesianProduct(result, head, tableToJoinNext, remainingTables);
+
+            var leftColumnIndex = head.IndexOf(condition.LeftColumn);
+            return result.WithRows(
+                from headRow in head.GetRows()
+                let right = JoinRemainingTablesRecursively(tableToJoinNext, remainingTables)
+                let rightColumnIndex = right.IndexOf(condition.RightColumn)
+                from tailRow in right.GetRows()
+                where CustomFieldComparer.Equals(
+                    headRow.Data[leftColumnIndex],
+                    tailRow.Data[rightColumnIndex])
+                select headRow.Concat(tailRow));
         }
+
+        Table CartesianProduct(Table result, Table head, Table tableToJoinNext, Table[] remainingTables)
+        {
+            return result.WithRows(
+                from headRow in head.GetRows()
+                from tailRow in JoinRemainingTablesRecursively(tableToJoinNext, remainingTables).GetRows()
+                select headRow.Concat(tailRow));
+        }
+    }
+
+    private static EquiJoinCondition? FindFor(this EquiJoinCondition[] equiJoins, Table a, Table b)
+    {
+        return equiJoins.FirstOrDefault(
+            e => (e.LeftTable == a && e.RightTable == b) ||
+                 (e.LeftTable == b && e.RightTable == a));
     }
 }
