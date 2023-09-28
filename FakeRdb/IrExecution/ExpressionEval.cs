@@ -7,9 +7,9 @@ public static class ExpressionEval
     public static T Eval<T>(this IExpression exp, Table table, int rowIndex)
     {
         var eval = exp.Eval(table, rowIndex)!;
-        if (typeof(T) == typeof(bool) && eval is long l)
+        if (typeof(T) == typeof(bool))
         {
-            return (T)(object)(l != 0);
+            return (T)(object)eval.ToBool();
         }
         return (T)eval;
     }
@@ -89,7 +89,7 @@ public static class ExpressionEval
                 BinaryOperator.Less => x is IComparable c ? c.CompareTo(y) == -1 : throw new NotSupportedException(),
                 BinaryOperator.Addition => (dynamic)x + (dynamic)y,
                 BinaryOperator.Concatenation => string.Concat(x, y),
-                BinaryOperator.And => (bool)x && (bool)y,
+                BinaryOperator.And => x.ToBool() & y.ToBool(),
                 _ => throw new ArgumentOutOfRangeException(op.ToString())
             });
         }

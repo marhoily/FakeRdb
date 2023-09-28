@@ -6,6 +6,15 @@ namespace FakeRdb;
 
 public static partial class TypeExt
 {
+    public static bool ToBool(this object value)
+    {
+        return value switch
+        {
+            bool b => b,
+            long l => l != 0,
+            _ => throw new ArgumentOutOfRangeException(nameof(value), value, null)
+        };
+    }
     [GeneratedRegex(@"^[-+]?((0(?![0-9])|[1-9]\d*)(\.\d*)?|\.\d+)([eE][-+]?\d+)?$")]
     private static partial Regex IsNumericRegex();
 
