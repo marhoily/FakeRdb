@@ -10,13 +10,19 @@ public static class ExpressionGenerators
 
     private static Gen<IExpression> AnyExpression() =>
         Gen.Sized(size => size > 5
-            ? Gen.OneOf(LiteralExpGen(), Gen.Resize(size / 2, BinaryExpGen()))
-            : LiteralExpGen());
+            ? Gen.OneOf(LiteralExpGen(), ColumnExpGen(),
+                Gen.Resize(size / 2, BinaryExpGen()))
+            : Gen.OneOf(LiteralExpGen(), ColumnExpGen()));
 
     private static Gen<IExpression> LiteralExpGen() =>
         from value in Gen.Elements(
             "1", "'string'", "5.2", "true", "false", "NULL")
         select (IExpression) new LiteralExp(value);
+
+    private static Gen<IExpression> ColumnExpGen() =>
+        from table in Gen.Elements(new Table("X"), new Table("Y"))
+        from column in Gen.Elements("X.A", "X.B", "Y.B", "Y.C", "Y.D")
+        select (IExpression) new ColumnExp(table, column);
 
     private static Gen<BinaryOperator> AnyBinaryOperator() =>
         Gen.Elements(BinaryOperator.And, BinaryOperator.Or, BinaryOperator.Equal, BinaryOperator.Less);

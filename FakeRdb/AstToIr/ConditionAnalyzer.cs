@@ -64,12 +64,12 @@ public static class ConditionAnalyzer
 
             return (left, right) switch
             {
-                (ColumnExp lce1, ColumnExp rce) =>
+                (ColumnExp l, ColumnExp r) =>
                     new EquiJoinCondition(
-                        lce1.Table, lce1.FullColumnName,
-                        rce.Table, rce.FullColumnName),
+                        l.Table, l.FullColumnName,
+                        r.Table, r.FullColumnName),
 
-                (ColumnExp lce, IExpression) => new SingleTableCondition(lce.Table, binaryExp),
+                (ColumnExp l, IExpression) => new SingleTableCondition(l.Table, binaryExp),
 
                 (not SingleTableCondition, _) => binaryExp,
 

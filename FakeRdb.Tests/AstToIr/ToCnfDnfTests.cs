@@ -152,7 +152,7 @@ public sealed class ToCnfDnfTests
         {
             return expType switch
             {
-                ExpressionType.AndAlso => BinaryOperator.And,
+                ExpressionType.AndAlso => And,
                 ExpressionType.OrElse => Or,
                 ExpressionType.Equal => Equal,
                 _ => throw new NotSupportedException($"ExpressionType {expType} is not supported.")

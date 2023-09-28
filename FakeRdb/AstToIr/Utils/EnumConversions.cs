@@ -13,7 +13,7 @@ public enum JoinOperator
     Inner = 1 << 3,
     Cross = 1 << 4,
 
-    LeftOuter = JoinOperator.Left | JoinOperator.Outer 
+    LeftOuter = Left | Outer 
 }
 
 public static class EnumConversions

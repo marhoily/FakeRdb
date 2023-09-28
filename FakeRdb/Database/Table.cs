@@ -16,10 +16,10 @@ public sealed class Table : IResult
 
     private int _autoincrement;
 
-    public Table(string name, Column[] columns)
+    public Table(string name, params Column[] columns)
     {
         columns.Select(c => c.Rows.Count).AssertAreAllEqual();
-        this.Name = name;
+        Name = name;
         Columns = columns;
     }
 
