@@ -37,8 +37,8 @@ public interface IR : IResult
     public interface IExpression : IR, ITaggedCondition { }
     public sealed record UnaryExp(UnaryOperator Op, IExpression Operand) : IExpression;
     public sealed record BinaryExp(BinaryOperator Op, IExpression Left, IExpression Right) : IExpression;
-    public sealed record ColumnExp(Table Table, string FullColumnName) : IExpression;
     public sealed record LiteralExp(string Value) : IExpression;
+    public sealed record ColumnExp(Table Table, string FullColumnName) : IExpression;
 
     public sealed record BindExp(object? Value) : IExpression;
     public sealed record AggregateExp(AggregateFunction Function, IExpression[] Args) : IExpression;

@@ -48,7 +48,7 @@ public static class ConditionAnalyzer
         return new[] { compositeCondition };
     }
 
-    private static ITaggedCondition DiscriminateCondition(IExpression exp)
+    public static ITaggedCondition DiscriminateCondition(IExpression exp)
     {
         return exp switch
         {
