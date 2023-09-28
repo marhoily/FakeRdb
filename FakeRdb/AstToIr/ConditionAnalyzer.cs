@@ -78,12 +78,17 @@ public static class ConditionAnalyzer
                         l.Table, l.FullColumnName,
                         r.Table, r.FullColumnName),
 
-                (ColumnExp l, IExpression) => new SingleTableCondition(l.Table, binaryExp),
+                (ColumnExp l, IExpression) =>
+                    new SingleTableCondition(l.Table, binaryExp),
 
-                (SingleTableCondition l, ColumnExp r) when l.Table == r.Table => 
-                    l with { Filter = new BinaryExp(binaryExp.Operand, l.Filter, r) },
-                (SingleTableCondition l, ColumnExp r) when l.Table != r.Table => 
-                    binaryExp,
+                (SingleTableCondition l, ColumnExp r)
+                    when l.Table == r.Table => l with
+                    {
+                        Filter = new BinaryExp(binaryExp.Operand, l.Filter, r)
+                    },
+                (SingleTableCondition l, ColumnExp r)
+                    when l.Table != r.Table => binaryExp,
+                (EquiJoinCondition, _) => binaryExp,
 
                 _ => throw new InvalidOperationException("Unreachable")
             };
