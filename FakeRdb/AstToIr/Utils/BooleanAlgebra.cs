@@ -1,4 +1,5 @@
-﻿using static FakeRdb.IR;
+﻿using static FakeRdb.BinaryOperator;
+using static FakeRdb.IR;
 
 namespace FakeRdb;
 
@@ -8,7 +9,7 @@ public static class BooleanAlgebra
     {
         switch (expr)
         {
-            case BinaryExp { Op: BinaryOperator.Or } binaryOr:
+            case BinaryExp { Op: Or } binaryOr:
             {
                 var leftGroup = DecomposeDnf(binaryOr.Left);
                 var rightGroup = DecomposeDnf(binaryOr.Right);
@@ -18,7 +19,7 @@ public static class BooleanAlgebra
 
                 return new OrGroup(leftGroup.Alternatives.Concat(rightGroup.Alternatives).ToArray());
             }
-            case BinaryExp { Op: BinaryOperator.And } binaryAnd:
+            case BinaryExp { Op: And } binaryAnd:
             {
                 var andGroup = ExtractAndConditions(binaryAnd);
                 return new OrGroup(new[] { andGroup });
@@ -38,12 +39,12 @@ public static class BooleanAlgebra
 
         void TraverseAnd(BinaryExp exp)
         {
-            if (exp.Left is BinaryExp { Op: BinaryOperator.And } leftAnd)
+            if (exp.Left is BinaryExp { Op: And } leftAnd)
                 TraverseAnd(leftAnd);
             else
                 conditions.Add(exp.Left);
 
-            if (exp.Right is BinaryExp { Op: BinaryOperator.And } rightAnd)
+            if (exp.Right is BinaryExp { Op: And } rightAnd)
                 TraverseAnd(rightAnd);
             else
                 conditions.Add(exp.Right);
@@ -90,35 +91,21 @@ public static class BooleanAlgebra
 
     private static bool AreEquivalent(IExpression x, IExpression y)
     {
-        switch (x, y)
+        return (x, y) switch
         {
-            case (LiteralExp a, LiteralExp b):
-                return a.Value == b.Value;
-
-            case (ColumnExp a, ColumnExp b):
-                return a.FullColumnName == b.FullColumnName;
-
-            case (UnaryExp a, UnaryExp b):
-                return a.Op == b.Op && AreEquivalent(a.Operand, b.Operand);
-
-            case (BinaryExp a, BinaryExp b):
-                return a.Op == b.Op && AreEquivalent(a.Left, b.Left) && AreEquivalent(a.Right, b.Right);
-
-            case (BindExp a, BindExp b):
-                return Equals(a.Value, b.Value);
-
-            case (AggregateExp a, AggregateExp b):
-                return a.Function == b.Function && a.Args.Zip(b.Args, AreEquivalent).All(equivalent => equivalent);
-
-            case (ScalarExp a, ScalarExp b):
-                return a.Function == b.Function && a.Args.Zip(b.Args, AreEquivalent).All(equivalent => equivalent);
-
-            case (InExp a, InExp b):
-                return AreEquivalent(a.Needle, b.Needle) && a.Haystack == b.Haystack;
-
-            default:
-                return false;
-        }
+            (LiteralExp a, LiteralExp b) => a.Value == b.Value,
+            (ColumnExp a, ColumnExp b) => a.FullColumnName == b.FullColumnName,
+            (UnaryExp a, UnaryExp b) => a.Op == b.Op && AreEquivalent(a.Operand, b.Operand),
+            (BinaryExp a, BinaryExp b) => a.Op == b.Op && AreEquivalent(a.Left, b.Left) &&
+                                          AreEquivalent(a.Right, b.Right),
+            (BindExp a, BindExp b) => Equals(a.Value, b.Value),
+            (AggregateExp a, AggregateExp b) => a.Function == b.Function &&
+                                                a.Args.Zip(b.Args, AreEquivalent).All(equivalent => equivalent),
+            (ScalarExp a, ScalarExp b) => a.Function == b.Function &&
+                                          a.Args.Zip(b.Args, AreEquivalent).All(equivalent => equivalent),
+            (InExp a, InExp b) => AreEquivalent(a.Needle, b.Needle) && a.Haystack == b.Haystack,
+            _ => false
+        };
     }
 
     private static IExpression SimplifyIdempotent(IExpression expr)
@@ -132,7 +119,7 @@ public static class BooleanAlgebra
         var simplifiedRight = SimplifyIdempotent(binaryExp.Right);
 
         // Then, check for idempotence
-        if ((binaryExp.Op == BinaryOperator.And || binaryExp.Op == BinaryOperator.Or) && AreEquivalent(simplifiedLeft, simplifiedRight))
+        if ((binaryExp.Op == And || binaryExp.Op == Or) && AreEquivalent(simplifiedLeft, simplifiedRight))
         {
             return simplifiedLeft;
         }
@@ -145,11 +132,11 @@ public static class BooleanAlgebra
     {
         return exp switch
         {
-            UnaryExp { Op: UnaryOperator.Not, Operand: BinaryExp { Op: BinaryOperator.And, Left: var left, Right: var right } } 
-                => new BinaryExp(BinaryOperator.Or, ApplyDeMorgansLaw(new UnaryExp(UnaryOperator.Not, left)), ApplyDeMorgansLaw(new UnaryExp(UnaryOperator.Not, right))),
+            UnaryExp { Op: UnaryOperator.Not, Operand: BinaryExp { Op: And, Left: var left, Right: var right } } 
+                => new BinaryExp(Or, ApplyDeMorgansLaw(new UnaryExp(UnaryOperator.Not, left)), ApplyDeMorgansLaw(new UnaryExp(UnaryOperator.Not, right))),
 
-            UnaryExp { Op: UnaryOperator.Not, Operand: BinaryExp { Op: BinaryOperator.Or, Left: var left, Right: var right } } 
-                => new BinaryExp(BinaryOperator.And, ApplyDeMorgansLaw(new UnaryExp(UnaryOperator.Not, left)), ApplyDeMorgansLaw(new UnaryExp(UnaryOperator.Not, right))),
+            UnaryExp { Op: UnaryOperator.Not, Operand: BinaryExp { Op: Or, Left: var left, Right: var right } } 
+                => new BinaryExp(And, ApplyDeMorgansLaw(new UnaryExp(UnaryOperator.Not, left)), ApplyDeMorgansLaw(new UnaryExp(UnaryOperator.Not, right))),
 
             UnaryExp { Op: UnaryOperator.Not, Operand: UnaryExp { Op: UnaryOperator.Not, Operand: var inner } } 
                 => ApplyDeMorgansLaw(inner),
@@ -157,11 +144,11 @@ public static class BooleanAlgebra
             UnaryExp { Op: UnaryOperator.Not, Operand: var inner } 
                 => new UnaryExp(UnaryOperator.Not, ApplyDeMorgansLaw(inner)),
 
-            BinaryExp { Op: BinaryOperator.And, Left: var left, Right: var right } 
-                => new BinaryExp(BinaryOperator.And, ApplyDeMorgansLaw(left), ApplyDeMorgansLaw(right)),
+            BinaryExp { Op: And, Left: var left, Right: var right } 
+                => new BinaryExp(And, ApplyDeMorgansLaw(left), ApplyDeMorgansLaw(right)),
 
-            BinaryExp { Op: BinaryOperator.Or, Left: var left, Right: var right } 
-                => new BinaryExp(BinaryOperator.Or, ApplyDeMorgansLaw(left), ApplyDeMorgansLaw(right)),
+            BinaryExp { Op: Or, Left: var left, Right: var right } 
+                => new BinaryExp(Or, ApplyDeMorgansLaw(left), ApplyDeMorgansLaw(right)),
 
             _ => exp
         };
@@ -169,43 +156,61 @@ public static class BooleanAlgebra
 
     private static IExpression DistributeOrOverAnd(IExpression expr)
     {
-        switch (expr)
+        return expr switch
         {
-            case BinaryExp { Op: BinaryOperator.Or, Left: BinaryExp { Op: BinaryOperator.And, Left: var leftAndLeft, Right: var leftAndRight }, Right: var right }:
+            BinaryExp
+                {
+                    Op: Or,
+                    Left: BinaryExp { Op: And, Left: var leftAndLeft, Right: var leftAndRight },
+                    Right: var right
+                } =>
                 // (A AND B) OR C -> (A OR C) AND (B OR C)
-                return new BinaryExp(BinaryOperator.And, DistributeOrOverAnd(new BinaryExp(BinaryOperator.Or, leftAndLeft, right)), DistributeOrOverAnd(new BinaryExp(BinaryOperator.Or, leftAndRight, right)));
-
-            case BinaryExp { Op: BinaryOperator.Or, Left: var left, Right: BinaryExp { Op: BinaryOperator.And, Left: var rightAndLeft, Right: var rightAndRight } }:
+                new BinaryExp(And,
+                    DistributeOrOverAnd(new BinaryExp(Or, leftAndLeft, right)),
+                    DistributeOrOverAnd(new BinaryExp(Or, leftAndRight, right))),
+            BinaryExp
+                {
+                    Op: Or,
+                    Left: var left,
+                    Right: BinaryExp { Op: And, Left: var rightAndLeft, Right: var rightAndRight }
+                } =>
                 // A OR (B AND C) -> (A OR B) AND (A OR C)
-                return new BinaryExp(BinaryOperator.And, DistributeOrOverAnd(new BinaryExp(BinaryOperator.Or, left, rightAndLeft)), DistributeOrOverAnd(new BinaryExp(BinaryOperator.Or, left, rightAndRight)));
-        
-            case BinaryExp binaryExp:
+                new BinaryExp(And,
+                    DistributeOrOverAnd(new BinaryExp(Or, left, rightAndLeft)),
+                    DistributeOrOverAnd(new BinaryExp(Or, left, rightAndRight))),
+            BinaryExp binaryExp =>
                 // If neither child is an AND, recurse on the children and return
-                return new BinaryExp(binaryExp.Op, DistributeOrOverAnd(binaryExp.Left), DistributeOrOverAnd(binaryExp.Right));
-
-            default:
-                return expr;
-        }
+                new BinaryExp(binaryExp.Op, DistributeOrOverAnd(binaryExp.Left), DistributeOrOverAnd(binaryExp.Right)),
+            _ => expr
+        };
     }
 
     private static IExpression DistributeAndOverOr(IExpression expr)
     {
-        switch (expr)
+        return expr switch
         {
-            case BinaryExp { Op: BinaryOperator.And, Left: BinaryExp { Op: BinaryOperator.Or, Left: var leftOrLeft, Right: var leftOrRight }, Right: var right }:
+            BinaryExp
+                {
+                    Op: And,
+                    Left: BinaryExp { Op: Or, Left: var leftOrLeft, Right: var leftOrRight },
+                    Right: var right
+                } =>
                 // (A OR B) AND C -> (A AND C) OR (B AND C)
-                return new BinaryExp(BinaryOperator.Or, DistributeAndOverOr(new BinaryExp(BinaryOperator.And, leftOrLeft, right)), DistributeAndOverOr(new BinaryExp(BinaryOperator.And, leftOrRight, right)));
-
-            case BinaryExp { Op: BinaryOperator.And, Left: var left, Right: BinaryExp { Op: BinaryOperator.Or, Left: var rightOrLeft, Right: var rightOrRight } }:
+                new BinaryExp(Or, DistributeAndOverOr(new BinaryExp(And, leftOrLeft, right)),
+                    DistributeAndOverOr(new BinaryExp(And, leftOrRight, right))),
+            BinaryExp
+                {
+                    Op: And,
+                    Left: var left,
+                    Right: BinaryExp { Op: Or, Left: var rightOrLeft, Right: var rightOrRight }
+                } =>
                 // A AND (B OR C) -> (A AND B) OR (A AND C)
-                return new BinaryExp(BinaryOperator.Or, DistributeAndOverOr(new BinaryExp(BinaryOperator.And, left, rightOrLeft)), DistributeAndOverOr(new BinaryExp(BinaryOperator.And, left, rightOrRight)));
-
-            case BinaryExp binaryExp:
+                new BinaryExp(Or, DistributeAndOverOr(new BinaryExp(And, left, rightOrLeft)),
+                    DistributeAndOverOr(new BinaryExp(And, left, rightOrRight))),
+            BinaryExp binaryExp =>
                 // If neither child is an OR, recurse on the children and return
-                return new BinaryExp(binaryExp.Op, DistributeAndOverOr(binaryExp.Left), DistributeAndOverOr(binaryExp.Right));
-
-            default:
-                return expr;
-        }
+                new BinaryExp(binaryExp.Op, DistributeAndOverOr(binaryExp.Left), DistributeAndOverOr(binaryExp.Right)),
+            _ => expr
+        };
     }
 }

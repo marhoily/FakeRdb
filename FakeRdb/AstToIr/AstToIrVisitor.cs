@@ -48,7 +48,7 @@ public sealed class AstToIrVisitor : SQLiteParserBaseVisitor<IResult?>
             (Table t, Affected a) => new QueryResult(t, a.RecordsCount),
             (Affected x, Affected y) => new Affected(x.RecordsCount + y.RecordsCount),
 
-            _ => throw new ArgumentOutOfRangeException()
+            _ => throw new ArgumentOutOfRangeException(nameof(aggregate))
         };
     }
 
@@ -300,6 +300,7 @@ public sealed class AstToIrVisitor : SQLiteParserBaseVisitor<IResult?>
         var op = context.join_operator(0).ToJoinOperator();
         return new Join(left, op, right, constraint);
     }
+    
     public override IResult VisitJoin_constraint(Join_constraintContext context)
     {
         return Visit<IExpression>(context.expr());

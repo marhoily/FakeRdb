@@ -9,6 +9,7 @@ public sealed class Table : IResult
     public static readonly Table Empty =
         new("", Array.Empty<ColumnHeader>());
 
+    public override string ToString() => Name;
     public string Name { get; }
     public Column[] Columns { get; }
     public IEnumerable<ColumnHeader> Headers => Columns.Select(c => c.Header);

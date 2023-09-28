@@ -17,11 +17,11 @@ public static class DebugPrint
             {
                 case BinaryExp binary:
                     bool thisNeedParens = needParens && binary.Op == BinaryOperator.Or;
-                    if (thisNeedParens) builder.Append("(");
+                    if (thisNeedParens) builder.Append('(');
                     Inner(binary.Left, builder, binary.Op == BinaryOperator.And);
                     builder.Append($" {BinaryOperatorToString(binary.Op)} ");
                     Inner(binary.Right, builder, binary.Op == BinaryOperator.And);
-                    if (thisNeedParens) builder.Append(")");
+                    if (thisNeedParens) builder.Append(')');
                     break;
                 case UnaryExp unaryExp:
                     builder.Append(UnaryOperatorToString(unaryExp.Op));
@@ -40,13 +40,13 @@ public static class DebugPrint
                     // For demonstration, not complete
                     builder.Append($"{aggregateExp.Function.Method.Name}(");
                     // Print arguments here...
-                    builder.Append(")");
+                    builder.Append(')');
                     break;
                 case ScalarExp scalarExp:
                     // For demonstration, not complete
                     builder.Append($"{scalarExp.Function.Method.Name}(");
                     // Print arguments here...
-                    builder.Append(")");
+                    builder.Append(')');
                     break;
                 case InExp inExp:
                     Inner(inExp.Needle, builder, false);
