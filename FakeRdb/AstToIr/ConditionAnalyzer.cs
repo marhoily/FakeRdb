@@ -44,7 +44,7 @@ public static class ConditionAnalyzer
             new CompositeCondition(
                 singleTableConditions.Values.ToArray(),
                 equiJoinConditions.ToArray(),
-                filter);
+                generalCondition);
         return new[] { compositeCondition };
     }
 
@@ -67,8 +67,11 @@ public static class ConditionAnalyzer
         {
             var left = DiscriminateCondition(binaryExp.Left);
             var right = DiscriminateCondition(binaryExp.Right);
-            if (left is ColumnExp lce && 
-                right is IExpression)
+            if (left is ColumnExp lce1 && right is ColumnExp rce)
+                return new EquiJoinCondition(
+                    lce1.Table, lce1.FullColumnName,
+                    rce.Table, rce.FullColumnName);
+            if (left is ColumnExp lce && right is IExpression)
             {
                 return new SingleTableCondition(lce.Table, binaryExp);
             }

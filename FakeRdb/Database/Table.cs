@@ -128,6 +128,13 @@ public sealed class Table : IResult
         Columns[columnIndex].Rows[rowIndex] = value;
     }
 
+    public Table Filter(IExpression filter)
+    {
+        if (filter == Expr.True) return this;
+        var clone = Clone();
+        clone.ApplyFilter(filter);
+        return clone;
+    }
     public void ApplyFilter(IExpression filter)
     {
         RemoveAll(row => !filter.Eval<bool>(this, row));

@@ -25,7 +25,7 @@ public static class IrExecutor
         var product = CartesianProduct(
             singleSource
                 .SingleTableConditions
-                .Select(c => c.Table).ToArray());
+                .Select(c => c.Table.Filter(c.Filter)).ToArray());
 
         if (singleSource.GeneralCondition != null)
             product.ApplyFilter(singleSource.GeneralCondition);

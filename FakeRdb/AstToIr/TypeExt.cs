@@ -224,6 +224,16 @@ public static partial class TypeExt
             return null;
         }
 
+        if (string.Equals(input, "true", StringComparison.OrdinalIgnoreCase))
+        {
+            return true;
+        }
+
+        if (string.Equals(input, "false", StringComparison.OrdinalIgnoreCase))
+        {
+            return false;
+        }
+
         if (string.Equals(input, "NULL", StringComparison.OrdinalIgnoreCase))
         {
             return null;
