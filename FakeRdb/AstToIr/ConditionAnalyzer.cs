@@ -9,9 +9,18 @@ public static class ConditionAnalyzer
         IEnumerable<Table> tables, IExpression? filter)
     {
         var orGroup = filter?.ToDnf().DecomposeDnf();
-        var andGroup = orGroup?.Alternatives
-            .Single().Conditions ?? Array.Empty<IExpression>();
+        if (orGroup == null)
+            return new[] { BuildCompositeCondition(tables, Array.Empty<IExpression>()) };
 
+        var andGroup = orGroup.Alternatives
+            .Select(alt => BuildCompositeCondition(tables, alt.Conditions))
+            .ToArray();
+
+        return andGroup;
+    }
+
+    private static CompositeCondition BuildCompositeCondition(IEnumerable<Table> tables, IExpression[] andGroup)
+    {
         var singleTableConditions = new Dictionary<Table, SingleTableCondition>();
         var equiJoinConditions = new List<EquiJoinCondition>();
         var generalCondition = default(IExpression);
@@ -45,10 +54,10 @@ public static class ConditionAnalyzer
                 singleTableConditions.Values.ToArray(),
                 equiJoinConditions.ToArray(),
                 generalCondition);
-        return new[] { compositeCondition };
+        return compositeCondition;
     }
 
-    public static ITaggedCondition DiscriminateCondition(IExpression exp)
+    private static ITaggedCondition DiscriminateCondition(IExpression exp)
     {
         return exp switch
         {

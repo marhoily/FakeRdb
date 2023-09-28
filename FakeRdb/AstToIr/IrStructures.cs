@@ -36,7 +36,14 @@ public interface IR : IResult
     public interface ITaggedCondition{ }
     public interface IExpression : IR, ITaggedCondition { }
     public sealed record UnaryExp(UnaryOperator Op, IExpression Operand) : IExpression;
-    public sealed record BinaryExp(BinaryOperator Op, IExpression Left, IExpression Right) : IExpression;
+
+    public sealed record BinaryExp(BinaryOperator Op, IExpression Left, IExpression Right) : IExpression
+    {
+        public override string ToString()
+        {
+            return this.Print();
+        }
+    }
     public sealed record LiteralExp(string Value) : IExpression;
     public sealed record ColumnExp(Table Table, string FullColumnName) : IExpression;
 

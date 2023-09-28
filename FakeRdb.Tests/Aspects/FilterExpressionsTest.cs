@@ -20,6 +20,19 @@ public sealed class FilterExpressionsTest : ComparisonTestBase
     }
 
     [Fact]
+    public void EquiJoin_With_Function_On_One_Side()
+    {
+        Sqlite.SeedCustomersOrders();
+        Sut.SeedCustomersOrders();
+
+        CompareAgainstSqlite(
+            """
+            SELECT * FROM orders, customers
+            WHERE orders.customer_id * 2 = customers.customer_id
+            """);
+    }
+
+    [Fact]
     public void Double_And()
     {
         ExecuteOnBoth(

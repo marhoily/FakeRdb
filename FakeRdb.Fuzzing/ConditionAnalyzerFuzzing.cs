@@ -7,11 +7,11 @@ public sealed class ConditionAnalyzerFuzzing
 {
     [Property(
         Arbitrary = new[] { typeof(ExpressionGenerators) },
-        EndSize = 100)]
-    public void DiscriminateCondition(IExpression expr)
+        EndSize = 100, Replay = "193158020,297238713")]
+    public void BuildAlternativeSources(IExpression expr)
     {
         ConditionAnalyzer
-            .DiscriminateCondition(expr)
+            .BuildAlternativeSources(Enumerable.Empty<Table>(), expr)
             .Should().NotBeNull();
     }
 }
