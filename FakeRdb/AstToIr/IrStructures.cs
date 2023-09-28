@@ -1,4 +1,6 @@
-﻿namespace FakeRdb;
+﻿using System.Diagnostics;
+
+namespace FakeRdb;
 
 /// <summary> Intermediate representation </summary>
 public interface IR : IResult
@@ -38,9 +40,6 @@ public interface IR : IResult
     public sealed record ColumnExp(Table Table, string FullColumnName) : IExpression;
     public sealed record LiteralExp(string Value) : IExpression;
 
-    public sealed record AndGroup(IExpression[] Conditions);
-    public sealed record OrGroup(AndGroup[] Alternatives);
-
     public sealed record BindExp(object? Value) : IExpression;
     public sealed record AggregateExp(AggregateFunction Function, IExpression[] Args) : IExpression;
     public sealed record ScalarExp(ScalarFunction Function, IExpression[] Args) : IExpression;
@@ -55,12 +54,13 @@ public interface IR : IResult
     /// Represents conditions specific to a single table.
     /// The Filter should only involve columns from one table and contain no OR/AND.
     /// </summary>
+    [DebuggerDisplay("STC({Table}): {Filter}")]
     public sealed record SingleTableCondition(Table Table, IExpression Filter) : ITaggedCondition;
+    [DebuggerDisplay("EquiJoin: {LeftTable}.{LeftColumn} == {RightTable}.{RightColumn}")]
     public sealed record EquiJoinCondition(
         Table LeftTable, string LeftColumn, 
         Table RightTable, string RightColumn) : ITaggedCondition;
 
-  
     public sealed record ValuesTable(ValuesRow[] Rows) : IResult;
     public sealed record ValuesRow(IExpression[] Cells);
 }

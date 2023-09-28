@@ -1,4 +1,5 @@
-﻿using static FakeRdb.IR;
+﻿using static FakeRdb.CompoundOperator;
+using static FakeRdb.IR;
 
 namespace FakeRdb;
 
@@ -28,10 +29,10 @@ public static class IrExecutor
             var right = db.ExecuteCompound(compound.Right);
             return compound.Operator switch
             {
-                CompoundOperator.Union => Table.Union(left, right),
-                CompoundOperator.UnionAll => Table.UnionAll(left, right),
-                CompoundOperator.Intersect => Table.Intersect(left, right),
-                CompoundOperator.Except => Table.Except(left, right),
+                Union => Table.Union(left, right),
+                UnionAll => Table.UnionAll(left, right),
+                Intersect => Table.Intersect(left, right),
+                Except => Table.Except(left, right),
                 _ => throw new ArgumentOutOfRangeException()
             };
         }

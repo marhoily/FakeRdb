@@ -60,12 +60,35 @@ public static class DebugPrint
         {
             return op switch
             {
-                BinaryOperator.And => "&&",
-                BinaryOperator.Or => "||",
-                BinaryOperator.Equal => "==",
+                BinaryOperator.And => "AND",
+                BinaryOperator.Or => "OR",
+                BinaryOperator.Equal => "=",
+                BinaryOperator.Multiplication => "*",
+                BinaryOperator.Concatenation => "||",
+                BinaryOperator.Division => "/",
+                BinaryOperator.Modulus => "%",
+                BinaryOperator.Addition => "+",
+                BinaryOperator.Subtraction => "-",
+                BinaryOperator.BinaryLeftShift => "<<",
+                BinaryOperator.BinaryRightShift => ">>",
+                BinaryOperator.BinaryAnd => "&",
+                BinaryOperator.BinaryOr => "|",
+                BinaryOperator.Less => "<",
+                BinaryOperator.LessOrEqual => "<=",
+                BinaryOperator.Greater => ">",
+                BinaryOperator.GreaterOrEqual => ">=",
+                BinaryOperator.NotEqual => "!=",
+                BinaryOperator.Is => "IS",
+                BinaryOperator.In => "IN",
+                BinaryOperator.Like => "LIKE",
+                BinaryOperator.Glob => "GLOB",
+                BinaryOperator.Match => "MATCH",
+                BinaryOperator.RegExp => "REGEXP",
+                BinaryOperator.IsNot => "IS NOT",
                 _ => throw new Exception($"Unknown BinaryOperator: {op}")
             };
         }
+
         static string UnaryOperatorToString(UnaryOperator op)
         {
             return op switch

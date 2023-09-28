@@ -52,15 +52,9 @@ public static class ConditionAnalyzer
     {
         return exp switch
         {
-            BindExp => exp,
-            AggregateExp => exp,
             BinaryExp binaryExp => Binary(binaryExp),
-            ColumnExp => exp,
-            InExp => exp,
-            LiteralExp => exp,
-            ScalarExp => exp,
             UnaryExp unaryExp => DiscriminateCondition(unaryExp.Operand),
-            _ => throw new ArgumentOutOfRangeException(nameof(exp))
+            _ => exp,
         };
 
         static ITaggedCondition Binary(BinaryExp binaryExp)

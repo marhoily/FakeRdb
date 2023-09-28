@@ -14,44 +14,44 @@ public sealed class ToCnfDnfTests
 
     // ReSharper disable DoubleNegationOperator
     [Fact] public void Cnf_Simplest() => AssertCnf(() => A, "A");
-    [Fact] public void Cnf_And() => AssertCnf(() => A && B, "A && B");
-    [Fact] public void Cnf_AndOfOr() => AssertCnf(() => (A || B) && C, "(A || B) && C");
-    [Fact] public void Cnf_OrOfAnd() => AssertCnf(() => (A && B) || C, "(A || C) && (B || C)");
-    [Fact] public void Cnf_NotOfAnd() => AssertCnf(() => !(A && B), "!A || !B");
-    [Fact] public void Cnf_NotOfOr() => AssertCnf(() => !(A || B), "!A && !B");
+    [Fact] public void Cnf_And() => AssertCnf(() => A && B, "A AND B");
+    [Fact] public void Cnf_AndOfOr() => AssertCnf(() => (A || B) && C, "(A OR B) AND C");
+    [Fact] public void Cnf_OrOfAnd() => AssertCnf(() => (A && B) || C, "(A OR C) AND (B OR C)");
+    [Fact] public void Cnf_NotOfAnd() => AssertCnf(() => !(A && B), "!A OR !B");
+    [Fact] public void Cnf_NotOfOr() => AssertCnf(() => !(A || B), "!A AND !B");
     [Fact] public void Cnf_DoubleNegative() => AssertCnf(() => !!A, "A");
     [Fact]
     public void Cnf_AndOrCombo() => AssertCnf(() =>
         (A && B) || (C && D),
-        "(A || C) && (A || D) && (B || C) && (B || D)");
+        "(A OR C) AND (A OR D) AND (B OR C) AND (B OR D)");
     [Fact]
     public void Cnf_ComplexExpression1() => AssertCnf(() =>
         (A && (B || C)) || D,
-        "(A || D) && (B || C || D)");
+        "(A OR D) AND (B OR C OR D)");
     [Fact]
     public void Cnf_ComplexExpression2() => AssertCnf(() =>
         !(A && (B || C)) || D,
-        "(!A || !B) && (!A || !C) || D");
+        "(!A OR !B) AND (!A OR !C) OR D");
 
     [Fact] public void Dnf_Showcase() => AssertDnf(
-        () => (A || B) && C, "A && C || B && C");
+        () => (A || B) && C, "A AND C OR B AND C");
 
     [Fact] public void Dnf_Simplest() => AssertDnf(() => A, "A");
-    [Fact] public void Dnf_NotOfOr() => AssertDnf(() => !(A || B), "!A && !B");
+    [Fact] public void Dnf_NotOfOr() => AssertDnf(() => !(A || B), "!A AND !B");
     [Fact]
     public void Dnf_AndOfOr() => AssertDnf(() =>
         (A || B) && (C || D),
-        "A && C || A && D || B && C || B && D");
+        "A AND C OR A AND D OR B AND C OR B AND D");
 
     [Fact]
     public void Dnf_OrOfAnd() => AssertDnf(() =>
-        (A && B) || (C && D), "A && B || C && D");
+        (A && B) || (C && D), "A AND B OR C AND D");
     [Fact]
     public void Dnf_NestedAndOr() => AssertDnf(() =>
-        (A || (B && C)) && D, "A && D || B && C && D");
+        (A || (B && C)) && D, "A AND D OR B AND C AND D");
     [Fact]
     public void Dnf_NestedOrAnd() => AssertDnf(() =>
-        (A && (B || C)) || D, "A && B || A && C || D");
+        (A && (B || C)) || D, "A AND B OR A AND C OR D");
 
     // ReSharper restore DoubleNegationOperator
 

@@ -5,6 +5,9 @@ namespace FakeRdb;
 
 public static class BooleanAlgebra
 {
+    public sealed record AndGroup(IExpression[] Conditions);
+    public sealed record OrGroup(AndGroup[] Alternatives);
+
     public static OrGroup? DecomposeDnf(this IExpression expr)
     {
         switch (expr)
