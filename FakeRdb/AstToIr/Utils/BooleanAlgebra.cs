@@ -33,21 +33,21 @@ public static class BooleanAlgebra
     {
         var conditions = new List<IExpression>();
 
+        TraverseAnd(binaryAnd);
+        return new AndGroup(conditions.ToArray());
+
         void TraverseAnd(BinaryExp exp)
         {
-            if (exp.Left is BinaryExp leftAnd && leftAnd.Op == BinaryOperator.And)
+            if (exp.Left is BinaryExp { Op: BinaryOperator.And } leftAnd)
                 TraverseAnd(leftAnd);
             else
                 conditions.Add(exp.Left);
 
-            if (exp.Right is BinaryExp rightAnd && rightAnd.Op == BinaryOperator.And)
+            if (exp.Right is BinaryExp { Op: BinaryOperator.And } rightAnd)
                 TraverseAnd(rightAnd);
             else
                 conditions.Add(exp.Right);
         }
-
-        TraverseAnd(binaryAnd);
-        return new AndGroup(conditions.ToArray());
     }
 
     /// <summary>
