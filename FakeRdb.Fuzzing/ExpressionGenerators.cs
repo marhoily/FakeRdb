@@ -9,9 +9,9 @@ public static class ExpressionGenerators
         AnyExpression().ToArbitrary();
 
     private static Gen<IExpression> AnyExpression() =>
-        Gen.Sized(size => Gen.OneOf(
-            LiteralExpGen(),
-            Gen.Resize(size / 2, BinaryExpGen())));
+        Gen.Sized(size => size > 5
+            ? Gen.OneOf(LiteralExpGen(), Gen.Resize(size / 2, BinaryExpGen()))
+            : LiteralExpGen());
 
     private static Gen<IExpression> LiteralExpGen() =>
         from value in Gen.Elements(

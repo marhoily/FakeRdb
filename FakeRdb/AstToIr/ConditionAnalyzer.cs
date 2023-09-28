@@ -61,19 +61,21 @@ public static class ConditionAnalyzer
         {
             var left = DiscriminateCondition(binaryExp.Left);
             var right = DiscriminateCondition(binaryExp.Right);
-            if (left is ColumnExp lce1 && right is ColumnExp rce)
-                return new EquiJoinCondition(
-                    lce1.Table, lce1.FullColumnName,
-                    rce.Table, rce.FullColumnName);
-            if (left is ColumnExp lce && right is IExpression)
-            {
-                return new SingleTableCondition(lce.Table, binaryExp);
-            }
 
-            if (left is not SingleTableCondition ||
-                right is not SingleTableCondition)
-                return binaryExp;
-            throw new InvalidOperationException("Unreachable");
+            return (left, right) switch
+            {
+                (ColumnExp lce1, ColumnExp rce) =>
+                    new EquiJoinCondition(
+                        lce1.Table, lce1.FullColumnName,
+                        rce.Table, rce.FullColumnName),
+
+                (ColumnExp lce, IExpression) => new SingleTableCondition(lce.Table, binaryExp),
+
+                (not SingleTableCondition, _) => binaryExp,
+
+                _ => throw new InvalidOperationException("Unreachable")
+            };
         }
+
     }
 }

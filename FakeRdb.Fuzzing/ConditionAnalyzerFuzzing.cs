@@ -3,27 +3,15 @@ using static FakeRdb.IR;
 
 namespace FakeRdb.Fuzzing;
 
-public class ConditionAnalyzerFuzzing
+public sealed class ConditionAnalyzerFuzzing
 {
-    private readonly ITestOutputHelper _testOutputHelper;
-
-    public ConditionAnalyzerFuzzing(ITestOutputHelper testOutputHelper)
-    {
-        _testOutputHelper = testOutputHelper;
-    }
-
-    [Property(Arbitrary = new [] { typeof(ExpressionGenerators) })]
+    [Property(
+        Arbitrary = new[] { typeof(ExpressionGenerators) },
+        EndSize = 100)]
     public void DiscriminateCondition(IExpression expr)
     {
-        try
-        {
-            ConditionAnalyzer.DiscriminateCondition(expr)
-             .Should().NotBeNull();
-        }
-        catch (Exception)
-        {
-            _testOutputHelper.WriteLine(expr.Print());
-            throw;
-        }
+        ConditionAnalyzer
+            .DiscriminateCondition(expr)
+            .Should().NotBeNull();
     }
 }
