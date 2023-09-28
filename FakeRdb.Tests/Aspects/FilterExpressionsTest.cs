@@ -39,7 +39,7 @@ public sealed class FilterExpressionsTest : ComparisonTestBase
 
         CompareAgainstSqlite(
             """
-            SELECT * FROM orders, customers
+            SELECT customer_name FROM orders, customers
             WHERE orders.customer_id * 2 = orders.order_id
             """);
     }

@@ -58,7 +58,7 @@ public static class ExpressionEval
             ? arg.Left.GetTypeAffinity()
             : arg.Right.GetTypeAffinity();
 
-        var result = Calc(arg.Op, l.Coerce(coerceTo), r.Coerce(coerceTo));
+        var result = Calc(arg.Operand, l.Coerce(coerceTo), r.Coerce(coerceTo));
 
         /*
          * Any operators applied to column names, including the no-op unary "+" operator,

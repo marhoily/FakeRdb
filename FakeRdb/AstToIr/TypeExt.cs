@@ -179,7 +179,7 @@ public static partial class TypeExt
             (_, StorageType.Real) => Convert.ChangeType(obj, typeof(double)),
             (_, StorageType.Text) => Convert.ChangeType(obj, typeof(string)),
             (_, StorageType.Blob) => obj,
-            _ => throw new ArgumentOutOfRangeException()
+            _ => throw new ArgumentOutOfRangeException(nameof(affinity))
         };
     }
     public static object? ConvertToSqliteType(this object? input, TypeAffinity affinity)
@@ -209,7 +209,7 @@ public static partial class TypeExt
     private static byte[] ConvertHexToBytes(this string input)
     {
         // Extract the hexadecimal part
-        var hex = input.Substring(2, input.Length - 3);
+        var hex = input[2..^1];
 
         // Convert the hexadecimal string to a byte array
         var bytes = new byte[hex.Length / 2];

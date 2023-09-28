@@ -95,9 +95,9 @@ public sealed class ToCnfDnfTests
         bool Inner(IExpression a) =>
             a switch
             {
-                BinaryExp { Op: Or, Left: var left, Right: var right } =>
+                BinaryExp { Operand: Or, Left: var left, Right: var right } =>
                     Inner(left) || Inner(right),
-                BinaryExp { Op: And, Left: var left, Right: var right } =>
+                BinaryExp { Operand: And, Left: var left, Right: var right } =>
                     Inner(left) && Inner(right),
                 ColumnExp literal =>
                     (bitfield & (1 << Array.IndexOf(mapping, literal.FullColumnName))) != 0,

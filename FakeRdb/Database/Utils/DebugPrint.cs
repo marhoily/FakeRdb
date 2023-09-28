@@ -16,11 +16,11 @@ public static class DebugPrint
             switch (exp)
             {
                 case BinaryExp binary:
-                    bool thisNeedParens = needParens && binary.Op == BinaryOperator.Or;
+                    bool thisNeedParens = needParens && binary.Operand == BinaryOperator.Or;
                     if (thisNeedParens) builder.Append('(');
-                    Inner(binary.Left, builder, binary.Op == BinaryOperator.And);
-                    builder.Append($" {BinaryOperatorToString(binary.Op)} ");
-                    Inner(binary.Right, builder, binary.Op == BinaryOperator.And);
+                    Inner(binary.Left, builder, binary.Operand == BinaryOperator.And);
+                    builder.Append($" {BinaryOperatorToString(binary.Operand)} ");
+                    Inner(binary.Right, builder, binary.Operand == BinaryOperator.And);
                     if (thisNeedParens) builder.Append(')');
                     break;
                 case UnaryExp unaryExp:

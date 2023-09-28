@@ -37,7 +37,7 @@ public interface IR : IResult
     public interface IExpression : IR, ITaggedCondition { }
     public sealed record UnaryExp(UnaryOperator Op, IExpression Operand) : IExpression;
 
-    public sealed record BinaryExp(BinaryOperator Op, IExpression Left, IExpression Right) : IExpression
+    public sealed record BinaryExp(BinaryOperator Operand, IExpression Left, IExpression Right) : IExpression
     {
         public override string ToString()
         {
