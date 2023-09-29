@@ -125,6 +125,7 @@ public static partial class TypeExt
             null => TypeAffinity.None,
             string => TypeAffinity.Text,
             int or
+                bool or
                 long or
                 byte or
                 char or

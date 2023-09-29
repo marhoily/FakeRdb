@@ -62,6 +62,11 @@ public sealed class CustomFieldComparer : IComparer<object?>
                 if (b is double bb)
                     return -bb.CompareTo(Convert.ChangeType(a, typeof(double)));
 
+                if (a is long la)
+                    return la.CompareTo(Convert.ChangeType(b, typeof(long)));
+                if (b is long lb)
+                    return -lb.CompareTo(Convert.ChangeType(a, typeof(long)));
+
             }
             if (a is long || b is long)
                 return a is long ? -1 : 1;

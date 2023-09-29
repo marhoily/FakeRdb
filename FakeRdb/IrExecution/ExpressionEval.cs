@@ -89,8 +89,8 @@ public static class ExpressionEval
             {
                 if (x is not bool) x = x is not 0;
                 if (y is not bool) y = y is not 0;
-            } 
-            else if (op.IsInCategory(BinaryOperator.IsArithmetic))
+            }
+            else if ((op & (BinaryOperator.IsArithmetic | BinaryOperator.IsComparison)) != 0)
             {
                 if (x is bool bx) x = bx ? 1 : 0;
                 if (y is bool by) y = by ? 1 : 0;
@@ -99,7 +99,7 @@ public static class ExpressionEval
             {
                 BinaryOperator.Multiplication => (dynamic)x * (dynamic)y,
                 BinaryOperator.Equal => Equals(x, y),
-                BinaryOperator.Less => x is IComparable c ? c.CompareTo(y) == -1 : throw new NotSupportedException(),
+                BinaryOperator.Less => CustomFieldComparer.Compare(x, y) < 0,
                 BinaryOperator.Addition => (dynamic)x + (dynamic)y,
                 BinaryOperator.Concatenation => string.Concat(x, y),
                 BinaryOperator.And => x.ToBool() && y.ToBool(),

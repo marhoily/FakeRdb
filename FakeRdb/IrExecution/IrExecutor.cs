@@ -43,10 +43,12 @@ public static class IrExecutor
     private static Table ExecuteCore(this SelectCore query, params OrderingTerm[] orderingTerms)
     {
         var singleSource = query.AlternativeSources.Single();
-        var product = JoinTables(
-            singleSource
-                .SingleTableConditions
-                .Select(c => c.Table.Filter(c.Filter)).ToArray(),
+        var tables = singleSource
+            .SingleTableConditions
+            .Select(c => c.Table.Filter(c.Filter)).ToArray();
+        if (tables.Length == 0)
+            return ExecuteNoFrom(query.Columns);
+        var product = JoinTables(tables,
             singleSource.EquiJoinConditions);
 
         if (singleSource.GeneralCondition != null)
@@ -58,6 +60,19 @@ public static class IrExecutor
         // We cannot take sorting out of SelectCore to the later stages
         // because the projection can throw the key columns away
         return grouped.OrderBy(orderingTerms).Project(query.Columns);
+    }
+
+    private static Table ExecuteNoFrom(ResultColumn[] queryColumns)
+    {
+        return new Table("Result", queryColumns.Select((col, n) =>
+        {
+            var eval = col.Exp.Eval();
+            var name = col.Alias ?? col.Original;
+            var affinity = eval.GetTypeAffinity();
+            return new Column(
+                new ColumnHeader(n, name, "Result."+name, affinity),
+                new List<object?> { eval });
+        }).ToArray());
     }
 
     /// <summary>
