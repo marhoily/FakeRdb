@@ -93,6 +93,18 @@ public sealed class ConditionAnalysisTest : ComparisonTestBase
             WHERE 4 = orders.customer_id * 2
             """);
     }
+    [Fact]
+    public void SingleTable_Rhs_Sandwich_Equals_First()
+    {
+        Sqlite.SeedCustomersOrders();
+        Sut.SeedCustomersOrders();
+
+        CompareAgainstSqlite(
+            """
+            SELECT customer_name FROM orders, customers
+            WHERE (4 = orders.customer_id) * 2
+            """);
+    }
 
     [Fact]
     public void Double_And()

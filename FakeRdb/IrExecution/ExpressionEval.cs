@@ -85,6 +85,16 @@ public static class ExpressionEval
         {
             if (x == null || y == null)
                 return null;
+            if (op.IsInCategory(BinaryOperator.IsLogical))
+            {
+                if (x is not bool) x = x is not 0;
+                if (y is not bool) y = y is not 0;
+            } 
+            else if (op.IsInCategory(BinaryOperator.IsArithmetic))
+            {
+                if (x is bool bx) x = bx ? 1 : 0;
+                if (y is bool by) y = by ? 1 : 0;
+            }
             return (object?)(op switch
             {
                 BinaryOperator.Multiplication => (dynamic)x * (dynamic)y,
