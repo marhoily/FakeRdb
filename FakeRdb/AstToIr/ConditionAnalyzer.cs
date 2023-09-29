@@ -37,6 +37,9 @@ public static class ConditionAnalyzer
                 case EquiJoinCondition ejc:
                     equiJoinConditions.Add(ejc);
                     break;
+                case GeneralCondition gc:
+                    generalCondition = gc.Filter;
+                    break;
                 case IExpression exp:
                     generalCondition = Expr.And(generalCondition, exp);
                     break;
@@ -88,11 +91,11 @@ public static class ConditionAnalyzer
                     },
 
                 (SingleTableCondition l, ColumnExp r)
-                    when l.Table != r.Table => binaryExp,
+                    when l.Table != r.Table => new GeneralCondition(binaryExp),
 
-                (EquiJoinCondition, _) => binaryExp,
+                (EquiJoinCondition, _) => new GeneralCondition(binaryExp),
 
-                // ConditionAnalyzer precalculates constant expressions
+                // ConditionAnalyzer pre-calculates constant expressions
                 (LiteralExp or BindExp, LiteralExp or BindExp) => 
                     new BindExp(binaryExp.Eval()),
 

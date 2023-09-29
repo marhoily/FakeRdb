@@ -33,7 +33,7 @@ public interface IR : IResult
     public sealed record ResultColumnList(params ResultColumn[] List) : IR;
     public sealed record ResultColumn(IExpression Exp, string Original, string? Alias = null) : IR;
 
-    public interface ITaggedCondition{ }
+    public interface ITaggedCondition { }
     public interface IExpression : IR, ITaggedCondition { }
     public sealed record UnaryExp(UnaryOperator Op, IExpression Operand) : IExpression;
 
@@ -63,9 +63,11 @@ public interface IR : IResult
     /// </summary>
     [DebuggerDisplay("STC({Table}): {Filter}")]
     public sealed record SingleTableCondition(Table Table, IExpression Filter) : ITaggedCondition;
+    [DebuggerDisplay("General({Filter})")]
+    public sealed record GeneralCondition(IExpression Filter) : ITaggedCondition;
     [DebuggerDisplay("EquiJoin: {LeftTable}.{LeftColumn} == {RightTable}.{RightColumn}")]
     public sealed record EquiJoinCondition(
-        Table LeftTable, string LeftColumn, 
+        Table LeftTable, string LeftColumn,
         Table RightTable, string RightColumn) : ITaggedCondition;
 
     public sealed record ValuesTable(ValuesRow[] Rows) : IResult;
