@@ -46,6 +46,18 @@ public sealed class ConditionAnalysisTest : ComparisonTestBase
     }
 
     [Fact]
+    public void SingleTable_Rhs()
+    {
+        Sqlite.SeedCustomersOrders();
+        Sut.SeedCustomersOrders();
+
+        CompareAgainstSqlite(
+            """
+            SELECT * FROM orders
+            WHERE 4 = orders.order_id
+            """);
+    }
+    [Fact]
     public void SingleTable_With_Subexpression()
     {
         Sqlite.SeedCustomersOrders();
@@ -57,7 +69,6 @@ public sealed class ConditionAnalysisTest : ComparisonTestBase
             WHERE orders.customer_id * 2 = orders.order_id
             """);
     }
-
     [Fact]
     public void SingleTable_Lhs_Sandwich()
     {

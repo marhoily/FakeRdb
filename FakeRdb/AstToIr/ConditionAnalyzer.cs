@@ -83,6 +83,8 @@ public static class ConditionAnalyzer
 
                 (ColumnExp l, IExpression) =>
                     new SingleTableCondition(l.Table, binaryExp),
+                (IExpression, ColumnExp r) =>
+                    new SingleTableCondition(r.Table, binaryExp),
 
                 (SingleTableCondition l, LiteralExp r) =>
                     l with { Filter = new BinaryExp(binaryExp.Operand, l.Filter, r) },
