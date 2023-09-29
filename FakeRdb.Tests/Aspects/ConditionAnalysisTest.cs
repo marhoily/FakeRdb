@@ -44,6 +44,7 @@ public sealed class ConditionAnalysisTest : ComparisonTestBase
             WHERE orders.customer_id * 2 = customers.customer_id
             """);
     }
+
     [Fact]
     public void SingleTable_With_Subexpression()
     {
@@ -54,6 +55,19 @@ public sealed class ConditionAnalysisTest : ComparisonTestBase
             """
             SELECT customer_name FROM orders, customers
             WHERE orders.customer_id * 2 = orders.order_id
+            """);
+    }
+
+    [Fact]
+    public void SingleTable_Sandwich()
+    {
+        Sqlite.SeedCustomersOrders();
+        Sut.SeedCustomersOrders();
+
+        CompareAgainstSqlite(
+            """
+            SELECT customer_name FROM orders, customers
+            WHERE orders.customer_id * 2 = 4
             """);
     }
 
