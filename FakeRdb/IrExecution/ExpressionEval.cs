@@ -9,7 +9,7 @@ public static class ExpressionEval
         var eval = exp.Eval(table, rowIndex)!;
         if (typeof(T) == typeof(bool))
         {
-            return (T)(object)eval.ToBool();
+            return (T)((object?)eval.ToNullableBool() ?? false);
         }
         return (T)eval;
     }
@@ -29,6 +29,7 @@ public static class ExpressionEval
     {
         return arg switch
         {
+            BindExp bind => bind.Value,
             BinaryExp binaryExp => binaryExp.Eval(table, rowIndex),
             ColumnExp columnExp => table.Get(columnExp.FullColumnName).Rows[rowIndex],
             InExp inExp => inExp.Eval(table, rowIndex),
@@ -69,12 +70,14 @@ public static class ExpressionEval
         result.GetTypeAffinity();
         return result;
 
+        // BUG: GetPriority is probably a wrong approach
         static int GetPriority(IExpression exp) =>
             exp switch
             {
                 BinaryExp => 0,
                 ColumnExp => 1,
                 LiteralExp => 0,
+                BindExp => 0,
                 _ => throw new ArgumentOutOfRangeException(nameof(exp))
             };
 
@@ -89,7 +92,7 @@ public static class ExpressionEval
                 BinaryOperator.Less => x is IComparable c ? c.CompareTo(y) == -1 : throw new NotSupportedException(),
                 BinaryOperator.Addition => (dynamic)x + (dynamic)y,
                 BinaryOperator.Concatenation => string.Concat(x, y),
-                BinaryOperator.And => x.ToBool() & y.ToBool(),
+                BinaryOperator.And => x.ToBool() && y.ToBool(),
                 _ => throw new ArgumentOutOfRangeException(op.ToString())
             });
         }

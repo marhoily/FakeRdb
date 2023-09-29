@@ -20,6 +20,19 @@ public sealed class FilterExpressionsTest : ComparisonTestBase
     }
 
     [Fact]
+    public void Const_Expr()
+    {
+        Sqlite.SeedCustomersOrders();
+        Sut.SeedCustomersOrders();
+
+        CompareAgainstSqlite(
+            """
+            SELECT * FROM orders
+            WHERE false = NULL
+            """);
+    }
+
+    [Fact]
     public void NonEquiJoin_With_Function_On_One_Side()
     {
         Sqlite.SeedCustomersOrders();

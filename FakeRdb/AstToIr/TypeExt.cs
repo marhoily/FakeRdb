@@ -6,6 +6,16 @@ namespace FakeRdb;
 
 public static partial class TypeExt
 {
+    public static bool? ToNullableBool(this object? value)
+    {
+        return value switch
+        {
+            null => false,
+            bool b => b,
+            long l => l != 0,
+            _ => throw new ArgumentOutOfRangeException(nameof(value), value, null)
+        };
+    }
     public static bool ToBool(this object value)
     {
         return value switch

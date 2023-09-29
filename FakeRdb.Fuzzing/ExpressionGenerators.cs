@@ -10,9 +10,17 @@ public static class ExpressionGenerators
 
     private static Gen<IExpression> AnyExpression() =>
         Gen.Sized(size => size > 5
-            ? Gen.OneOf(LiteralExpGen(), ColumnExpGen(),
+            ? Gen.OneOf(SimpleExpressionGen(),
                 Gen.Resize(size / 2, BinaryExpGen()))
-            : Gen.OneOf(LiteralExpGen(), ColumnExpGen()));
+            : Gen.OneOf(SimpleExpressionGen()));
+
+    private static Gen<IExpression> SimpleExpressionGen() => 
+        Gen.OneOf(LiteralExpGen(), BindExpGen(), ColumnExpGen());
+
+    private static Gen<IExpression> BindExpGen() =>
+        from value in Gen.Elements<object?>(
+            1, "str", 5.2, true, false, null)
+        select (IExpression) new BindExp(value);
 
     private static Gen<IExpression> LiteralExpGen() =>
         from value in Gen.Elements(

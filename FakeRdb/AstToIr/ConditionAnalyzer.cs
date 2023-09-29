@@ -86,9 +86,16 @@ public static class ConditionAnalyzer
                     {
                         Filter = new BinaryExp(binaryExp.Operand, l.Filter, r)
                     },
+
                 (SingleTableCondition l, ColumnExp r)
                     when l.Table != r.Table => binaryExp,
+
                 (EquiJoinCondition, _) => binaryExp,
+
+                // ConditionAnalyzer precalculates constant expressions
+                (LiteralExp or BindExp, LiteralExp or BindExp) => 
+                    new BindExp(binaryExp.Eval()),
+
 
                 _ => throw new InvalidOperationException("Unreachable")
             };
