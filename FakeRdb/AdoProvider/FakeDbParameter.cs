@@ -139,7 +139,7 @@ public sealed class FakeDbParameter : DbParameter
                 return size.GetValueOrDefault();
             if (_value is string str)
                 return str.Length;
-            return !(_value is byte[] numArray) ? 0 : numArray.Length;
+            return _value is not byte[] numArray ? 0 : numArray.Length;
         }
         set => _size = value >= -1 ? value : throw new ArgumentOutOfRangeException(nameof(value), value, null);
     }

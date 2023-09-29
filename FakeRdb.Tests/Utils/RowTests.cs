@@ -2,10 +2,10 @@
 
 public class RowTests
 {
-    private static readonly Row Row1 = new(new object?[] { 1, "Apple", null });
-    private static readonly Row Row2 = new(new object?[] { 2, "Banana", null });
-    private static readonly Row RowNulls = new(new object?[] { null, null, null });
-    private static readonly Row RowMixed = new(new object?[] { 1.0, "Apple", 1 });
+    private static readonly Row Row1 = new(1, "Apple", null);
+    private static readonly Row Row2 = new(2, "Banana", null);
+    private static readonly Row RowNulls = new(null, null, null);
+    private static readonly Row RowMixed = new(1.0, "Apple", 1);
 
     [Fact]
     public void GetKey_ShouldReturnEqualKeysForSameData()

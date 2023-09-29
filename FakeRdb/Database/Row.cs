@@ -128,7 +128,7 @@ public sealed record Row(params object?[] Data)
 
         public bool Equals(CompositeKey? other)
         {
-            if (ReferenceEquals(other, null)) return false;
+            if (other is null) return false;
             if (ReferenceEquals(this, other)) return true;
 
             return _keyComponents.SequenceEqual(other._keyComponents);
