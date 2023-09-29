@@ -59,7 +59,7 @@ public sealed class ConditionAnalysisTest : ComparisonTestBase
     }
 
     [Fact]
-    public void SingleTable_Sandwich()
+    public void SingleTable_Lhs_Sandwich()
     {
         Sqlite.SeedCustomersOrders();
         Sut.SeedCustomersOrders();
@@ -68,6 +68,18 @@ public sealed class ConditionAnalysisTest : ComparisonTestBase
             """
             SELECT customer_name FROM orders, customers
             WHERE orders.customer_id * 2 = 4
+            """);
+    }
+    [Fact]
+    public void SingleTable_Rhs_Sandwich()
+    {
+        Sqlite.SeedCustomersOrders();
+        Sut.SeedCustomersOrders();
+
+        CompareAgainstSqlite(
+            """
+            SELECT customer_name FROM orders, customers
+            WHERE 4 = orders.customer_id * 2
             """);
     }
 
