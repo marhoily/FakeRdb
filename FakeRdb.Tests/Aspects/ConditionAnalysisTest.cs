@@ -1,8 +1,8 @@
 ﻿namespace FakeRdb.Tests;
 
-public sealed class FilterExpressionsTest : ComparisonTestBase
+public sealed class ConditionAnalysisTest : ComparisonTestBase
 {
-    public FilterExpressionsTest(ITestOutputHelper output) : base(output)
+    public ConditionAnalysisTest(ITestOutputHelper output) : base(output)
     {
     }
 
