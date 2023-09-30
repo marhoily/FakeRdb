@@ -8,6 +8,7 @@ public sealed class EvalTest : ComparisonTestBase
 
     [Theory]
     [InlineData("true < 2")]
+    [InlineData("'str' AND 15")]
     public void Check(string exp) => 
         CompareAgainstSqlite($"SELECT {exp}");
 }

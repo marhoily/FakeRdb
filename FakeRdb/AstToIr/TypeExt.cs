@@ -8,13 +8,7 @@ public static partial class TypeExt
 {
     public static bool? ToNullableBool(this object? value)
     {
-        return value switch
-        {
-            null => false,
-            bool b => b,
-            long l => l != 0,
-            _ => throw new ArgumentOutOfRangeException(nameof(value), value, null)
-        };
+        return value?.ToBool() ?? false;
     }
     public static bool ToBool(this object value)
     {
@@ -22,7 +16,8 @@ public static partial class TypeExt
         {
             bool b => b,
             long l => l != 0,
-            _ => throw new ArgumentOutOfRangeException(nameof(value), value, null)
+            string s => s.StartsWith('0'),
+            _ => throw new ArgumentOutOfRangeException(nameof(value), value.GetType().Name)
         };
     }
     [GeneratedRegex(@"^[-+]?((0(?![0-9])|[1-9]\d*)(\.\d*)?|\.\d+)([eE][-+]?\d+)?$")]
@@ -187,6 +182,7 @@ public static partial class TypeExt
             bool b => b ? 1L : 0L,
             int i => (long)i,
             float f => (double)f,
+            short s => (long) s,
             _ => throw new ArgumentOutOfRangeException(nameof(obj), obj.GetType().Name)
         };
     }

@@ -19,12 +19,13 @@ public static class ExpressionGenerators
 
     private static Gen<IExpression> BindExpGen() =>
         from value in Gen.Elements<object?>(
-            15L, "str", 5.2, 0L, null, true, false, -6m,(short) 9)
+            15L, "str", "", 5.2, 0L, null, true, false, -6m,(short) 9)
         select (IExpression) new BindExp(value);
 
     private static Gen<IExpression> LiteralExpGen() =>
         from value in Gen.Elements(
-            "1", "42.0", "5e2", "-7", "'string'", "5.2", "true", "false", "NULL")
+            "1", "42.0", "5e2", "-7", "'string'",
+            "''", "5.2", "true", "false", "NULL")
         select (IExpression) new LiteralExp(value);
 
     private static Gen<IExpression> ColumnExpGen() =>

@@ -7,9 +7,6 @@
       <NamedTestSelector>
         <TestName>FakeRdb.Tests.JoinTests.JoinWithCountryAndGroupByContinent</TestName>
       </NamedTestSelector>
-      <NamedTestSelector>
-        <TestName>FakeRdb.Tests.MultiTableSelectTests.Should_Fill_In_The_Tables</TestName>
-      </NamedTestSelector>
     </IgnoredTests>
   </Settings>
 </ProjectConfiguration>

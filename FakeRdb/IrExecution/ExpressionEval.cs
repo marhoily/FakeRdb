@@ -85,17 +85,26 @@ public static class ExpressionEval
         {
             if (x == null || y == null)
                 return null;
-
+            if ((op & (BinaryOperator.IsComparison | BinaryOperator.IsLogical)) != 0)
+                return CalcComparison(op, x, y) ? 1L : 0L;
             return (object?)(op switch
             {
                 BinaryOperator.Multiplication => (dynamic)x * (dynamic)y,
-                BinaryOperator.Equal => Equals(x, y) ? 1L : 0L,
-                BinaryOperator.Less => CustomFieldComparer.Compare(x, y) < 0 ? 1L : 0L,
                 BinaryOperator.Addition => (dynamic)x + (dynamic)y,
                 BinaryOperator.Concatenation => string.Concat(x, y),
-                BinaryOperator.And => x.ToBool() && y.ToBool(),
                 _ => throw new ArgumentOutOfRangeException(op.ToString())
             });
+        }
+
+        static bool CalcComparison(BinaryOperator op, object x, object y)
+        {
+            return op switch
+            {
+                BinaryOperator.Equal => Equals(x, y),
+                BinaryOperator.Less => CustomFieldComparer.Compare(x, y) < 0,
+                BinaryOperator.And => x.ToBool() && y.ToBool(),
+                _ => throw new ArgumentOutOfRangeException(op.ToString())
+            };
         }
     }
 
