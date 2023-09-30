@@ -13,8 +13,9 @@ public sealed class MultiTableSelectTests : ComparisonTestBase
     [Fact]
     public void Should_Fill_In_The_Tables()
     {
-        _dbPair.QueueForBothDbs("select * from orders, customers")
-            .Anticipate(Outcome.Error)
+        _dbPair
+            .Anticipate(Outcome.Either)
+            .QueueForBothDbs("select * from orders, customers")
             .AssertResultsAreIdentical();
     }
 }

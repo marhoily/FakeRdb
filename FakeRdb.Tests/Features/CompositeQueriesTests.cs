@@ -47,13 +47,14 @@ public sealed class CompositeQueriesTests : ComparisonTestBase
     [MemberData(nameof(GetPermutations))]
     public void Union(string combinator, string[] cityColumns, string[] countryColumns )
     {
-        _dbPair.QueueForBothDbs(
-            $"""
-            SELECT {string.Join(", ", cityColumns)} FROM City
-            {combinator}
-            SELECT {string.Join(", ", countryColumns)} FROM Country
-            """)
+        _dbPair
             .Anticipate(Outcome.Either)
+            .QueueForBothDbs(
+                $"""
+                 SELECT {string.Join(", ", cityColumns)} FROM City
+                 {combinator}
+                 SELECT {string.Join(", ", countryColumns)} FROM Country
+                 """)
             .AssertResultsAreIdentical();
     }
     public static IEnumerable<object[]> GetPermutations()

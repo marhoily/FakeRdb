@@ -28,10 +28,10 @@ public sealed class SelectTests : ComparisonTestBase
     [InlineData("Text in select", "select '12' from Album")]
     public void Check(string d, string sql)
     {
-        _dbPair.QueueForBothDbs(sql)
+        _dbPair
             .WithName(d)
             .Anticipate(Outcome.Either)
+            .QueueForBothDbs(sql)
             .AssertResultsAreIdentical();
     }
-
 }

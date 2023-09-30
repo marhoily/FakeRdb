@@ -32,22 +32,24 @@ public sealed class ColumnNameClashTests : ComparisonTestBase
     [Fact]
     public void Ambiguous_Column_Name_In_Where()
     {
-        _dbPair.QueueForBothDbs(
+        _dbPair
+            .Anticipate(Outcome.Error)
+            .QueueForBothDbs(
             """
             SELECT * FROM Country, City
             WHERE Name = 'USA' AND Name = 'Berlin'
             """)
-            .Anticipate(Outcome.Error)
             .AssertResultsAreIdentical();
     }
     [Fact]
     public void Ambiguous_Column_Name_In_Select()
     {
-        _dbPair.QueueForBothDbs(
+        _dbPair
+            .Anticipate(Outcome.Error)
+            .QueueForBothDbs(
             """
             SELECT Name FROM Country, City
             """)
-            .Anticipate(Outcome.Error)
             .AssertResultsAreIdentical();
     }
     [Fact]
@@ -70,25 +72,27 @@ public sealed class ColumnNameClashTests : ComparisonTestBase
     [Fact]
     public void Cross_Reference()
     {
-        _dbPair.QueueForBothDbs(
+        _dbPair
+            .Anticipate(Outcome.Error)
+            .QueueForBothDbs(
             """
             SELECT * FROM Country
             UNION
             SELECT Country.Name FROM City
             """)
-            .Anticipate(Outcome.Error)
             .AssertResultsAreIdentical();
     }
     [Fact]
     public void Alias_Cross_Reference()
     {
-        _dbPair.QueueForBothDbs(
+        _dbPair
+            .Anticipate(Outcome.Error)
+            .QueueForBothDbs(
             """
             SELECT * FROM Country as x
             UNION
             SELECT x.Name FROM City
             """)
-            .Anticipate(Outcome.Error)
             .AssertResultsAreIdentical();
     }
 }

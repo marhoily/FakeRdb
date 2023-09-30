@@ -2,7 +2,12 @@ using JetBrains.Annotations;
 
 namespace FakeRdb.Tests;
 
-public class DbPair
+public interface IAmReadyToAssert
+{
+    void AssertResultsAreIdentical();
+}
+
+public sealed class DbPair : IAmReadyToAssert
 {
     private readonly DbConnection _referenceDb;
     private readonly DbConnection _targetDb;
@@ -27,7 +32,7 @@ public class DbPair
     }
 
     [MustUseReturnValue]
-    public DbPair QueueForBothDbs(string sql)
+    public IAmReadyToAssert QueueForBothDbs(string sql)
     {
         _sql = sql;
         return this;

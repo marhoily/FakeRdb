@@ -22,6 +22,8 @@ public sealed class AliasingTests : ComparisonTestBase
     [InlineData("Table alias", "SELECT x.year FROM Album as x")]
     public void Check(string d, string sql)
     {
-        _dbPair.QueueForBothDbs(sql).WithName(d);
+        _dbPair.WithName(d)
+            .QueueForBothDbs(sql)
+            .AssertResultsAreIdentical();
     }
 }

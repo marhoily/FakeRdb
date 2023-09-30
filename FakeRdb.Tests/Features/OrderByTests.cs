@@ -27,8 +27,9 @@ public sealed class OrderByTests : ComparisonTestBase
     [InlineData("BLOBS", "SELECT * FROM T ORDER BY Z")]
     public void ShouldSortDataCorrectly(string d, string sql)
     {
-        _dbPair.QueueForBothDbs(sql)
+        _dbPair
             .WithName(d)
+            .QueueForBothDbs(sql)
             .AssertResultsAreIdentical();
     }
 }
