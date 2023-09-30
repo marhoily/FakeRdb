@@ -19,7 +19,7 @@ public static class ExpressionEval
         return arg switch
         {
             BinaryExp binaryExp => binaryExp.Eval(),
-            BindExp bindExp => bindExp.Value,
+            BindExp bindExp => bindExp.Value.CoerceToStoredType(),
             LiteralExp literalExp => literalExp.Value.CoerceToLexicalAffinity(),
             _ => throw new ArgumentOutOfRangeException(nameof(arg))
         };
@@ -85,21 +85,12 @@ public static class ExpressionEval
         {
             if (x == null || y == null)
                 return null;
-            if (op.IsInCategory(BinaryOperator.IsLogical))
-            {
-                if (x is not bool) x = x is not 0;
-                if (y is not bool) y = y is not 0;
-            }
-            else if ((op & (BinaryOperator.IsArithmetic | BinaryOperator.IsComparison)) != 0)
-            {
-                if (x is bool bx) x = bx ? 1 : 0;
-                if (y is bool by) y = by ? 1 : 0;
-            }
+
             return (object?)(op switch
             {
                 BinaryOperator.Multiplication => (dynamic)x * (dynamic)y,
-                BinaryOperator.Equal => Equals(x, y),
-                BinaryOperator.Less => CustomFieldComparer.Compare(x, y) < 0,
+                BinaryOperator.Equal => Equals(x, y) ? 1L : 0L,
+                BinaryOperator.Less => CustomFieldComparer.Compare(x, y) < 0 ? 1L : 0L,
                 BinaryOperator.Addition => (dynamic)x + (dynamic)y,
                 BinaryOperator.Concatenation => string.Concat(x, y),
                 BinaryOperator.And => x.ToBool() && y.ToBool(),

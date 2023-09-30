@@ -179,6 +179,17 @@ public static partial class TypeExt
         return value % 1 == 0;
     }
 
+    public static object? CoerceToStoredType(this object? obj)
+    {
+        return obj switch
+        {
+            null or long or string or double or byte[] => obj,
+            bool b => b ? 1L : 0L,
+            int i => (long)i,
+            float f => (double)f,
+            _ => throw new ArgumentOutOfRangeException(nameof(obj), obj.GetType().Name)
+        };
+    }
     public static object? Coerce(this object? obj, TypeAffinity affinity)
     {
         return (obj, obj.GetStorageType(affinity)) switch
@@ -246,12 +257,12 @@ public static partial class TypeExt
 
         if (string.Equals(input, "true", StringComparison.OrdinalIgnoreCase))
         {
-            return true;
+            return 1L;
         }
 
         if (string.Equals(input, "false", StringComparison.OrdinalIgnoreCase))
         {
-            return false;
+            return 0L;
         }
 
         if (string.Equals(input, "NULL", StringComparison.OrdinalIgnoreCase))

@@ -1,0 +1,9 @@
+﻿<ProjectConfiguration>
+  <Settings>
+    <IgnoredTests>
+      <NamedTestSelector>
+        <TestName>FakeRdb.Fuzzing.ConditionAnalyzerFuzzing.BuildAlternativeSources</TestName>
+      </NamedTestSelector>
+    </IgnoredTests>
+  </Settings>
+</ProjectConfiguration>

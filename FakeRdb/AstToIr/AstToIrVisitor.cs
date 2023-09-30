@@ -177,7 +177,7 @@ public sealed class AstToIrVisitor : SQLiteParserBaseVisitor<IResult?>
         if (context.BIND_PARAMETER() is { } bind)
         {
             var exp = bind.GetText();
-            var value = _parameters[exp].Value;
+            var value = _parameters[exp].Value.CoerceToStoredType();
             return new BindExp(value);
         }
 
