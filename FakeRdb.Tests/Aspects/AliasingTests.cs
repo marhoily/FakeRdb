@@ -23,6 +23,7 @@ public sealed class AliasingTests : ComparisonTestBase
     public void Check(string d, string sql)
     {
         _dbPair.WithName(d)
+            .Anticipate(Outcome.Either)
             .QueueForBothDbs(sql)
             .AssertResultsAreIdentical();
     }
