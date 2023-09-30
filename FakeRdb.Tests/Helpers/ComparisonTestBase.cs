@@ -1,4 +1,3 @@
-using System.Text.RegularExpressions;
 using Microsoft.Data.Sqlite;
 
 namespace FakeRdb.Tests;
@@ -53,7 +52,7 @@ public abstract class ComparisonTestBase : IDisposable
         {
             x2.Should().NotBeNull();
             _output.WriteLine(x1.Message);
-            AssertErrorsMatch(x1.Message, x2!.Message);
+            ErrorEquivalence.Assert(x1.Message, x2!.Message);
         }
         else if (x2 != null)
         {
@@ -64,73 +63,5 @@ public abstract class ComparisonTestBase : IDisposable
         {
             actual!.ShouldEqual(expected!, _output, printOut);
         }
-    }
-
-    private static readonly string[][] ErrorEquivalenceTable =
-    {
-        new[]
-        {
-            "SQLite Error 1: 'no such table: (?<t>[A-Za-z.]+)'.",
-            "The given key '(?<t>[A-Za-z.]+)' was not present in the dictionary."
-        },
-        new[]
-        {
-            "SQLite Error 1: 'no such column: (?<t>[A-Za-z.]+)'.",
-            "Column (?<t>[A-Za-z.]+) is not found"
-        },
-        new[]
-        {
-            "SQLite Error 1: 'SELECTs to the left and right of UNION do not have the same number of result columns'.",
-            "SELECTs to the left and right of UNION do not have the same number of result columns"
-        },
-        new[]
-        {
-            "SQLite Error 1: 'ambiguous column name: (?<t>\\w+)'.",
-            "Ambiguous column ref: (?<t>\\w+)"
-        },
-     };
-    // Makes sure actual error either matches the expected completely,
-    // or equivalent to any of it counterparts in the lookup table, using Regex
-    protected static void AssertErrorsMatch(string expected, string actual)
-    {
-        if (expected == actual) return;
-        var (equivalenceClass, expectedMatch) = ErrorEquivalenceTable
-            .Select(errorSet => (errorSet, match: errorSet.FindMatch(expected)))
-            .FirstOrDefault(t => t.match != null);
-        if (equivalenceClass == null || expectedMatch == null)
-        {
-            Assert.Fail($"""
-                         Expected error equivalence class is NOT found!
-                         {expected}
-                         """);
-        }
-
-        var actualMatch = equivalenceClass.FindMatch(actual);
-        if (actualMatch == null)
-        {
-            Assert.Fail(
-                $"""
-                 Actual error message does not fit the equivalence class!
-
-                 Equivalence class:
-                 {string.Join("\n", equivalenceClass)}
-
-                 Actual error message:
-                 {actual}
-                 """);
-        }
-
-        var expectedGroups = expectedMatch.Groups
-            .Cast<Group>()
-            .Where(group => group.Name != "0")
-            .Select(group => new { groupName = group.Name, group.Value });
-
-        var actualGroups = actualMatch.Groups
-            .Cast<Group>()
-            .Where(group => group.Name != "0")
-            .Select(group => new { groupName = group.Name, group.Value });
-
-        actualGroups.Should().BeEquivalentTo(expectedGroups,
-            options => options.WithStrictOrdering());
     }
 }
