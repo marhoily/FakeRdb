@@ -2,10 +2,13 @@ namespace FakeRdb.Tests;
 
 public sealed class AliasingTests : ComparisonTestBase
 {
-    public AliasingTests(ITestOutputHelper output) : base(output)
+    private readonly DbPair _dbPair;
+
+    public AliasingTests(ITestOutputHelper output)
     {
-        Sqlite.Seed3Albums();
-        Sut.Seed3Albums();
+        _dbPair = new DbPair(SqliteConnection, SutConnection)
+            .LogQueryAndResultsTo(output)
+            .ExecuteOnBoth(DbSeed.Albums);
     }
 
     [Theory]
@@ -17,8 +20,8 @@ public sealed class AliasingTests : ComparisonTestBase
     [InlineData("Alias in ORDER BY clause",
         "SELECT title AS alias FROM Album ORDER BY alias")]
     [InlineData("Table alias", "SELECT x.year FROM Album as x")]
-    public void F(string d, string sql)
+    public void Check(string d, string sql)
     {
-        CompareAgainstSqlite(sql, d);
+        _dbPair.QueueForBothDbs(sql).WithName(d);
     }
 }

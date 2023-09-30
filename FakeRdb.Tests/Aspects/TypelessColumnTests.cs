@@ -3,24 +3,28 @@ namespace FakeRdb.Tests;
 
 public sealed class TypelessColumnTests : ComparisonTestBase
 {
-    public TypelessColumnTests(ITestOutputHelper output) : base(output)
+    private readonly DbPair _dbPair;
+
+    public TypelessColumnTests(ITestOutputHelper output)
     {
+        _dbPair = new DbPair(SqliteConnection, SutConnection)
+            .LogQueryAndResultsTo(output);
     }
 
     [Fact]
     public void EmptyOutput()
     {
-        CompareAgainstSqlite(
+        _dbPair.ExecuteOnBoth(
             """
              CREATE TABLE T (C);
              INSERT INTO T (C) VALUES (1);
-             """, 
-            printOut: false);
-        CompareAgainstSqlite(
+             """);
+        _dbPair.QueueForBothDbs(
             """
             SELECT * FROM T WHERE C = 3;
 
-            """);
+            """)
+            .AssertResultsAreIdentical();
     }
 
     [Theory]
@@ -28,17 +32,13 @@ public sealed class TypelessColumnTests : ComparisonTestBase
     [InlineData("text", "'1'")]
     public void Test(string d, string v)
     {
-        CompareAgainstSqlite(
+        _dbPair.ExecuteOnBoth(
             $"""
              CREATE TABLE T (C);
              INSERT INTO T (C) VALUES ({v});
-             """, 
-            printOut: false,
-            description: d);
-        CompareAgainstSqlite(
-            """
-            SELECT * FROM T
-
-            """);
+             """)
+            .WithName(d);
+        _dbPair.QueueForBothDbs("SELECT * FROM T")
+            .AssertResultsAreIdentical();
     }
 }

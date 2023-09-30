@@ -8,7 +8,7 @@ public sealed class ConditionAnalyzerFuzzing
     [Property(
         Arbitrary = new[] { typeof(ExpressionGenerators) },
         EndSize = 100, Replay = "193158020,297238713")]
-    public void BuildAlternativeSources(IExpression expr)
+    public void BuildAlternativeSources_Should_Not_Crash(IExpression expr)
     {
         ConditionAnalyzer
             .BuildAlternativeSources(Enumerable.Empty<Table>(), expr)

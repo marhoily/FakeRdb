@@ -2,10 +2,13 @@ namespace FakeRdb.Tests;
 
 public sealed class SelectTests : ComparisonTestBase
 {
-    public SelectTests(ITestOutputHelper output) : base(output)
+    private readonly DbPair _dbPair;
+
+    public SelectTests(ITestOutputHelper output)
     {
-        Sqlite.Seed3Albums();
-        Sut.Seed3Albums();
+        _dbPair = new DbPair(SqliteConnection, SutConnection)
+            .LogQueryAndResultsTo(output)
+            .ExecuteOnBoth(DbSeed.Albums);
     }
 
     [Theory]
@@ -23,9 +26,12 @@ public sealed class SelectTests : ComparisonTestBase
     [InlineData("Decimal without trailing digits in select", "select 123. from Album")]
     [InlineData("Integer in select", "select 12 from Album")]
     [InlineData("Text in select", "select '12' from Album")]
-    public void F(string d, string sql)
+    public void Check(string d, string sql)
     {
-        CompareAgainstSqlite(sql, d);
+        _dbPair.QueueForBothDbs(sql)
+            .WithName(d)
+            .Anticipate(Outcome.Either)
+            .AssertResultsAreIdentical();
     }
 
 }

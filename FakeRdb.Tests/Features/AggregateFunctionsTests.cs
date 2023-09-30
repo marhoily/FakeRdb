@@ -2,25 +2,23 @@ namespace FakeRdb.Tests;
 
 public sealed class AggregateFunctionsTests : ComparisonTestBase
 {
-    public AggregateFunctionsTests(ITestOutputHelper output) : base(output)
+    private readonly DbPair _dbPair;
+
+    public AggregateFunctionsTests(ITestOutputHelper helper)
     {
-        Sqlite.SeedCustomersOrders();
-        Sut.SeedCustomersOrders();
+        _dbPair = new DbPair(SqliteConnection, SutConnection)
+            .LogQueryAndResultsTo(helper)
+            .ExecuteOnBoth(DbSeed.CustomersAndOrders);
     }
 
-    [Fact]
-    public void Max()
+    [Theory]
+    [InlineData("MAX")]
+    [InlineData("Min")]
+    [InlineData("avg")]
+    public void Check(string functionName)
     {
-        CompareAgainstSqlite("SELECT MAX(total_amount) FROM orders");
-    }
-    [Fact]
-    public void Min()
-    {
-        CompareAgainstSqlite("SELECT Min(order_date) FROM orders");
-    }
-    [Fact]
-    public void Alias()
-    {
-        CompareAgainstSqlite("SELECT Avg(total_amount) as A FROM orders");
+        _dbPair.QueueForBothDbs(
+                $"SELECT {functionName}(total_amount) FROM orders")
+            .AssertResultsAreIdentical();
     }
 }

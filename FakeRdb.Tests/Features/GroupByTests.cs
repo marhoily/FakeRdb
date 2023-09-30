@@ -2,9 +2,13 @@
 
 public sealed class GroupByTests : ComparisonTestBase
 {
-    public GroupByTests(ITestOutputHelper output) : base(output)
+    private readonly DbPair _dbPair;
+
+    public GroupByTests(ITestOutputHelper output)
     {
-        ExecuteOnBoth(
+        _dbPair = new DbPair(SqliteConnection, SutConnection)
+            .LogQueryAndResultsTo(output)
+            .ExecuteOnBoth(
             """
             CREATE TABLE City (
                 Name TEXT,
@@ -34,19 +38,21 @@ public sealed class GroupByTests : ComparisonTestBase
     [Fact]
     public void GroupByCountry()
     {
-        CompareAgainstSqlite(
-            "SELECT Sum(Area) FROM City GROUP BY Country");
+        _dbPair.QueueForBothDbs(
+            "SELECT Sum(Area) FROM City GROUP BY Country")
+            .AssertResultsAreIdentical();
     }
     [Fact]
     public void Should_Filter_Before_GroupBy()
     {
-        CompareAgainstSqlite(
-            "SELECT Avg(Area) FROM City WHERE Country = 'USA'");
+        _dbPair.QueueForBothDbs(
+            "SELECT Avg(Area) FROM City WHERE Country = 'USA'")
+            .AssertResultsAreIdentical();
     }
     [Fact]
     public void Multiple_Aggregate_Functions()
     {
-        CompareAgainstSqlite(
+        _dbPair.QueueForBothDbs(
             """
             SELECT Country, 
                 Sum(Population) as X, 
@@ -54,6 +60,7 @@ public sealed class GroupByTests : ComparisonTestBase
                 MAX(Population) as Z
             FROM City 
             GROUP BY Country
-            """);
+            """)
+            .AssertResultsAreIdentical();
     }
 }

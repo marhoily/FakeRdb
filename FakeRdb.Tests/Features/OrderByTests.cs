@@ -2,19 +2,23 @@ namespace FakeRdb.Tests;
 
 public sealed class OrderByTests : ComparisonTestBase
 {
-    public OrderByTests(ITestOutputHelper output) : base(output)
+    private readonly DbPair _dbPair;
+
+    public OrderByTests(ITestOutputHelper output)
     {
-        ExecuteOnBoth(
+        _dbPair = new DbPair(SqliteConnection, SutConnection)
+            .LogQueryAndResultsTo(output)
+            .ExecuteOnBoth(
             """
-            CREATE TABLE T (X,Y,Z);
-            INSERT INTO T (X, Y, Z)
-            VALUES
-                ('Banana', 5, '2022-01-10'),
-                (12345, 'Apple', x'4D414E47'),   -- x'4D414E47' is a BLOB literal for 'MANG'
-                ('Orange', 8.23, 'This is text.'),
-                (98765, NULL, 999),
-                (3.1415, 'Another text', x'ABCDE12345');
-            """);
+                CREATE TABLE T (X,Y,Z);
+                INSERT INTO T (X, Y, Z)
+                VALUES
+                    ('Banana', 5, '2022-01-10'),
+                    (12345, 'Apple', x'4D414E47'),   -- x'4D414E47' is a BLOB literal for 'MANG'
+                    ('Orange', 8.23, 'This is text.'),
+                    (98765, NULL, 999),
+                    (3.1415, 'Another text', x'ABCDE12345');
+                """);
     }
 
     [Theory]
@@ -23,6 +27,8 @@ public sealed class OrderByTests : ComparisonTestBase
     [InlineData("BLOBS", "SELECT * FROM T ORDER BY Z")]
     public void ShouldSortDataCorrectly(string d, string sql)
     {
-        CompareAgainstSqlite(sql, d);
+        _dbPair.QueueForBothDbs(sql)
+            .WithName(d)
+            .AssertResultsAreIdentical();
     }
 }

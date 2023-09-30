@@ -2,44 +2,49 @@ namespace FakeRdb.Tests;
 
 public sealed class CartesianProductTests : ComparisonTestBase
 {
-    public CartesianProductTests(ITestOutputHelper output) : base(output)
+    private readonly DbPair _dbPair;
+
+    public CartesianProductTests(ITestOutputHelper helper)
     {
-        ExecuteOnBoth(
-            """
-            CREATE TABLE Country (CountryName TEXT);
+        _dbPair = new DbPair(SqliteConnection, SutConnection)
+            .LogQueryAndResultsTo(helper)
+            .ExecuteOnBoth(
+                """
+                CREATE TABLE Country (CountryName TEXT);
+                CREATE TABLE City (CityName TEXT);
+                
+                INSERT INTO Country VALUES 
+                    ('USA'), ('Germany'), ('Japan');
 
-            INSERT INTO Country (CountryName) VALUES ('USA');
-            INSERT INTO Country (CountryName) VALUES ('Germany');
-            INSERT INTO Country (CountryName) VALUES ('Japan');
-
-            CREATE TABLE City (CityName TEXT);
-
-            INSERT INTO City (CityName) VALUES ('New York');
-            INSERT INTO City (CityName) VALUES ('Berlin');
-            """);
+                INSERT INTO City VALUES
+                    ('New York'), ('Berlin');
+                """);
     }
-    
+
     [Fact]
     public void Should_Return_2x3_Rows()
     {
-        CompareAgainstSqlite("SELECT * FROM Country, City");
+        _dbPair.QueueForBothDbs("SELECT * FROM Country, City")
+            .AssertResultsAreIdentical();
     }
     [Fact]
     public void Where_References_Different_Tables()
     {
-        CompareAgainstSqlite(
+        _dbPair.QueueForBothDbs(
             """
             SELECT * FROM Country, City
             WHERE CountryName = 'USA' AND CityName = 'Berlin'
-            """);
+            """)
+            .AssertResultsAreIdentical();
     }
     [Fact]
     public void Effective_Join()
     {
-        CompareAgainstSqlite(
+        _dbPair.QueueForBothDbs(
             """
             SELECT * FROM Country, City
             WHERE CountryName = CityName
-            """);
+            """)
+            .AssertResultsAreIdentical();
     }
 }

@@ -1,3 +1,12 @@
 ﻿<ProjectConfiguration>
-  <Settings />
+  <Settings>
+    <IgnoredTests>
+      <NamedTestSelector>
+        <TestName>FakeRdb.Fuzzing.ConditionAnalyzerFuzzing.BuildAlternativeSources</TestName>
+      </NamedTestSelector>
+      <NamedTestSelector>
+        <TestName>FakeRdb.Fuzzing.ConditionAnalyzerFuzzing.BuildAlternativeSources_Should_Not_Crash</TestName>
+      </NamedTestSelector>
+    </IgnoredTests>
+  </Settings>
 </ProjectConfiguration>

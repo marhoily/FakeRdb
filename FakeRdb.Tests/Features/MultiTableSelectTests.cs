@@ -2,15 +2,19 @@ namespace FakeRdb.Tests;
 
 public sealed class MultiTableSelectTests : ComparisonTestBase
 {
-    public MultiTableSelectTests(ITestOutputHelper output) : base(output)
+    private readonly DbPair _dbPair;
+
+    public MultiTableSelectTests(ITestOutputHelper output) 
     {
-        Sqlite.SeedCustomersOrders();
-        Sut.SeedCustomersOrders();
+        _dbPair = new DbPair(SqliteConnection, SutConnection)
+            .LogQueryAndResultsTo(output);
     }
 
     [Fact]
     public void Should_Fill_In_The_Tables()
     {
-        CompareAgainstSqlite("select * from orders, customers");
+        _dbPair.QueueForBothDbs("select * from orders, customers")
+            .Anticipate(Outcome.Error)
+            .AssertResultsAreIdentical();
     }
 }

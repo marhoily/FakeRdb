@@ -2,15 +2,20 @@ namespace FakeRdb.Tests;
 
 public sealed class WhereClauseTests : ComparisonTestBase
 {
-    public WhereClauseTests (ITestOutputHelper output) : base(output)
+    private readonly DbPair _dbPair;
+
+    public WhereClauseTests (ITestOutputHelper output) 
     {
-        Sqlite.Seed3Albums();
-        Sut.Seed3Albums();
+        _dbPair = new DbPair(SqliteConnection, SutConnection)
+            .LogQueryAndResultsTo(output)
+            .ExecuteOnBoth(DbSeed.Albums);
     }
     
     [Fact]
     public void LessThan()
     {
-        CompareAgainstSqlite("SELECT * FROM Album WHERE Year < 2023");
+        _dbPair.QueueForBothDbs(
+            "SELECT * FROM Album WHERE Year < 2023")
+            .AssertResultsAreIdentical();
     }
 }

@@ -2,9 +2,13 @@
 
 public sealed class CompositeQueriesTests : ComparisonTestBase
 {
-    public CompositeQueriesTests(ITestOutputHelper output) : base(output)
+    private readonly DbPair _dbPair;
+
+    public CompositeQueriesTests(ITestOutputHelper output)
     {
-        ExecuteOnBoth("""
+        _dbPair = new DbPair(SqliteConnection, SutConnection)
+            .LogQueryAndResultsTo(output)
+            .ExecuteOnBoth("""
                 -- Create tables
                 CREATE TABLE City (
                     Name TEXT,
@@ -43,12 +47,14 @@ public sealed class CompositeQueriesTests : ComparisonTestBase
     [MemberData(nameof(GetPermutations))]
     public void Union(string combinator, string[] cityColumns, string[] countryColumns )
     {
-        CompareAgainstSqlite(
+        _dbPair.QueueForBothDbs(
             $"""
             SELECT {string.Join(", ", cityColumns)} FROM City
             {combinator}
             SELECT {string.Join(", ", countryColumns)} FROM Country
-            """);
+            """)
+            .Anticipate(Outcome.Either)
+            .AssertResultsAreIdentical();
     }
     public static IEnumerable<object[]> GetPermutations()
     {

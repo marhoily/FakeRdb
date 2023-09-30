@@ -2,25 +2,30 @@ namespace FakeRdb.Tests;
 
 public sealed class DeleteTests : ComparisonTestBase
 {
-    public DeleteTests(ITestOutputHelper output) : base(output)
+    private readonly DbPair _dbPair;
+
+    public DeleteTests(ITestOutputHelper output)
     {
-        Sqlite.Seed3Albums();
-        Sut.Seed3Albums();
+        _dbPair = new DbPair(SqliteConnection, SutConnection)
+            .LogQueryAndResultsTo(output)
+            .ExecuteOnBoth(DbSeed.Albums);
     }
 
     [Fact]
     public void Delete_All()
     {
-        CompareAgainstSqlite(
+        _dbPair.QueueForBothDbs(
             "DELETE FROM Album; " +
-            "SELECT * FROM Album");
+            "SELECT * FROM Album")
+            .AssertResultsAreIdentical();
     }
 
     [Fact]
     public void Delete_Predicated()
     {
-        CompareAgainstSqlite(
+        _dbPair.QueueForBothDbs(
             "DELETE FROM Album WHERE Year = 2021; " +
-            "SELECT * FROM Album");
+            "SELECT * FROM Album")
+            .AssertResultsAreIdentical();
     }
 }

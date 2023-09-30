@@ -4,10 +4,6 @@ namespace FakeRdb.Tests;
 
 public sealed class TestComparisonTest : ComparisonTestBase
 {
-    public TestComparisonTest(ITestOutputHelper output) : base(output)
-    {
-    }
-
     [Fact]
     public void AssertErrorsMatch_Should_Check_Regex_Groups()
     {

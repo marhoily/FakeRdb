@@ -1,8 +1,8 @@
 namespace FakeRdb.Tests;
 
-public static class DatabaseSeeder
+public static class DbSeed
 {
-    public static void Seed3Albums(this DbConnection connection)
+    public static void Albums(this DbConnection connection)
     {
         var factory = DbProviderFactories.GetFactory(connection)
                       ?? throw new InvalidOperationException();
@@ -39,7 +39,7 @@ public static class DatabaseSeeder
             cmd.Parameters.Clear();
         }
     }
-    public static void SeedCustomersOrders(this DbConnection connection)
+    public static void CustomersAndOrders(this DbConnection connection)
     {
         using var cmd = connection.CreateCommand();
         cmd.CommandText =
@@ -71,23 +71,6 @@ public static class DatabaseSeeder
                 (1, 1, '2023-09-01', 100.20),
                 (2, 1, '2023-09-05', 250.00),
                 (3, 2, '2023-09-10', 150.00);
-            """;
-        cmd.ExecuteNonQuery();
-
-
-    }
-    public static void SeedColumnAffinityTable(this DbConnection connection)
-    {
-        using var cmd = connection.CreateCommand();
-        cmd.CommandText =
-            """
-            CREATE TABLE t1(
-                t  TEXT,     -- text affinity by rule 2
-                nu NUMERIC,  -- numeric affinity by rule 5
-                i  INTEGER,  -- integer affinity by rule 1
-                r  REAL,     -- real affinity by rule 4
-                no BLOB      -- no affinity by rule 3
-            );
             """;
         cmd.ExecuteNonQuery();
 

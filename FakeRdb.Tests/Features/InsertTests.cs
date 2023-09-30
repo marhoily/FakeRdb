@@ -2,17 +2,21 @@ namespace FakeRdb.Tests;
 
 public sealed class InsertTests : ComparisonTestBase
 {
-    public InsertTests(ITestOutputHelper output) : base(output)
+    private readonly DbPair _dbPair;
+
+    public InsertTests(ITestOutputHelper output) 
     {
-        Sqlite.Seed3Albums();
-        Sut.Seed3Albums();
+        _dbPair = new DbPair(SqliteConnection, SutConnection)
+            .LogQueryAndResultsTo(output)
+            .ExecuteOnBoth(DbSeed.Albums);
     }
 
     [Fact]
     public void Insert_Expression()
     {
-        CompareAgainstSqlite(
+        _dbPair.QueueForBothDbs(
             "INSERT INTO Album (Title, Artist, Year) " +
-            "VALUES ('blah', 'blah', 1+1)");
+            "VALUES ('blah', 'blah', 1+1)")
+            .AssertResultsAreIdentical();
     }
 }
