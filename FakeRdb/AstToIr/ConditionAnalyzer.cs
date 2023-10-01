@@ -80,10 +80,12 @@ public static class ConditionAnalyzer
                     new EquiJoinCondition(
                         l.Table, l.FullColumnName,
                         r.Table, r.FullColumnName),
-
-                (ColumnExp l, IExpression) =>
+                (ColumnExp l, ColumnExp r) when l.Table == r.Table =>
                     new SingleTableCondition(l.Table, binaryExp),
-                (IExpression, ColumnExp r) =>
+
+                (ColumnExp l, LiteralExp or BindExp) =>
+                    new SingleTableCondition(l.Table, binaryExp),
+                (LiteralExp or BindExp, ColumnExp r) =>
                     new SingleTableCondition(r.Table, binaryExp),
 
                 (SingleTableCondition l, ColumnExp r)
@@ -92,13 +94,22 @@ public static class ConditionAnalyzer
                         Filter = new BinaryExp(binaryExp.Operand, l.Filter, r)
                     },
 
+                (ColumnExp l, SingleTableCondition r)
+                    when l.Table == r.Table => r with
+                    {
+                        Filter = new BinaryExp(binaryExp.Operand, l, r.Filter)
+                    },
+
                 (SingleTableCondition l, ColumnExp r)
+                    when l.Table != r.Table => new GeneralCondition(binaryExp),
+                (ColumnExp l, SingleTableCondition r)
                     when l.Table != r.Table => new GeneralCondition(binaryExp),
 
                 (SingleTableCondition l, IExpression r) =>
                     l with { Filter = new BinaryExp(binaryExp.Operand, l.Filter, r) },
 
-                (IExpression l, SingleTableCondition r) =>
+                (IExpression l, SingleTableCondition r)
+                    when l is LiteralExp or BindExp =>
                     r with { Filter = new BinaryExp(binaryExp.Operand, l, r.Filter) },
 
 

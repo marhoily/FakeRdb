@@ -19,7 +19,7 @@ public sealed class ConditionAnalysisTest : ComparisonTestBase
     [InlineData("orders.customer_id * 2 = orders.order_id")]
     [InlineData("orders.order_id = orders.customer_id * 2")]
     [InlineData("orders.customer_id * 2 = customers.customer_id")]
-    //[InlineData("customers.customer_id = orders.customer_id * 2")]
+    [InlineData("customers.customer_id = orders.customer_id * 2")]
     [InlineData("orders.customer_id * 2 = 4")]
     [InlineData("4 = orders.customer_id * 2")]
     [InlineData("(4 = orders.customer_id) * 2")]
