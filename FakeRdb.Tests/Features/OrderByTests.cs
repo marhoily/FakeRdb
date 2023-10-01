@@ -32,4 +32,12 @@ public sealed class OrderByTests : ComparisonTestBase
             .QueueForBothDbs(sql)
             .AssertResultsAreIdentical();
     }
+
+    [Fact]
+    public void QueryPlan()
+    {
+        _dbPair
+            .QueueForBothDbs("SELECT * FROM T ORDER BY Y")
+            .AssertResultsAreIdentical(cfg => cfg.IncludeQueryPlan());
+    }
 }

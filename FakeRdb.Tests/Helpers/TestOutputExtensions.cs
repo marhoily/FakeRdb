@@ -2,6 +2,10 @@
 
 public static class TestOutputExtensions
 {
+    public static void Print(this ITestOutputHelper output, QueryPlan value)
+    {
+        foreach (var item in value.Items) output.WriteLine(item);
+    }
     public static void Print(this ITestOutputHelper output, ReaderResult value)
     {
         output.PrintTable(value.Schema

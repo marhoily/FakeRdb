@@ -127,7 +127,7 @@ public sealed class DbPair : IAmReadyToAssert
                 cmd2.SetParameter(targetFactory, name, value);
         var (targetResult, targetError) = cmd2.SafeExecuteReader();
 
-        LogQueryAndTheResults(
+        LogQueryAndTheResults(isPlan,
             targetResult, referenceResult,
             targetError, referenceError);
 
@@ -166,7 +166,7 @@ public sealed class DbPair : IAmReadyToAssert
                 "for either the reference or target database.");
     }
 
-    private void LogQueryAndTheResults(
+    private void LogQueryAndTheResults(bool isPlan, 
         ReaderResult? targetResult, ReaderResult? referenceResult,
         Exception? targetError, Exception? referenceError)
     {
@@ -183,14 +183,16 @@ public sealed class DbPair : IAmReadyToAssert
         if (targetResult != null)
         {
             o.WriteLine("--- Target Result --- ");
-            o.Print(targetResult);
+            if (isPlan) o.Print(targetResult.Data.ToQueryPlan());
+            else o.Print(targetResult);
             o.WriteLine("");
         }
 
         if (referenceResult != null)
         {
             o.WriteLine("--- Reference Result ---");
-            o.Print(referenceResult);
+            if (isPlan) o.Print(referenceResult.Data.ToQueryPlan());
+            else o.Print(referenceResult);
             o.WriteLine("");
         }
 

@@ -1,6 +1,6 @@
-﻿using JetBrains.Annotations;
+﻿namespace FakeRdb.Tests;
 
-namespace FakeRdb.Tests;
+public record QueryPlan(string[] Items);
 
 public static class ReaderResultExtensions
 {
@@ -45,9 +45,7 @@ public static class ReaderResultExtensions
             .BeEquivalentTo(expected.Data.ToQueryPlan(),
             opt => opt.WithStrictOrdering());
     }
-    [UsedImplicitly]
-    private record QueryPlan(string[] Items);
-    private static QueryPlan ToQueryPlan(this List<List<object?>> data)
+    public static QueryPlan ToQueryPlan(this List<List<object?>> data)
     {
         return new QueryPlan(data.Select(row => (string)row[3]!).ToArray());
     }

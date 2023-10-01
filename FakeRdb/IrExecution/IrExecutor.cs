@@ -16,7 +16,7 @@ public static class IrExecutor
         // execute all of them without ordering terms first...
         return db.ExecuteCompound(stmt.Query, explain)
             // ...and then do the ordering.
-            .OrderBy(stmt.OrderingTerms);
+            .OrderBy(explain, stmt.OrderingTerms);
     }
 
     private static Table ExecuteCompound(this Database db, ICompoundSelect query, bool explain)
@@ -61,7 +61,7 @@ public static class IrExecutor
 
         // We cannot take sorting out of SelectCore to the later stages
         // because the projection can throw the key columns away
-        var ordered = grouped.OrderBy(orderingTerms);
+        var ordered = grouped.OrderBy(explain, orderingTerms);
         if (explain) return ordered;
         return ordered.Project(query.Columns);
     }

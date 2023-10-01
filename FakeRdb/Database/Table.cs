@@ -145,9 +145,15 @@ public sealed class Table : IResult
         return new Table(Name, Headers).WithRows(GetRows());
     }
 
-    public Table OrderBy(OrderingTerm[] orderingTerms)
+    public Table OrderBy(bool explain, OrderingTerm[] orderingTerms)
     {
         var result = this;
+        if (explain && orderingTerms.Length > 0)
+        {
+            result.AsExplainTable()
+                .Insert("USE TEMP B-TREE FOR ORDER BY");
+            return result;
+        }
         foreach (var orderingTerm in orderingTerms)
         {
             var columnIndex = IndexOf(orderingTerm.FullColumnName);
