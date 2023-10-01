@@ -111,13 +111,7 @@ public static class IrExecutor
         Table JoinRemainingTablesRecursively(Table head, Table[] tail)
         {
             if (tail.Length == 0)
-            {
-                if (explain)
-                    return explainTable;
-                       // .Append($"SCAN {head.Name}");
-
-                return head;
-            }
+                return explain ? explainTable : head;
 
             var tableToJoinNext = tail[0];
             var remainingTables = tail.Skip(1).ToArray();
