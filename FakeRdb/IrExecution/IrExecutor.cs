@@ -5,28 +5,28 @@ namespace FakeRdb;
 
 public static class IrExecutor
 {
-    public static Table ExecuteStmt(this Database db, SelectStmt stmt)
+    public static Table ExecuteStmt(this Database db, SelectStmt stmt, bool explain)
     {
         // If it's just a core query, we must directly
         // execute it with the ordering terms
         if (stmt.Query is SelectCore core)
-            return core.ExecuteCore(stmt.OrderingTerms);
+            return core.ExecuteCore(explain, stmt.OrderingTerms);
 
         // If there are multiple cores connected by "UNION" or "EXCEPT"
         // execute all of them without ordering terms first...
-        return db.ExecuteCompound(stmt.Query)
+        return db.ExecuteCompound(stmt.Query, explain)
             // ...and then do the ordering.
             .OrderBy(stmt.OrderingTerms);
     }
 
-    private static Table ExecuteCompound(this Database db, ICompoundSelect query)
+    private static Table ExecuteCompound(this Database db, ICompoundSelect query, bool explain)
     {
         if (query is SelectCore core)
-            return core.ExecuteCore();
+            return core.ExecuteCore(explain);
         if (query is CompoundSelect compound)
         {
-            var left = db.ExecuteCompound(compound.Left);
-            var right = db.ExecuteCompound(compound.Right);
+            var left = db.ExecuteCompound(compound.Left, explain);
+            var right = db.ExecuteCompound(compound.Right, explain);
             return compound.Operator switch
             {
                 Union => Table.Union(left, right),
@@ -40,14 +40,16 @@ public static class IrExecutor
         throw new ArgumentOutOfRangeException();
     }
 
-    private static Table ExecuteCore(this SelectCore query, params OrderingTerm[] orderingTerms)
+    private static Table ExecuteCore(this SelectCore query,
+        bool explain,
+        params OrderingTerm[] orderingTerms)
     {
         var singleSource = query.AlternativeSources.Single();
         var tables = singleSource
             .SingleTableConditions
             .Select(c => c.Table.Filter(c.Filter)).ToArray();
         if (tables.Length == 0)
-            return ExecuteNoFrom(query.Columns);
+            return ExecuteNoFrom(query.Columns, explain);
         var product = JoinTables(tables,
             singleSource.EquiJoinConditions);
 
@@ -62,15 +64,19 @@ public static class IrExecutor
         return grouped.OrderBy(orderingTerms).Project(query.Columns);
     }
 
-    private static Table ExecuteNoFrom(ResultColumn[] queryColumns)
+    private static Table ExecuteNoFrom(ResultColumn[] queryColumns, bool explain)
     {
+        if (explain)
+            return new ExplainTable()
+                .With("SCAN CONSTANT ROW")
+                .Build();
         return new Table("Result", queryColumns.Select((col, n) =>
         {
             var eval = col.Exp.Eval(TypeAffinity.NotSet);
             var name = col.Alias ?? col.Original;
             var affinity = eval.GetTypeAffinity();
             return new Column(
-                new ColumnHeader(n, name, "Result."+name, affinity),
+                new ColumnHeader(n, name, "Result." + name, affinity),
                 new List<object?> { eval });
         }).ToArray());
     }

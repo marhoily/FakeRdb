@@ -28,6 +28,7 @@ public sealed class AstToIrVisitor : SQLiteParserBaseVisitor<IResult?>
     private readonly string _originalSql;
     private readonly Database _db;
     private readonly FakeDbParameterCollection _parameters;
+    private ScopedValue<bool> _explainQueryPlan;
     private ScopedValue<Dictionary<string, Table>> _currentTables;
     private readonly HierarchicalAliasStore<IExpression> _alias = new();
 
@@ -54,6 +55,10 @@ public sealed class AstToIrVisitor : SQLiteParserBaseVisitor<IResult?>
 
     public override IResult? VisitSql_stmt(Sql_stmtContext context)
     {
+        using var _ = _explainQueryPlan.Set(
+            context.EXPLAIN_() != null && 
+            context.QUERY_() != null);
+
         return VisitChildren(context);
     }
 
@@ -105,7 +110,7 @@ public sealed class AstToIrVisitor : SQLiteParserBaseVisitor<IResult?>
         var stmt = orderBy != null
             ? new SelectStmt(select, orderBy.Terms)
             : new SelectStmt(select);
-        return _db.ExecuteStmt(stmt).ResolveColumnTypes();
+        return _db.ExecuteStmt(stmt, _explainQueryPlan.Value).ResolveColumnTypes();
     }
 
     public override IResult VisitSelect_expr(Select_exprContext context)
