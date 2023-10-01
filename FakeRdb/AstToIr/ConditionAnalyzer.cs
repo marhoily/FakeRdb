@@ -98,7 +98,7 @@ public static class ConditionAnalyzer
                 (SingleTableCondition l, IExpression r) =>
                     l with { Filter = new BinaryExp(binaryExp.Operand, l.Filter, r) },
 
-                (LiteralExp l, SingleTableCondition r) =>
+                (IExpression l, SingleTableCondition r) =>
                     r with { Filter = new BinaryExp(binaryExp.Operand, l, r.Filter) },
 
 
@@ -107,7 +107,6 @@ public static class ConditionAnalyzer
                 // ConditionAnalyzer pre-calculates constant expressions
                 (LiteralExp or BindExp, LiteralExp or BindExp) =>
                     new BindExp(binaryExp.Eval()),
-
 
                 _ => throw new InvalidOperationException("Unreachable")
             };

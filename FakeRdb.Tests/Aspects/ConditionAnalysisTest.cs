@@ -69,7 +69,7 @@ public sealed class ConditionAnalysisTest : ComparisonTestBase
             """).AssertResultsAreIdentical();
     }
     [Fact]
-    public void SingleTable_With_Subexpression_And_Binding()
+    public void SingleTable_Rhs_With_Binding()
     {
         _dbPair.ExecuteOnBoth(DbSeed.CustomersAndOrders);
 
@@ -77,6 +77,17 @@ public sealed class ConditionAnalysisTest : ComparisonTestBase
             """
             SELECT customer_name FROM orders, customers
             WHERE orders.customer_id * 2 = @p1
+            """, ("@p1", 4)).AssertResultsAreIdentical();
+    }
+    [Fact]
+    public void SingleTable_Lhs_With_Binding()
+    {
+        _dbPair.ExecuteOnBoth(DbSeed.CustomersAndOrders);
+
+        _dbPair.QueueForBothDbsWithArgs(
+            """
+            SELECT customer_name FROM orders, customers
+            WHERE @p1 = orders.customer_id * 2
             """, ("@p1", 4)).AssertResultsAreIdentical();
     }
     [Fact]

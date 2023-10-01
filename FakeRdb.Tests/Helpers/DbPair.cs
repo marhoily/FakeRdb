@@ -130,7 +130,7 @@ public sealed class DbPair : IAmReadyToAssert
         else if (referenceResult != null && targetError != null)
         {
             _expectedOutcome.Should().NotBe(Outcome.Error);
-            throw targetError;
+            throw new InvalidOperationException("", targetError);
         }
         // reference: Error; target: Success
         else if (referenceError != null && targetResult != null)
