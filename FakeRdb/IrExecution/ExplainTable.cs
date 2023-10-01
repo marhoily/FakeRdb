@@ -24,7 +24,16 @@ public readonly struct ExplainTable
         _table = table;
     }
 
-    public ExplainTable Insert(string detail)
+    public ExplainTable Prepend(string detail)
+    {
+        _table.Columns[0].Rows.Insert(0, _table.Autoincrement());
+        _table.Columns[1].Rows.Insert(0, 0);
+        _table.Columns[2].Rows.Insert(0, 0);
+        _table.Columns[3].Rows.Insert(0, detail);
+        return this;
+    }
+
+    public ExplainTable Append(string detail)
     {
         _table.Columns[0].Rows.Add(_table.Autoincrement());
         _table.Columns[1].Rows.Add(0);

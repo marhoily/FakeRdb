@@ -55,7 +55,7 @@ public static class IrExecutor
 
         if (singleSource.GeneralCondition != null)
         {
-            if (explain) product.AsExplainTable().Insert("General filter");
+            if (explain) product.AsExplainTable().Append("General filter");
             else product.ApplyFilter(singleSource.GeneralCondition);
         }
 
@@ -73,7 +73,7 @@ public static class IrExecutor
     {
         if (explain)
             return new ExplainTable()
-                .Insert("SCAN CONSTANT ROW");
+                .Append("SCAN CONSTANT ROW");
         return new Table("Result", queryColumns.Select((col, n) =>
         {
             var eval = col.Exp.Eval(TypeAffinity.NotSet);
@@ -103,7 +103,7 @@ public static class IrExecutor
         return tables switch
         {
             [] => Table.Empty,
-            [var t] => explain ? explainTable.Insert($"SCAN {t.Name}") : t.Clone(),
+            [var t] => explain ? explainTable.Append($"SCAN {t.Name}") : t.Clone(),
             [var head, .. var tail] _ => JoinRemainingTablesRecursively(head, tail),
             _ => throw new ArgumentOutOfRangeException(nameof(tables))
         };
@@ -113,25 +113,28 @@ public static class IrExecutor
             if (tail.Length == 0)
             {
                 if (explain)
-                    return explainTable
-                        .Insert($"SCAN {head.Name}");
+                    return explainTable;
+                       // .Append($"SCAN {head.Name}");
 
                 return head;
             }
 
             var tableToJoinNext = tail[0];
             var remainingTables = tail.Skip(1).ToArray();
-            if (explain)
-            {
-                explainTable.Insert($"SCAN {head.Name}");
-                return JoinRemainingTablesRecursively(tableToJoinNext, remainingTables);
-            }
-
             var condition = equiJoins.FindFor(head, tableToJoinNext);
             var result = head.ConcatHeaders(tableToJoinNext);
+            if (explain)
+                explainTable.Append($"SCAN {head.Name}");
 
             if (condition == null) // fallback
                 return CartesianProduct(result, head, tableToJoinNext, remainingTables);
+            if (explain)
+            {
+                var rightTable = tableToJoinNext.Name;
+                var rightColumn = tableToJoinNext.Get(condition.RightColumn).Header.Name;
+                explainTable.Append($"SEARCH {rightTable} USING AUTOMATIC COVERING INDEX ({rightColumn}=?)");
+                return JoinRemainingTablesRecursively(tableToJoinNext, remainingTables);
+            }
 
             var leftColumnIndex = head.IndexOf(condition.LeftColumn);
             return result.WithRows(
@@ -147,6 +150,11 @@ public static class IrExecutor
 
         Table CartesianProduct(Table result, Table head, Table tableToJoinNext, Table[] remainingTables)
         {
+            if (explain)
+            {
+                explainTable.Append($"SCAN {tableToJoinNext.Name}");
+                return JoinRemainingTablesRecursively(tableToJoinNext, remainingTables);
+            }
             return result.WithRows(
                 from headRow in head.GetRows()
                 from tailRow in JoinRemainingTablesRecursively(tableToJoinNext, remainingTables).GetRows()

@@ -151,7 +151,7 @@ public sealed class Table : IResult
         if (explain && orderingTerms.Length > 0)
         {
             result.AsExplainTable()
-                .Insert("USE TEMP B-TREE FOR ORDER BY");
+                .Append("USE TEMP B-TREE FOR ORDER BY");
             return result;
         }
         foreach (var orderingTerm in orderingTerms)
