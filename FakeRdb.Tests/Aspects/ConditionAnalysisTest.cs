@@ -10,118 +10,42 @@ public sealed class ConditionAnalysisTest : ComparisonTestBase
             .LogQueryAndResultsTo(output);
     }
 
-    [Fact]
-    public void Compound_Binary()
+    [Theory]
+    [InlineData("false = NULL")]
+    [InlineData("4 = orders.order_id")]
+    [InlineData("orders.customer_id + customers.customer_id = 5")]
+    [InlineData("orders.customer_id * 2 = orders.order_id")]
+    [InlineData("orders.customer_id * 2 = customers.customer_id")]
+    [InlineData("orders.customer_id * 2 = 4")]
+    [InlineData("4 = orders.customer_id * 2")]
+    [InlineData("(4 = orders.customer_id) * 2")]
+    public void Check(string filter)
     {
         _dbPair.ExecuteOnBoth(DbSeed.CustomersAndOrders);
 
-        _dbPair.QueueForBothDbs(
-            """
-            SELECT * FROM orders, customers
-            WHERE orders.customer_id + customers.customer_id = 5
-            """).AssertResultsAreIdentical();
-    }
-
-    [Fact]
-    public void Const_Expr()
-    {
-        _dbPair.ExecuteOnBoth(DbSeed.CustomersAndOrders);
-
-        _dbPair.QueueForBothDbs(
-            """
-            SELECT * FROM orders
-            WHERE false = NULL
-            """).AssertResultsAreIdentical();
-    }
-
-    [Fact]
-    public void NonEquiJoin_With_Function_On_One_Side()
-    {
-        _dbPair.ExecuteOnBoth(DbSeed.CustomersAndOrders);
-
-        _dbPair.QueueForBothDbs(
-            """
-            SELECT * FROM orders, customers
-            WHERE orders.customer_id * 2 = customers.customer_id
-            """).AssertResultsAreIdentical();
-    }
-
-    [Fact]
-    public void SingleTable_Rhs()
-    {
-        _dbPair.ExecuteOnBoth(DbSeed.CustomersAndOrders);
-
-        _dbPair.QueueForBothDbs(
-            """
-            SELECT * FROM orders
-            WHERE 4 = orders.order_id
-            """).AssertResultsAreIdentical();
-    }
-    [Fact]
-    public void SingleTable_With_Subexpression()
-    {
-        _dbPair.ExecuteOnBoth(DbSeed.CustomersAndOrders);
-
-        _dbPair.QueueForBothDbs(
-            """
+        _dbPair
+            .QueueForBothDbsWithArgs(
+            $"""
             SELECT customer_name FROM orders, customers
-            WHERE orders.customer_id * 2 = orders.order_id
-            """).AssertResultsAreIdentical();
+            WHERE {filter}
+            """)
+            .AssertResultsAreIdentical();
     }
-    [Fact]
-    public void SingleTable_Rhs_With_Binding()
+
+    [Theory]
+    [InlineData("orders.customer_id * 2 = @p", 4)]
+    [InlineData("@p = orders.customer_id * 2", 4)]
+    public void WithBinding(string filter, object? parameter)
     {
         _dbPair.ExecuteOnBoth(DbSeed.CustomersAndOrders);
 
-        _dbPair.QueueForBothDbsWithArgs(
-            """
-            SELECT customer_name FROM orders, customers
-            WHERE orders.customer_id * 2 = @p1
-            """, ("@p1", 4)).AssertResultsAreIdentical();
-    }
-    [Fact]
-    public void SingleTable_Lhs_With_Binding()
-    {
-        _dbPair.ExecuteOnBoth(DbSeed.CustomersAndOrders);
-
-        _dbPair.QueueForBothDbsWithArgs(
-            """
-            SELECT customer_name FROM orders, customers
-            WHERE @p1 = orders.customer_id * 2
-            """, ("@p1", 4)).AssertResultsAreIdentical();
-    }
-    [Fact]
-    public void SingleTable_Lhs_Sandwich()
-    {
-        _dbPair.ExecuteOnBoth(DbSeed.CustomersAndOrders);
-
-        _dbPair.QueueForBothDbs(
-            """
-            SELECT customer_name FROM orders, customers
-            WHERE orders.customer_id * 2 = 4
-            """).AssertResultsAreIdentical();
-    }
-    [Fact]
-    public void SingleTable_Rhs_Sandwich()
-    {
-        _dbPair.ExecuteOnBoth(DbSeed.CustomersAndOrders);
-
-        _dbPair.QueueForBothDbs(
-            """
-            SELECT customer_name FROM orders, customers
-            WHERE 4 = orders.customer_id * 2
-            """).AssertResultsAreIdentical();
-    }
-    [Fact]
-    public void SingleTable_Rhs_Sandwich_Equals_First()
-    {
-        _dbPair.ExecuteOnBoth(DbSeed.CustomersAndOrders);
-
-        _dbPair.QueueForBothDbs(
-            """
-            SELECT customer_name FROM orders, customers
-            WHERE (4 = orders.customer_id) * 2
-            """).AssertResultsAreIdentical();
+        _dbPair
+            .QueueForBothDbsWithArgs(
+                $"""
+                 SELECT customer_name FROM orders, customers
+                 WHERE {filter}
+                 """, ("@p", parameter))
+            .AssertResultsAreIdentical();
     }
 
     [Fact]
