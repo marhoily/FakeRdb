@@ -73,9 +73,37 @@ public static class ConditionAnalyzer
         {
             var left = DiscriminateCondition(binaryExp.Left);
             var right = DiscriminateCondition(binaryExp.Right);
+            
+            // simplifies the upcoming search
+            var reflect = Priority(left) < Priority(right);
+            var (hi, lo) = reflect ? (right, left) : (left, right);
 
-            return (left, right) switch
+            // to exhaust all combinations go in order of decreasing 
+            // priorities of the both arguments 
+            return (hi, lo) switch
             {
+                (GeneralCondition or EquiJoinCondition, _) =>
+                    new GeneralCondition(binaryExp),
+
+                (SingleTableCondition l, ColumnExp r)
+                    when l.Table == r.Table => l with
+                    {
+                        Filter = reflect
+                            ? new BinaryExp(binaryExp.Operand, l.Filter, r)
+                            : new BinaryExp(binaryExp.Operand, r, l.Filter)
+                    },
+
+                (SingleTableCondition l, ColumnExp r)
+                    when l.Table != r.Table => new GeneralCondition(binaryExp),
+
+                (SingleTableCondition l, IExpression r) =>
+                    l with
+                    {
+                        Filter = reflect
+                            ? new BinaryExp(binaryExp.Operand, l.Filter, r)
+                            : new BinaryExp(binaryExp.Operand, r, l.Filter)
+                    },
+
                 (ColumnExp l, ColumnExp r) when l.Table != r.Table =>
                     new EquiJoinCondition(
                         l.Table, l.FullColumnName,
@@ -83,49 +111,30 @@ public static class ConditionAnalyzer
                 (ColumnExp l, ColumnExp r) when l.Table == r.Table =>
                     new SingleTableCondition(l.Table, binaryExp),
 
-                (ColumnExp l, LiteralExp or BindExp) =>
+                (ColumnExp l, IExpression) =>
                     new SingleTableCondition(l.Table, binaryExp),
-                (LiteralExp or BindExp, ColumnExp r) =>
-                    new SingleTableCondition(r.Table, binaryExp),
-
-                (SingleTableCondition l, ColumnExp r)
-                    when l.Table == r.Table => l with
-                    {
-                        Filter = new BinaryExp(binaryExp.Operand, l.Filter, r)
-                    },
-
-                (ColumnExp l, SingleTableCondition r)
-                    when l.Table == r.Table => r with
-                    {
-                        Filter = new BinaryExp(binaryExp.Operand, l, r.Filter)
-                    },
-
-                (SingleTableCondition l, ColumnExp r)
-                    when l.Table != r.Table => new GeneralCondition(binaryExp),
-                (ColumnExp l, SingleTableCondition r)
-                    when l.Table != r.Table => new GeneralCondition(binaryExp),
-
-                (SingleTableCondition l, IExpression r) =>
-                    l with { Filter = new BinaryExp(binaryExp.Operand, l.Filter, r) },
-
-                (IExpression l, SingleTableCondition r)
-                    when l is LiteralExp or BindExp =>
-                    r with { Filter = new BinaryExp(binaryExp.Operand, l, r.Filter) },
-
-
-                (EquiJoinCondition, _) or (_, EquiJoinCondition) => 
-                    new GeneralCondition(binaryExp),
 
                 // ConditionAnalyzer pre-calculates constant expressions
-                (LiteralExp or BindExp, LiteralExp or BindExp) =>
+                (IExpression, IExpression) =>
                     new BindExp(binaryExp.Eval()),
 
                 _ => throw new InvalidOperationException(
                     $"Unreachable: " +
-                    $"LHS = {left.GetType().Name}; " +
-                    $"RHS = {right.GetType().Name}")
+                    $"HI = {hi.GetType().Name}; " +
+                    $"LO = {lo.GetType().Name}")
             };
         }
 
+        static int Priority(ITaggedCondition exp)
+        {
+            return exp switch
+            {
+                GeneralCondition => 40,
+                EquiJoinCondition => 30,
+                SingleTableCondition => 20,
+                ColumnExp => 10,
+                _ => 0
+            };
+        }
     }
 }
