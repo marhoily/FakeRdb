@@ -12,8 +12,10 @@ public sealed class ConditionAnalysisTest : ComparisonTestBase
 
     [Theory]
     [InlineData("false = NULL")]
+    [InlineData("orders.order_id = 4")]
     [InlineData("4 = orders.order_id")]
     [InlineData("orders.customer_id + customers.customer_id = 5")]
+    [InlineData("5 = orders.customer_id + customers.customer_id")]
     [InlineData("orders.customer_id * 2 = orders.order_id")]
     [InlineData("orders.customer_id * 2 = customers.customer_id")]
     [InlineData("orders.customer_id * 2 = 4")]

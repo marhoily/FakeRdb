@@ -102,13 +102,17 @@ public static class ConditionAnalyzer
                     r with { Filter = new BinaryExp(binaryExp.Operand, l, r.Filter) },
 
 
-                (EquiJoinCondition, _) => new GeneralCondition(binaryExp),
+                (EquiJoinCondition, _) or (_, EquiJoinCondition) => 
+                    new GeneralCondition(binaryExp),
 
                 // ConditionAnalyzer pre-calculates constant expressions
                 (LiteralExp or BindExp, LiteralExp or BindExp) =>
                     new BindExp(binaryExp.Eval()),
 
-                _ => throw new InvalidOperationException("Unreachable")
+                _ => throw new InvalidOperationException(
+                    $"Unreachable: " +
+                    $"LHS = {left.GetType().Name}; " +
+                    $"RHS = {right.GetType().Name}")
             };
         }
 

@@ -99,15 +99,15 @@ public sealed class DbPair : IAmReadyToAssert
         var cmd1 = _referenceDb.CreateCommand();
         cmd1.CommandText = _sql;
         if (_parameters != null)
-            foreach (var parameter in _parameters)
-                cmd1.SetParameter(referenceFactory, parameter.Name, parameter.Value);
+            foreach (var (name, value) in _parameters)
+                cmd1.SetParameter(referenceFactory, name, value);
         var (referenceResult, referenceError) = cmd1.SafeExecuteReader();
 
         var cmd2 = _targetDb.CreateCommand();
         cmd2.CommandText = _sql;
         if (_parameters != null)
-            foreach (var parameter in _parameters)
-                cmd2.SetParameter(targetFactory, parameter.Name, parameter.Value);
+            foreach (var (name, value) in _parameters)
+                cmd2.SetParameter(targetFactory, name, value);
         var (targetResult, targetError) = cmd2.SafeExecuteReader();
 
         LogQueryAndTheResults(
