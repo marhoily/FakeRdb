@@ -23,6 +23,7 @@ public sealed class ConditionAnalysisTest : ComparisonTestBase
     [InlineData("orders.customer_id * 2 = 4")]
     [InlineData("4 = orders.customer_id * 2")]
     [InlineData("(4 = orders.customer_id) * 2")]
+    [InlineData("orders.customer_id * 2 = 2 * orders.customer_id")]
     public void Check(string filter)
     {
         _dbPair.ExecuteOnBoth(DbSeed.CustomersAndOrders);

@@ -64,6 +64,7 @@ public static class ConditionAnalyzer
     {
         return exp switch
         {
+            ColumnExp col => new SingleTableCondition(col.Table, exp),
             BinaryExp binaryExp => Binary(binaryExp),
             UnaryExp unaryExp => DiscriminateCondition(unaryExp.Operand),
             _ => exp,
@@ -87,35 +88,18 @@ public static class ConditionAnalyzer
                 (GeneralCondition or EquiJoinCondition, _) =>
                     new GeneralCondition(binaryExp),
 
-                (SingleTableCondition l, ColumnExp r)
-                    when l.Table == r.Table => l with
-                    {
-                        Filter = reflect
-                            ? new BinaryExp(binaryExp.Operand, l.Filter, r)
-                            : new BinaryExp(binaryExp.Operand, r, l.Filter)
-                    },
+                (SingleTableCondition l, SingleTableCondition r)=>
+                    l.Table == r.Table && 
+                    binaryExp.Operand == Equal &&
+                    l.Filter is ColumnExp lc &&
+                    r.Filter is ColumnExp rc
+                        ? new EquiJoinCondition(
+                            l.Table, lc.FullColumnName,
+                            r.Table, rc.FullColumnName)
+                        : new GeneralCondition(binaryExp),
 
-                (SingleTableCondition l, ColumnExp r)
-                    when l.Table != r.Table => new GeneralCondition(binaryExp),
-
-                (SingleTableCondition l, IExpression r) =>
-                    l with
-                    {
-                        Filter = reflect
-                            ? new BinaryExp(binaryExp.Operand, l.Filter, r)
-                            : new BinaryExp(binaryExp.Operand, r, l.Filter)
-                    },
-
-                (ColumnExp l, ColumnExp r) when l.Table != r.Table =>
-                    new EquiJoinCondition(
-                        l.Table, l.FullColumnName,
-                        r.Table, r.FullColumnName),
-                (ColumnExp l, ColumnExp r) when l.Table == r.Table =>
-                    new SingleTableCondition(l.Table, binaryExp),
-
-                (ColumnExp l, IExpression) =>
-                    new SingleTableCondition(l.Table, binaryExp),
-
+                (SingleTableCondition l, _) => l with { Filter = binaryExp },
+            
                 // ConditionAnalyzer pre-calculates constant expressions
                 (IExpression, IExpression) =>
                     new BindExp(binaryExp.Eval(TypeAffinity.Integer)),
@@ -134,7 +118,7 @@ public static class ConditionAnalyzer
                 GeneralCondition => 40,
                 EquiJoinCondition => 30,
                 SingleTableCondition => 20,
-                ColumnExp => 10,
+                //ColumnExp => 10,
                 _ => 0
             };
         }
