@@ -7,15 +7,6 @@
       <NamedTestSelector>
         <TestName>FakeRdb.Tests.JoinTests.JoinWithCountryAndGroupByContinent</TestName>
       </NamedTestSelector>
-      <NamedTestSelector>
-        <TestName>FakeRdb.Tests.TypeAffinityTests.Check("REAL", "33")</TestName>
-      </NamedTestSelector>
-      <NamedTestSelector>
-        <TestName>FakeRdb.Tests.TypeAffinityTests.Check("TEXT", "22.0")</TestName>
-      </NamedTestSelector>
-      <NamedTestSelector>
-        <TestName>FakeRdb.Tests.TypeAffinityTests.Check("TEXT", "33")</TestName>
-      </NamedTestSelector>
     </IgnoredTests>
   </Settings>
 </ProjectConfiguration>

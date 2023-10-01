@@ -17,7 +17,7 @@ public static partial class TypeExt
             bool b => b,
             long l => l != 0,
             double d => d != 0,
-            string s => s.StartsWith('0'),
+            string s => char.IsDigit(s[0]),
             _ => throw new ArgumentOutOfRangeException(nameof(value), value.GetType().Name)
         };
     }

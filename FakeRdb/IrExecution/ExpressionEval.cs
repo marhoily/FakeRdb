@@ -103,6 +103,7 @@ public static class ExpressionEval
                 BinaryOperator.Equal => Equals(x, y),
                 BinaryOperator.Less => CustomFieldComparer.Compare(x, y) < 0,
                 BinaryOperator.And => x.ToBool() && y.ToBool(),
+                BinaryOperator.Or => x.ToBool() || y.ToBool(),
                 _ => throw new ArgumentOutOfRangeException(op.ToString())
             };
         }

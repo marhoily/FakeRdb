@@ -13,6 +13,9 @@ public sealed class EvalTest : ComparisonTestBase
     [Theory]
     [InlineData("true < 2")]
     [InlineData("'str' AND 15")]
+    //[InlineData("CAST('5e2' as bool)")]
+    [InlineData("'5e2' OR false")]
+    [InlineData("'5e2' OR 'true'")]
     public void Check(string exp) => 
         _dbPair.QueueForBothDbs($"SELECT {exp}")
             .AssertResultsAreIdentical();
