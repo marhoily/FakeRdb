@@ -118,7 +118,7 @@ public static class ConditionAnalyzer
 
                 // ConditionAnalyzer pre-calculates constant expressions
                 (IExpression, IExpression) =>
-                    new BindExp(binaryExp.Eval()),
+                    new BindExp(binaryExp.Eval(TypeAffinity.Integer)),
 
                 _ => throw new InvalidOperationException(
                     $"Unreachable: " +

@@ -24,9 +24,9 @@ public sealed class Database : Dictionary<string, Table>
             var col = Array.IndexOf(columns, column.Name);
             if (col != -1)
                 return row =>
-                    values.Rows[row].Cells[col]
-                        .Eval()
-                        .ConvertToSqliteType(column.ColumnType);
+                        values.Rows[row].Cells[col]
+                            .Eval(column.ColumnType)
+                    ;//.ConvertToSqliteType(column.ColumnType);
 
             if (column.IsAutoincrement)
                 return _ => table.Autoincrement();

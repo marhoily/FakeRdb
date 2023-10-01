@@ -14,13 +14,13 @@ public static class ExpressionEval
         return (T)eval;
     }
 
-    public static object? Eval(this IExpression arg)
+    public static object? Eval(this IExpression arg, TypeAffinity targetAffinity)
     {
         return arg switch
         {
-            BinaryExp binaryExp => binaryExp.Eval(),
+            BinaryExp binaryExp => binaryExp.Eval(targetAffinity),
             BindExp bindExp => bindExp.Value.CoerceToStoredType(),
-            LiteralExp literalExp => literalExp.Value.CoerceToLexicalAffinity(),
+            LiteralExp literalExp => literalExp.Value.CoerceToLexicalAffinity(targetAffinity),
             _ => throw new ArgumentOutOfRangeException(nameof(arg))
         };
     }
@@ -33,16 +33,16 @@ public static class ExpressionEval
             BinaryExp binaryExp => binaryExp.Eval(table, rowIndex),
             ColumnExp columnExp => table.Get(columnExp.FullColumnName).Rows[rowIndex],
             InExp inExp => inExp.Eval(table, rowIndex),
-            LiteralExp literalExp => literalExp.Value.CoerceToLexicalAffinity(),
+            LiteralExp literalExp => literalExp.Value.CoerceToLexicalAffinity(TypeAffinity.NotSet),
             ScalarExp scalarExp => scalarExp.Function(table, rowIndex, scalarExp.Args),
             _ => throw new ArgumentOutOfRangeException(nameof(arg))
         };
     }
 
-    private static object? Eval(this BinaryExp arg)
+    private static object? Eval(this BinaryExp arg, TypeAffinity targetAffinity)
     {
-        var l = arg.Left.Eval();
-        var r = arg.Right.Eval();
+        var l = arg.Left.Eval(targetAffinity);
+        var r = arg.Right.Eval(targetAffinity);
         return arg.Eval(l, r);
     }
 

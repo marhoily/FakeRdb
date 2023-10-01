@@ -66,7 +66,7 @@ public static class IrExecutor
     {
         return new Table("Result", queryColumns.Select((col, n) =>
         {
-            var eval = col.Exp.Eval();
+            var eval = col.Exp.Eval(TypeAffinity.NotSet);
             var name = col.Alias ?? col.Original;
             var affinity = eval.GetTypeAffinity();
             return new Column(

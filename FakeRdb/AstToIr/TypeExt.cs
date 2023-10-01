@@ -183,7 +183,7 @@ public static partial class TypeExt
             bool b => b ? 1L : 0L,
             int i => (long)i,
             float f => (double)f,
-            short s => (long) s,
+            short s => (long)s,
             _ => throw new ArgumentOutOfRangeException(nameof(obj), obj.GetType().Name)
         };
     }
@@ -250,7 +250,7 @@ public static partial class TypeExt
     private static partial Regex IsBlob();
 
 
-    public static object? CoerceToLexicalAffinity(this string? input)
+    public static object? CoerceToLexicalAffinity(this string? input, TypeAffinity targetAffinity)
     {
         if (input == null)
         {
@@ -277,14 +277,36 @@ public static partial class TypeExt
             return input.ConvertHexToBytes();
         }
 
-        if (long.TryParse(input, out var integer))
+        if (targetAffinity is TypeAffinity.Blob or TypeAffinity.NotSet)
         {
-            return integer;
+            if (long.TryParse(input, out var integer))
+            {
+                return integer;
+            }
+            if (double.TryParse(input, out var real))
+            {
+                return real;
+            }
+        }
+        if (targetAffinity is TypeAffinity.Integer or TypeAffinity.Numeric)
+        {
+            if (input.StartsWith("'") && input.EndsWith("'"))
+                input = input[1..^1];
+            if (long.TryParse(input, out var integer))
+            {
+                return integer;
+            }
         }
 
-        if (double.TryParse(input, out var real))
+        if (targetAffinity is TypeAffinity.Real or TypeAffinity.Integer or TypeAffinity.Numeric)
         {
-            return real;
+            if (input.StartsWith("'") && input.EndsWith("'"))
+                input = input[1..^1];
+
+            if (double.TryParse(input, out var real))
+            {
+                return real;
+            }
         }
 
         if (input.StartsWith("'") && input.EndsWith("'"))
