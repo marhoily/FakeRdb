@@ -203,25 +203,30 @@ public static partial class TypeExt
     }
     public static object? ConvertToSqliteType(this object? input, TypeAffinity affinity)
     {
-        if (input is not string s)
+        if (input is string s)
         {
-            return input;
+            var result = affinity switch
+            {
+                TypeAffinity.Integer =>
+                    long.TryParse(s, NumberStyles.Any,
+                        CultureInfo.InvariantCulture, out var integer)
+                        ? integer
+                        : input,
+                TypeAffinity.Real =>
+                    double.TryParse(s, out var real) ? real : input,
+                TypeAffinity.Numeric =>
+                    long.TryParse(s, NumberStyles.Any,
+                        CultureInfo.InvariantCulture, out var integer) ? integer :
+                    double.TryParse(s, out var real) ? real : input,
+                _ => input
+            };
+            return result;
         }
 
-        var result = affinity switch
-        {
-            TypeAffinity.Integer =>
-                long.TryParse(s, NumberStyles.Any,
-                    CultureInfo.InvariantCulture, out var integer) ? integer : input,
-            TypeAffinity.Real =>
-                double.TryParse(s, out var real) ? real : input,
-            TypeAffinity.Numeric =>
-                long.TryParse(s, NumberStyles.Any,
-                    CultureInfo.InvariantCulture, out var integer) ? integer :
-                double.TryParse(s, out var real) ? real : input,
-            _ => input
-        };
-        return result;
+        if (input is long l && affinity == TypeAffinity.Real)
+            return (double)l;
+
+        return input;
 
     }
 

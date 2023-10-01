@@ -2,7 +2,7 @@
   <Settings>
     <IgnoredTests>
       <NamedTestSelector>
-        <TestName>FakeRdb.Fuzzing.ConditionAnalyzerFuzzing.BuildAlternativeSources</TestName>
+        <TestName>FakeRdb.Fuzzing.ConditionAnalyzerFuzzing.BuildAlternativeSources_Should_Not_Crash</TestName>
       </NamedTestSelector>
     </IgnoredTests>
   </Settings>
