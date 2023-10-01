@@ -74,7 +74,9 @@ public static class ConditionAnalyzer
             var left = DiscriminateCondition(binaryExp.Left);
             var right = DiscriminateCondition(binaryExp.Right);
             
-            // simplifies the upcoming search
+            // Thanks to this the complexity of the upcoming search can
+            // be cut in half. We cannot forget if the swap occurred,
+            // because many binary operators are not commutative.
             var reflect = Priority(left) < Priority(right);
             var (hi, lo) = reflect ? (right, left) : (left, right);
 
