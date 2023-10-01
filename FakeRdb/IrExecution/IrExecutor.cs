@@ -70,8 +70,7 @@ public static class IrExecutor
     {
         if (explain)
             return new ExplainTable()
-                .With("SCAN CONSTANT ROW")
-                .Build();
+                .Insert("SCAN CONSTANT ROW");
         return new Table("Result", queryColumns.Select((col, n) =>
         {
             var eval = col.Exp.Eval(TypeAffinity.NotSet);
@@ -104,8 +103,7 @@ public static class IrExecutor
             case [var t]:
                 if (explain)
                     return new ExplainTable()
-                        .With($"SCAN {t.Name}")
-                        .Build();
+                        .Insert($"SCAN {t.Name}");
                 return t.Clone();
             case [var head, .. var tail] _:
                 return JoinRemainingTablesRecursively(head, tail);
