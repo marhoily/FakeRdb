@@ -88,8 +88,12 @@ public static class ConditionAnalyzer
                 (GeneralCondition or EquiJoinCondition, _) =>
                     new GeneralCondition(binaryExp),
 
+                (SingleTableCondition l, SingleTableCondition r)
+                    when l.Table == r.Table =>
+                        l with { Filter = binaryExp },
+
                 (SingleTableCondition l, SingleTableCondition r)=>
-                    l.Table == r.Table && 
+                    l.Table != r.Table && 
                     binaryExp.Operand == Equal &&
                     l.Filter is ColumnExp lc &&
                     r.Filter is ColumnExp rc
