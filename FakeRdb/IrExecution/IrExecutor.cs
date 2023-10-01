@@ -96,27 +96,34 @@ public static class IrExecutor
     /// </remarks>
     private static Table JoinTables(Table[] tables, EquiJoinCondition[] equiJoins, bool explain)
     {
-        switch (tables)
+        var explainTable = new ExplainTable(); // TODO: only call when explain
+        return tables switch
         {
-            case []:
-                return Table.Empty;
-            case [var t]:
-                if (explain)
-                    return new ExplainTable()
-                        .Insert($"SCAN {t.Name}");
-                return t.Clone();
-            case [var head, .. var tail] _:
-                return JoinRemainingTablesRecursively(head, tail);
-            default:
-                throw new ArgumentOutOfRangeException(nameof(tables));
-        }
+            [] => Table.Empty,
+            [var t] => explain ? explainTable.Insert($"SCAN {t.Name}") : t.Clone(),
+            [var head, .. var tail] _ => JoinRemainingTablesRecursively(head, tail),
+            _ => throw new ArgumentOutOfRangeException(nameof(tables))
+        };
 
         Table JoinRemainingTablesRecursively(Table head, Table[] tail)
         {
-            if (tail.Length == 0) return head;
+            if (tail.Length == 0)
+            {
+                if (explain)
+                    return explainTable
+                        .Insert($"SCAN {head.Name}");
+
+                return head;
+            }
 
             var tableToJoinNext = tail[0];
             var remainingTables = tail.Skip(1).ToArray();
+            if (explain)
+            {
+                explainTable.Insert($"SCAN {head.Name}");
+                return JoinRemainingTablesRecursively(tableToJoinNext, remainingTables);
+            }
+
             var condition = equiJoins.FindFor(head, tableToJoinNext);
             var result = head.ConcatHeaders(tableToJoinNext);
 

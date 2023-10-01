@@ -25,7 +25,7 @@ public sealed class CartesianProductTests : ComparisonTestBase
     public void Should_Return_2x3_Rows()
     {
         _dbPair.QueueForBothDbs("SELECT * FROM Country, City")
-            .AssertResultsAreIdentical();
+            .AssertResultsAreIdentical(cfg => cfg.IncludeQueryPlan());
     }
     [Fact]
     public void Where_References_Different_Tables()

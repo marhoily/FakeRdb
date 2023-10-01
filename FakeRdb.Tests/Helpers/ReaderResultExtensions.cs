@@ -47,6 +47,8 @@ public static class ReaderResultExtensions
     }
     public static QueryPlan ToQueryPlan(this List<List<object?>> data)
     {
+        if (data.Count == 0 || data[0].Count != 4)
+            Assert.Fail("Not a Query Plan!");
         return new QueryPlan(data.Select(row => (string)row[3]!).ToArray());
     }
 }
