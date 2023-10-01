@@ -34,7 +34,7 @@ public sealed class ConditionAnalysisTest : ComparisonTestBase
             SELECT customer_name FROM orders, customers
             WHERE {filter}
             """)
-            .AssertResultsAreIdentical();
+            .AssertResultsAreIdentical(cfg => cfg.IncludeQueryPlan());
     }
 
     [Theory]

@@ -46,18 +46,17 @@ public static class DbSeed
             """
             -- Create the 'customers' table
             CREATE TABLE customers (
-                customer_id INTEGER PRIMARY KEY,
+                customer_id INTEGER,
                 customer_name TEXT,
                 email TEXT
             );
             
             -- Create the 'orders' table
             CREATE TABLE orders (
-                order_id INTEGER PRIMARY KEY,
+                order_id INTEGER,
                 customer_id INTEGER,
                 order_date TEXT,
-                total_amount NUMERIC,
-                FOREIGN KEY (customer_id) REFERENCES customers(customer_id)
+                total_amount NUMERIC
             );
             
             -- Insert records into the 'customers' table
@@ -73,7 +72,5 @@ public static class DbSeed
                 (3, 2, '2023-09-10', 150.00);
             """;
         cmd.ExecuteNonQuery();
-
-
     }
 }
