@@ -86,12 +86,6 @@ public static class ConditionAnalyzer
                 (IExpression, ColumnExp r) =>
                     new SingleTableCondition(r.Table, binaryExp),
 
-                (SingleTableCondition l, LiteralExp r) =>
-                    l with { Filter = new BinaryExp(binaryExp.Operand, l.Filter, r) },
-
-                (LiteralExp l, SingleTableCondition r) =>
-                    r with { Filter = new BinaryExp(binaryExp.Operand, l, r.Filter) },
-
                 (SingleTableCondition l, ColumnExp r)
                     when l.Table == r.Table => l with
                     {
@@ -100,6 +94,13 @@ public static class ConditionAnalyzer
 
                 (SingleTableCondition l, ColumnExp r)
                     when l.Table != r.Table => new GeneralCondition(binaryExp),
+
+                (SingleTableCondition l, IExpression r) =>
+                    l with { Filter = new BinaryExp(binaryExp.Operand, l.Filter, r) },
+
+                (LiteralExp l, SingleTableCondition r) =>
+                    r with { Filter = new BinaryExp(binaryExp.Operand, l, r.Filter) },
+
 
                 (EquiJoinCondition, _) => new GeneralCondition(binaryExp),
 
