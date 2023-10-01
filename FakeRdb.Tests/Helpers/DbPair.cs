@@ -2,9 +2,18 @@ using JetBrains.Annotations;
 
 namespace FakeRdb.Tests;
 
+public sealed class ResultCheckOptionsConfig
+{
+    internal bool Iqp { get; private set; }
+    public ResultCheckOptionsConfig IncludeQueryPlan()
+    {
+        Iqp = true;
+        return this;
+    }
+}
 public interface IAmReadyToAssert
 {
-    void AssertResultsAreIdentical();
+    void AssertResultsAreIdentical(Action<ResultCheckOptionsConfig>? configure = null);
 }
 
 public sealed class DbPair : IAmReadyToAssert
@@ -85,26 +94,34 @@ public sealed class DbPair : IAmReadyToAssert
         return this;
     }
 
-    void IAmReadyToAssert.AssertResultsAreIdentical()
+    void IAmReadyToAssert.AssertResultsAreIdentical(Action<ResultCheckOptionsConfig>? configure)
     {
         if (_sql == null) throw new InvalidOperationException(
             "SQL query has not been queued. " +
             "Call QueueForBothDbs() before executing this method.");
+        var cfg = new ResultCheckOptionsConfig();
+        configure?.Invoke(cfg);
+        if (cfg.Iqp)
+            DoCheck("EXPLAIN QUERY PLAN " + _sql);
+        DoCheck(_sql);
+    }
 
+    private void DoCheck(string sql)
+    {
         var referenceFactory = DbProviderFactories.GetFactory(_referenceDb)
-                      ?? throw new InvalidOperationException();
+                               ?? throw new InvalidOperationException();
         var targetFactory = DbProviderFactories.GetFactory(_targetDb)
-                      ?? throw new InvalidOperationException();
+                            ?? throw new InvalidOperationException();
 
         var cmd1 = _referenceDb.CreateCommand();
-        cmd1.CommandText = _sql;
+        cmd1.CommandText = sql;
         if (_parameters != null)
             foreach (var (name, value) in _parameters)
                 cmd1.SetParameter(referenceFactory, name, value);
         var (referenceResult, referenceError) = cmd1.SafeExecuteReader();
 
         var cmd2 = _targetDb.CreateCommand();
-        cmd2.CommandText = _sql;
+        cmd2.CommandText = sql;
         if (_parameters != null)
             foreach (var (name, value) in _parameters)
                 cmd2.SetParameter(targetFactory, name, value);
@@ -140,9 +157,10 @@ public sealed class DbPair : IAmReadyToAssert
                         "result when an error was expected based on the " +
                         "reference database.");
         }
-        else throw new Exception(
-            "Invariant violation: Both result and error cannot be null " +
-            "for either the reference or target database.");
+        else
+            throw new Exception(
+                "Invariant violation: Both result and error cannot be null " +
+                "for either the reference or target database.");
     }
 
     private void LogQueryAndTheResults(

@@ -19,4 +19,8 @@ public sealed class EvalTest : ComparisonTestBase
     public void Check(string exp) => 
         _dbPair.QueueForBothDbs($"SELECT {exp}")
             .AssertResultsAreIdentical();
+    [Fact]
+    public void QueryPlan() => 
+        _dbPair.QueueForBothDbs("SELECT 1")
+            .AssertResultsAreIdentical(cfg => cfg.IncludeQueryPlan());
 }
