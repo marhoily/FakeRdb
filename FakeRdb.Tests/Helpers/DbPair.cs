@@ -14,7 +14,7 @@ public sealed class DbPair : IAmReadyToAssert
     private ITestOutputHelper? _outputHelper;
     private string? _testName;
     private Outcome _expectedOutcome = Outcome.Success;
-    private object?[]? _bindings;
+    private (string Name, object? Value)[]? _parameters;
     private string? _sql;
     private bool _shouldLog = true;
 
@@ -35,6 +35,14 @@ public sealed class DbPair : IAmReadyToAssert
     public IAmReadyToAssert QueueForBothDbs(string sql)
     {
         _sql = sql;
+        return this;
+    }
+    [MustUseReturnValue]
+    public IAmReadyToAssert QueueForBothDbsWithArgs(string sql, 
+        params (string Name, object? Value)[] parameters)
+    {
+        _sql = sql;
+        _parameters = parameters;
         return this;
     }
 
@@ -64,20 +72,12 @@ public sealed class DbPair : IAmReadyToAssert
     }
 
     [MustUseReturnValue]
-    public DbPair WithBindings(object?[]? bindings)
+    public DbPair ShouldLog(bool should)
     {
-        _bindings = bindings;
+        _shouldLog = should;
         return this;
     }
-
-    [MustUseReturnValue]
-    public DbPair ShouldLog(bool shouldPrint)
-    {
-        _shouldLog = shouldPrint;
-        return this;
-    }
-
-
+    
     [MustUseReturnValue]
     public DbPair Anticipate(Outcome outcome)
     {
@@ -85,7 +85,7 @@ public sealed class DbPair : IAmReadyToAssert
         return this;
     }
 
-    public void AssertResultsAreIdentical()
+    void IAmReadyToAssert.AssertResultsAreIdentical()
     {
         if (_sql == null) throw new InvalidOperationException(
             "SQL query has not been queued. " +
@@ -98,14 +98,16 @@ public sealed class DbPair : IAmReadyToAssert
 
         var cmd1 = _referenceDb.CreateCommand();
         cmd1.CommandText = _sql;
-        if (_bindings != null)
-            cmd1.AddPositionalParameters(referenceFactory, _bindings);
+        if (_parameters != null)
+            foreach (var parameter in _parameters)
+                cmd1.SetParameter(referenceFactory, parameter.Name, parameter.Value);
         var (referenceResult, referenceError) = cmd1.SafeExecuteReader();
 
         var cmd2 = _targetDb.CreateCommand();
         cmd2.CommandText = _sql;
-        if (_bindings != null)
-            cmd2.AddPositionalParameters(targetFactory, _bindings);
+        if (_parameters != null)
+            foreach (var parameter in _parameters)
+                cmd2.SetParameter(targetFactory, parameter.Name, parameter.Value);
         var (targetResult, targetError) = cmd2.SafeExecuteReader();
 
         LogQueryAndTheResults(
@@ -149,32 +151,40 @@ public sealed class DbPair : IAmReadyToAssert
     {
         if (_outputHelper is not {} o || !_shouldLog) return;
         if (_testName != null)
+        {
             o.WriteLine($"--- {_testName} ---");
+            o.WriteLine("");
+        }
 
         o.WriteLine(_sql);
+        o.WriteLine("");
 
         if (targetResult != null)
         {
             o.WriteLine("--- Target Result --- ");
             o.Print(targetResult);
+            o.WriteLine("");
         }
 
         if (referenceResult != null)
         {
             o.WriteLine("--- Reference Result ---");
             o.Print(referenceResult);
+            o.WriteLine("");
         }
 
         if (targetError != null)
         {
             o.WriteLine("--- Target Error --- ");
             o.WriteLine(targetError.Message);
+            o.WriteLine("");
         }
 
         if (referenceError != null)
         {
             o.WriteLine("--- Reference Error --- ");
             o.WriteLine(referenceError.Message);
+            o.WriteLine("");
         }
     }
 }

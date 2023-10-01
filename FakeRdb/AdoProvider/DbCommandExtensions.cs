@@ -12,19 +12,8 @@ public static class DbCommandExtensions
         dbParameter.Value = value;
         cmd.Parameters.Add(dbParameter);
     }
-    public static void AddPositionalParameters(this DbCommand cmd,
-        DbProviderFactory factory, object?[] positionalBindings)
-    {
-        foreach (var binding in positionalBindings) 
-            cmd.AddPositionalParameter(factory, binding);
-    }
-    public static void AddPositionalParameter(this DbCommand cmd,
-        DbProviderFactory factory, object? value)
-    {
-        var dbParameter =
-            factory.CreateParameter() ??
-            throw new InvalidOperationException("WTF?");
-        dbParameter.Value = value;
-        cmd.Parameters.Add(dbParameter);
-    }
+    /* NOTE: Microsoft.Data.Sqlite does not support positional bindings!
+     * https://github.com/aspnet/Microsoft.Data.Sqlite/issues/8
+     */
+
 }
