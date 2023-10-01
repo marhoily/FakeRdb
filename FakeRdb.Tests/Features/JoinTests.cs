@@ -57,7 +57,7 @@ public sealed class JoinTests : ComparisonTestBase
             FROM City, Country
             WHERE City.Country = Country.CountryName 
             """
-        ).AssertResultsAreIdentical();
+        ).AssertResultsAreIdentical(cfg => cfg.IncludeQueryPlan());
     }
 
     [Fact]

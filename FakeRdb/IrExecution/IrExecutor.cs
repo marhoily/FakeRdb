@@ -54,7 +54,10 @@ public static class IrExecutor
             singleSource.EquiJoinConditions, explain);
 
         if (singleSource.GeneralCondition != null)
-            product.ApplyFilter(singleSource.GeneralCondition);
+        {
+            if (explain) product.AsExplainTable().Insert("General filter");
+            else product.ApplyFilter(singleSource.GeneralCondition);
+        }
 
         var grouped = product.GroupBy(query.GroupBy
             .Select(product.Get).ToArray(), query.Columns);
