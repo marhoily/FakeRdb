@@ -102,11 +102,11 @@ public sealed class DbPair : IAmReadyToAssert
         var cfg = new ResultCheckOptionsConfig();
         configure?.Invoke(cfg);
         if (cfg.Iqp)
-            DoCheck("EXPLAIN QUERY PLAN " + _sql);
-        DoCheck(_sql);
+            DoCheck("EXPLAIN QUERY PLAN " + _sql, true);
+        DoCheck(_sql, false);
     }
 
-    private void DoCheck(string sql)
+    private void DoCheck(string sql, bool isPlan)
     {
         var referenceFactory = DbProviderFactories.GetFactory(_referenceDb)
                                ?? throw new InvalidOperationException();
@@ -134,7 +134,10 @@ public sealed class DbPair : IAmReadyToAssert
         // reference: Success; target: Success
         if (referenceResult != null && targetResult != null)
         {
-            targetResult.ShouldEqual(referenceResult);
+            if (isPlan)
+                targetResult.PlanShouldEqual(referenceResult);
+            else 
+                targetResult.ShouldEqual(referenceResult);
             _expectedOutcome.Should().NotBe(Outcome.Error);
         }
         // reference: Error; target: Error

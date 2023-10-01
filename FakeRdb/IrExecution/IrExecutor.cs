@@ -51,7 +51,7 @@ public static class IrExecutor
         if (tables.Length == 0)
             return ExecuteNoFrom(query.Columns, explain);
         var product = JoinTables(tables,
-            singleSource.EquiJoinConditions);
+            singleSource.EquiJoinConditions, explain);
 
         if (singleSource.GeneralCondition != null)
             product.ApplyFilter(singleSource.GeneralCondition);
@@ -61,7 +61,9 @@ public static class IrExecutor
 
         // We cannot take sorting out of SelectCore to the later stages
         // because the projection can throw the key columns away
-        return grouped.OrderBy(orderingTerms).Project(query.Columns);
+        var ordered = grouped.OrderBy(orderingTerms);
+        if (explain) return ordered;
+        return ordered.Project(query.Columns);
     }
 
     private static Table ExecuteNoFrom(ResultColumn[] queryColumns, bool explain)
@@ -93,14 +95,23 @@ public static class IrExecutor
     /// However, they can be inefficient for large data-sets or complex join conditions.
     /// Other join algorithms like "hash joins" or "sort-merge joins" could offer better performance for certain scenarios but are not implemented here.
     /// </remarks>
-    private static Table JoinTables(Table[] tables, EquiJoinCondition[] equiJoins)
+    private static Table JoinTables(Table[] tables, EquiJoinCondition[] equiJoins, bool explain)
     {
-        return tables switch
+        switch (tables)
         {
-            [] => Table.Empty,
-            [var t] => t.Clone(),
-            [var head, .. var tail] _ => JoinRemainingTablesRecursively(head, tail)
-        };
+            case []:
+                return Table.Empty;
+            case [var t]:
+                if (explain)
+                    return new ExplainTable()
+                        .With($"SCAN {t.Name}")
+                        .Build();
+                return t.Clone();
+            case [var head, .. var tail] _:
+                return JoinRemainingTablesRecursively(head, tail);
+            default:
+                throw new ArgumentOutOfRangeException(nameof(tables));
+        }
 
         Table JoinRemainingTablesRecursively(Table head, Table[] tail)
         {

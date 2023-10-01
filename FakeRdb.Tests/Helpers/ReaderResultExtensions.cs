@@ -1,4 +1,6 @@
-﻿namespace FakeRdb.Tests;
+﻿using JetBrains.Annotations;
+
+namespace FakeRdb.Tests;
 
 public static class ReaderResultExtensions
 {
@@ -30,5 +32,23 @@ public static class ReaderResultExtensions
                 .Using<float>(ctx => ctx.Subject.Should()
                     .BeApproximately(ctx.Expectation, 1e-4f))
                 .WhenTypeIs<float>());
+    }
+
+    public static void PlanShouldEqual(this ReaderResult actual, ReaderResult expected)
+    {
+        actual.RecordsAffected.Should().Be(expected.RecordsAffected);
+
+        actual.Schema.Should().BeEquivalentTo(
+            expected.Schema, opt => opt.WithStrictOrdering());
+
+        actual.Data.ToQueryPlan().Should()
+            .BeEquivalentTo(expected.Data.ToQueryPlan(),
+            opt => opt.WithStrictOrdering());
+    }
+    [UsedImplicitly]
+    private record QueryPlan(string[] Items);
+    private static QueryPlan ToQueryPlan(this List<List<object?>> data)
+    {
+        return new QueryPlan(data.Select(row => (string)row[3]!).ToArray());
     }
 }

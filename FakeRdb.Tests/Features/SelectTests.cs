@@ -34,4 +34,12 @@ public sealed class SelectTests : ComparisonTestBase
             .QueueForBothDbs(sql)
             .AssertResultsAreIdentical();
     }
+
+    [Fact]
+    public void QueryPlan()
+    {
+        _dbPair.QueueForBothDbs("SELECT * FROM Album")
+            .AssertResultsAreIdentical(
+                cfg => cfg.IncludeQueryPlan());
+    }
 }
